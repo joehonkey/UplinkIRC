@@ -53,6 +53,48 @@ Known issues open:
   - Window position/dock layout not persisted.
 -->
 
+<!--
+Session summary — docs, repo, landing page sprint:
+
+What was built:
+  - Full documentation rewrite — all 5 docs/ files rewritten from scratch,
+    all DojoIRC references removed. configuration.md, commands.md, faq.md,
+    ircv3.md, keyboard-shortcuts.md now reflect actual v0.1.0 feature set
+    and real config format ([[server.channels]] structure, [ui] block).
+  - config.toml.example updated to match actual parser format.
+  - README.md rewritten with real build instructions, per-platform dep
+    install commands, feature list, config example, docs index.
+  - version.h.in added — CMake configure_file bakes PROJECT_VERSION into
+    version.h at build time. About dialog now shows version from header
+    (UPLINKIRC_VERSION macro) instead of hardcoded string. To release:
+    bump VERSION in CMakeLists.txt, rebuild, tag.
+  - Global git commit-msg hook at ~/.config/git/hooks/commit-msg strips
+    all AI co-author/attribution lines from every commit on this machine.
+    git config --global core.hooksPath set to ~/.config/git/hooks.
+  - GitHub repo created: https://github.com/joehonkey/UplinkIRC (public).
+  - Branch protection on main — force push and deletion blocked.
+  - GitHub Pages enabled from docs/ folder.
+    Live at: https://joehonkey.github.io/UplinkIRC/
+  - Landing page (docs/index.html) — dark Catppuccin design, hero with
+    About.png logo, cross-platform section (Linux/FreeBSD/macOS/Windows/ARM64),
+    feature cards, IRCv3 capability status grid, docs links, footer.
+  - about.png resized from 2172px/894KB to 760px/143KB for fast page load.
+    Optimized copy also written back to resources/icons/about.png.
+  - CLAUDE.md (project + global) updated with hard rule: zero AI
+    attribution anywhere ever — no Co-Authored-By, no Claude tags.
+
+Bugs found and fixed:
+  - about.png was 894KB (2172×724px) — invisible on dark hero background
+    and slow to load. Fixed: resized to 760px wide, 143KB. White rounded
+    card container added so logo is visible against dark background.
+
+Known issues open:
+  - Theme and icon choice persist via QSettings only, not config.toml.
+  - No auto-reconnect on disconnect.
+  - Emoji picker not yet built.
+  - In-app Documentation panel not yet built (resources/docs/ doesn't exist).
+-->
+
 ## [Unreleased] — v0.1.0
 
 **Initial release — full IRC client foundation**

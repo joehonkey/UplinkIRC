@@ -29,6 +29,11 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] App icons — Maindefault (flat satellite) and Mainalt (3D satellite), user picks in hamburger, persists via QSettings
 - [x] About dialog — horizontal Uplink IRC Client brand image, version, server info
 - [x] Signal ordering fix — config loads after MainWindow connects signals
+- [x] Version baked into binary — `version.h` generated from CMake `PROJECT_VERSION` at build time
+- [x] Full documentation — configuration.md, commands.md, faq.md, ircv3.md, keyboard-shortcuts.md (beginner-friendly, real examples)
+- [x] GitHub repo — public, branch-protected, invite-only contributions
+- [x] GitHub Pages landing page — https://joehonkey.github.io/UplinkIRC/
+- [x] Global git hook — strips all AI attribution lines from every commit machine-wide
 
 ---
 
