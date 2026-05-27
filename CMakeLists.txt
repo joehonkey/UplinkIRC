@@ -22,6 +22,8 @@ qt_add_executable(UplinkIRC
     src/model/message.h
     src/ui/mainwindow.cpp
     src/ui/mainwindow.h
+    src/ui/trayicon.cpp
+    src/ui/trayicon.h
     src/irc/ircclient.cpp
     src/irc/ircclient.h
     src/irc/ircparser.cpp

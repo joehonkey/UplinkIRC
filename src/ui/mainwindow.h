@@ -3,6 +3,8 @@
 #include <QMainWindow>
 #include "model/sessionmodel.h"
 
+class TrayIcon;
+
 class QTreeWidget;
 class QTreeWidgetItem;
 class QTextEdit;
@@ -73,9 +75,13 @@ private:
     QToolButton  *m_hamburger;
 
     SessionModel *m_model;
+    TrayIcon     *m_tray{nullptr};
 
     // UI state (persisted to config eventually)
     bool m_showNickPrefix{true};
     bool m_showEmojiBtn{false};
     bool m_showTopic{true};
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
 };

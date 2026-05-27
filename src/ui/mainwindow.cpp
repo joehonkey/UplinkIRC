@@ -1,7 +1,9 @@
 #include "mainwindow.h"
 #include "irc/ircclient.h"
+#include "ui/trayicon.h"
 
 #include <QApplication>
+#include <QCloseEvent>
 #include <QToolBar>
 #include <QToolButton>
 #include <QMenu>
@@ -40,6 +42,9 @@ MainWindow::MainWindow(SessionModel *model, QWidget *parent)
     setupChatArea();   // sets central widget
     setupInputBar();   // injects input into central widget layout
     connectModel();
+
+    if (QSystemTrayIcon::isSystemTrayAvailable())
+        m_tray = new TrayIcon(model, this);
 
     statusBar()->showMessage("UplinkIRC ready");
 }
@@ -448,6 +453,16 @@ void MainWindow::appendMessage(const Message &msg)
     // Keep scroll pinned to bottom
     auto *sb = m_chatView->verticalScrollBar();
     sb->setValue(sb->maximum());
+}
+
+void MainWindow::closeEvent(QCloseEvent *event)
+{
+    if (m_tray && m_tray->isVisible()) {
+        hide();
+        event->ignore();
+    } else {
+        event->accept();
+    }
 }
 
 QString MainWindow::formatMessage(const Message &msg) const
