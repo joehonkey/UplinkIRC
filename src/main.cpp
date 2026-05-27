@@ -29,10 +29,12 @@ int main(int argc, char *argv[])
     }
 
     auto *model = new SessionModel;
-    model->loadConfig(cfg);
 
     MainWindow window(model);
     window.show();
+
+    // Load config after MainWindow has connected its signals
+    model->loadConfig(cfg);
 
     return app.exec();
 }
