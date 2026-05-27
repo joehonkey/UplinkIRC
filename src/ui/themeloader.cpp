@@ -106,48 +106,55 @@ Theme ThemeLoader::load(const QString &name)
 }
 
 // ---------------------------------------------------------------------------
-// QSS generation
+// QSS generation — uses named {{key}} substitution to avoid Qt arg() mangling
 // ---------------------------------------------------------------------------
+
+static QString fill(QString tpl, const QHash<QString, QString> &vars)
+{
+    for (auto it = vars.constBegin(); it != vars.constEnd(); ++it)
+        tpl.replace("{{" + it.key() + "}}", it.value());
+    return tpl;
+}
 
 QString ThemeLoader::toStyleSheet(const Theme &t)
 {
-    return QString(R"(
+    static const QString tpl = R"(
 /* ── Base ── */
 QMainWindow, QDialog, QWidget {
-    background-color: %1;
-    color: %2;
+    background-color: {{bg}};
+    color: {{text}};
 }
 QToolBar {
-    background-color: %1;
-    border-bottom: 1px solid %3;
+    background-color: {{bg}};
+    border-bottom: 1px solid {{border}};
     spacing: 4px;
 }
 QStatusBar {
-    background-color: %1;
-    color: %18;
-    border-top: 1px solid %3;
+    background-color: {{bg}};
+    color: {{srvText}};
+    border-top: 1px solid {{border}};
 }
 QMenuBar {
-    background-color: %1;
-    color: %2;
+    background-color: {{bg}};
+    color: {{text}};
 }
 QMenuBar::item:selected {
-    background-color: %4;
-    color: %2;
+    background-color: {{accent}};
+    color: {{text}};
 }
 QMenu {
-    background-color: %1;
-    color: %2;
-    border: 1px solid %3;
+    background-color: {{bg}};
+    color: {{text}};
+    border: 1px solid {{border}};
 }
 QMenu::item:selected {
-    background-color: %4;
+    background-color: {{accent}};
 }
 
-/* ── Sidebar (server/channel tree) ── */
+/* ── Sidebar ── */
 QTreeWidget {
-    background-color: %5;
-    color: %6;
+    background-color: {{sidebarBg}};
+    color: {{sidebarText}};
     border: none;
     outline: none;
 }
@@ -155,68 +162,67 @@ QTreeWidget::item {
     padding: 2px 4px;
 }
 QTreeWidget::item:selected {
-    background-color: %4;
-    color: %7;
+    background-color: {{accent}};
+    color: {{sidebarActive}};
 }
 QTreeWidget::item:hover {
-    background-color: %3;
+    background-color: {{border}};
 }
 
 /* ── Chat view ── */
 QTextEdit {
-    background-color: %10;
-    color: %2;
+    background-color: {{bufferBg}};
+    color: {{text}};
     border: none;
-    selection-background-color: %4;
+    selection-background-color: {{accent}};
 }
 
 /* ── Nick list ── */
 QListWidget {
-    background-color: %16;
-    color: %17;
+    background-color: {{nicklistBg}};
+    color: {{nicklistText}};
     border: none;
     outline: none;
 }
 QListWidget::item:selected {
-    background-color: %4;
-    color: %7;
+    background-color: {{accent}};
+    color: {{sidebarActive}};
 }
 QListWidget::item:hover {
-    background-color: %3;
+    background-color: {{border}};
 }
 
 /* ── Input bar ── */
 QLineEdit {
-    background-color: %20;
-    color: %21;
+    background-color: {{inputBg}};
+    color: {{inputText}};
     border: none;
-    border-top: 1px solid %3;
+    border-top: 1px solid {{border}};
     padding: 4px 6px;
-    selection-background-color: %4;
+    selection-background-color: {{accent}};
 }
-QLineEdit::placeholder {
-    color: %22;
+QLineEdit::placeholder-text {
+    color: {{placeholder}};
 }
 
 /* ── Dock widgets ── */
 QDockWidget {
-    color: %2;
-    titlebar-close-icon: none;
+    color: {{text}};
 }
 QDockWidget::title {
-    background-color: %5;
+    background-color: {{sidebarBg}};
     padding: 4px;
-    border-bottom: 1px solid %3;
+    border-bottom: 1px solid {{border}};
 }
 
 /* ── Scroll bars ── */
 QScrollBar:vertical {
-    background: %1;
+    background: {{bg}};
     width: 8px;
     border: none;
 }
 QScrollBar::handle:vertical {
-    background: %3;
+    background: {{border}};
     border-radius: 4px;
     min-height: 20px;
 }
@@ -225,65 +231,60 @@ QScrollBar:horizontal { height: 0; }
 
 /* ── Splitter ── */
 QSplitter::handle {
-    background: %3;
+    background: {{border}};
 }
 
-/* ── Tool buttons (hamburger) ── */
+/* ── Tool buttons ── */
 QToolButton {
     background: transparent;
-    color: %2;
+    color: {{text}};
     border: none;
     padding: 2px 6px;
     font-size: 16px;
 }
-QToolButton:hover, QToolButton::menu-indicator {
-    background-color: %3;
+QToolButton:hover {
+    background-color: {{border}};
 }
 
 /* ── Labels ── */
 QLabel {
-    color: %2;
+    color: {{text}};
     background: transparent;
 }
 
 /* ── Push buttons ── */
 QPushButton {
-    background-color: %3;
-    color: %2;
-    border: 1px solid %3;
+    background-color: {{border}};
+    color: {{text}};
+    border: 1px solid {{border}};
     border-radius: 3px;
     padding: 4px 12px;
 }
-QPushButton:hover  { background-color: %4; }
-QPushButton:pressed{ background-color: %5; }
+QPushButton:hover   { background-color: {{accent}}; }
+QPushButton:pressed { background-color: {{sidebarBg}}; }
 
 /* ── Dialog buttons ── */
 QDialogButtonBox QPushButton {
     min-width: 70px;
 }
-)")
-    .arg(t.background)    // 1
-    .arg(t.text)          // 2
-    .arg(t.border)        // 3
-    .arg(t.accent)        // 4
-    .arg(t.sidebarBg)     // 5
-    .arg(t.sidebarText)   // 6
-    .arg(t.sidebarActive) // 7
-    .arg(t.sidebarUnread) // 8  (reserved)
-    .arg(t.sidebarMention)// 9  (reserved)
-    .arg(t.bufferBg)      // 10
-    .arg(t.timestamp)     // 11 (reserved)
-    .arg(t.serverLine)    // 12 (reserved)
-    .arg(t.action)        // 13 (reserved)
-    .arg(t.nickSelf)      // 14 (reserved)
-    .arg(t.mentionBg)     // 15 (reserved)
-    .arg(t.nicklistBg)    // 16
-    .arg(t.nicklistText)  // 17
-    .arg(t.sidebarServer) // 18
-    .arg(t.inputBg)       // 19 (reserved)
-    .arg(t.inputBg)       // 20
-    .arg(t.inputText)     // 21
-    .arg(t.placeholder);  // 22
+)";
+
+    return fill(tpl, {
+        {"bg",           t.background},
+        {"text",         t.text},
+        {"border",       t.border},
+        {"accent",       t.accent},
+        {"sidebarBg",    t.sidebarBg},
+        {"sidebarText",  t.sidebarText},
+        {"sidebarActive",t.sidebarActive},
+        {"bufferBg",     t.bufferBg},
+        {"nicklistBg",   t.nicklistBg},
+        {"nicklistText", t.nicklistText},
+        {"inputBg",      t.inputBg},
+        {"inputText",    t.inputText},
+        {"placeholder",  t.placeholder},
+        {"srvText",      t.sidebarServer},
+    });
 }
 
 // ---------------------------------------------------------------------------
