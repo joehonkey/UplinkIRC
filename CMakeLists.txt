@@ -12,6 +12,7 @@ find_package(tomlplusplus REQUIRED)
 qt_standard_project_setup()
 
 qt_add_executable(UplinkIRC
+    resources/resources.qrc
     src/main.cpp
     src/config/config.cpp
     src/config/config.h
@@ -24,6 +25,9 @@ qt_add_executable(UplinkIRC
     src/ui/mainwindow.h
     src/ui/trayicon.cpp
     src/ui/trayicon.h
+    src/ui/aboutdialog.cpp
+    src/ui/aboutdialog.h
+    src/ui/appicons.h
     src/irc/ircclient.cpp
     src/irc/ircclient.h
     src/irc/ircparser.cpp

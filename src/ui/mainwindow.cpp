@@ -1,6 +1,8 @@
 #include "mainwindow.h"
 #include "irc/ircclient.h"
 #include "ui/trayicon.h"
+#include "ui/aboutdialog.h"
+#include "ui/appicons.h"
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -33,6 +35,7 @@ MainWindow::MainWindow(SessionModel *model, QWidget *parent)
     , m_model(model)
 {
     setWindowTitle("UplinkIRC");
+    setWindowIcon(AppIcons::platformIcon());
     resize(1100, 700);
     setDockOptions(QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks);
 
@@ -70,7 +73,8 @@ void MainWindow::setupToolbar()
 
     auto *aboutAct = menu->addAction("About UplinkIRC");
     connect(aboutAct, &QAction::triggered, this, [this]{
-        // TODO: about dialog
+        AboutDialog dlg(this);
+        dlg.exec();
     });
 
     menu->addAction("Documentation"); // TODO: open docs

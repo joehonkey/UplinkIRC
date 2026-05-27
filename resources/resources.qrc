@@ -1,0 +1,13 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file alias="linux.png">icons/linux.png</file>
+        <file alias="linux-alt.png">icons/linux-alt.png</file>
+        <file alias="freebsd.png">icons/freebsd.png</file>
+        <file alias="macos.png">icons/macos.png</file>
+        <file alias="macos-alt.png">icons/macos-alt.png</file>
+        <file alias="windows.png">icons/windows.png</file>
+        <file alias="windows-alt.png">icons/windows-alt.png</file>
+        <file alias="about.png">icons/about.png</file>
+        <file alias="logo.png">icons/logo.png</file>
+    </qresource>
+</RCC>

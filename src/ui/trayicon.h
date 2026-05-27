@@ -25,9 +25,12 @@ private:
     void buildMenu();
     void updateTooltip();
 
+    void updateShowAction();
+
     MainWindow   *m_window;
     SessionModel *m_model;
     QMenu        *m_menu;
-    QAction      *m_toggleAction;
+    QAction      *m_showAction;
+    QIcon         m_baseIcon;
     int           m_totalUnread{0};
 };

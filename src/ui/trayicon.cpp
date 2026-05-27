@@ -1,28 +1,21 @@
 #include "trayicon.h"
 #include "mainwindow.h"
 #include "model/sessionmodel.h"
+#include "ui/appicons.h"
 
 #include <QApplication>
-#include <QIcon>
 #include <QPixmap>
 #include <QPainter>
 
-// Build a simple placeholder icon — a filled circle with "U" until real icons land
-static QIcon makePlaceholderIcon(bool unread = false)
+// Overlay a red dot on the icon to signal unread messages
+static QIcon withUnreadBadge(const QIcon &base)
 {
-    QPixmap pm(32, 32);
-    pm.fill(Qt::transparent);
+    QPixmap pm = base.pixmap(32, 32);
     QPainter p(&pm);
     p.setRenderHint(QPainter::Antialiasing);
-    p.setBrush(unread ? QColor("#e05050") : QColor("#5080e0"));
+    p.setBrush(QColor("#e05050"));
     p.setPen(Qt::NoPen);
-    p.drawEllipse(1, 1, 30, 30);
-    p.setPen(Qt::white);
-    QFont f = p.font();
-    f.setBold(true);
-    f.setPointSize(14);
-    p.setFont(f);
-    p.drawText(pm.rect(), Qt::AlignCenter, "U");
+    p.drawEllipse(20, 0, 11, 11);
     return QIcon(pm);
 }
 
@@ -31,10 +24,12 @@ TrayIcon::TrayIcon(SessionModel *model, MainWindow *window)
     , m_window(window)
     , m_model(model)
 {
-    setIcon(makePlaceholderIcon());
+    m_baseIcon = AppIcons::platformIcon();
+    setIcon(m_baseIcon);
     setToolTip("UplinkIRC");
 
     buildMenu();
+    // Right-click menu only — left click is handled via activated signal
     setContextMenu(m_menu);
 
     connect(this, &QSystemTrayIcon::activated, this, &TrayIcon::onActivated);
@@ -49,40 +44,39 @@ void TrayIcon::buildMenu()
 {
     m_menu = new QMenu;
 
-    m_toggleAction = m_menu->addAction("Hide", this, [this]{
-        if (m_window->isVisible()) {
-            m_window->hide();
-            m_toggleAction->setText("Show");
-        } else {
-            m_window->show();
-            m_window->raise();
-            m_window->activateWindow();
-            m_toggleAction->setText("Hide");
-        }
+    m_showAction = m_menu->addAction("Show", this, [this]{
+        m_window->show();
+        m_window->raise();
+        m_window->activateWindow();
+        updateShowAction();
     });
 
     m_menu->addSeparator();
     m_menu->addAction("Quit", qApp, &QApplication::quit);
+
+    updateShowAction();
+}
+
+void TrayIcon::updateShowAction()
+{
+    m_showAction->setText(m_window->isVisible() ? "Show" : "Show");
+    // Always labelled "Show" — clicking it always brings the window up
 }
 
 void TrayIcon::onActivated(QSystemTrayIcon::ActivationReason reason)
 {
-    if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick) {
-        if (m_window->isVisible()) {
-            m_window->hide();
-            m_toggleAction->setText("Show");
-        } else {
-            m_window->show();
-            m_window->raise();
-            m_window->activateWindow();
-            m_toggleAction->setText("Hide");
-        }
+    if (reason == QSystemTrayIcon::Trigger) {
+        // Left click — always show and raise
+        m_window->show();
+        m_window->raise();
+        m_window->activateWindow();
     }
+    // Right click is handled automatically by the context menu
 }
 
 void TrayIcon::onServerConnected(const QString &host)
 {
-    setToolTip("UplinkIRC — " + host);
+    Q_UNUSED(host)
     updateTooltip();
 }
 
@@ -94,7 +88,6 @@ void TrayIcon::onServerDisconnected(const QString &host)
 
 void TrayIcon::onUnreadChanged(const QString &, const QString &, int)
 {
-    // Recount total unread across all sessions/channels
     m_totalUnread = 0;
     for (const auto &sess : m_model->sessions())
         for (const auto &ch : sess.channels)
@@ -105,9 +98,10 @@ void TrayIcon::onUnreadChanged(const QString &, const QString &, int)
 
 void TrayIcon::setUnread(bool hasUnread)
 {
-    setIcon(makePlaceholderIcon(hasUnread));
+    setIcon(hasUnread ? withUnreadBadge(m_baseIcon) : m_baseIcon);
     if (hasUnread && !m_window->isVisible())
-        showMessage("UplinkIRC", QString("You have %1 unread message(s)").arg(m_totalUnread),
+        showMessage("UplinkIRC",
+                    QString("%1 unread message(s)").arg(m_totalUnread),
                     QSystemTrayIcon::Information, 3000);
 }
 
@@ -117,8 +111,7 @@ void TrayIcon::updateTooltip()
     for (const auto &sess : m_model->sessions())
         if (sess.connected) connected << sess.host;
 
-    if (connected.isEmpty())
-        setToolTip("UplinkIRC — not connected");
-    else
-        setToolTip("UplinkIRC — " + connected.join(", "));
+    setToolTip(connected.isEmpty()
+               ? "UplinkIRC — not connected"
+               : "UplinkIRC — " + connected.join(", "));
 }
