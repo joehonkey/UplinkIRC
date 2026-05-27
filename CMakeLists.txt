@@ -15,6 +15,11 @@ qt_add_executable(UplinkIRC
     src/main.cpp
     src/config/config.cpp
     src/config/config.h
+    src/model/sessionmodel.cpp
+    src/model/sessionmodel.h
+    src/model/serversession.h
+    src/model/channel.h
+    src/model/message.h
     src/ui/mainwindow.cpp
     src/ui/mainwindow.h
     src/irc/ircclient.cpp
