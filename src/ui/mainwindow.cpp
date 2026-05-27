@@ -1,93 +1,495 @@
 #include "mainwindow.h"
 #include "irc/ircclient.h"
 
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QMenuBar>
+#include <QApplication>
+#include <QToolBar>
+#include <QToolButton>
 #include <QMenu>
 #include <QAction>
+#include <QDockWidget>
+#include <QTreeWidget>
+#include <QListWidget>
+#include <QTextEdit>
+#include <QLineEdit>
+#include <QLabel>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QStatusBar>
-#include <QApplication>
+#include <QMenuBar>
+#include <QSplitter>
+#include <QTextCharFormat>
+#include <QScrollBar>
+#include <QInputDialog>
 
-MainWindow::MainWindow(const Config &cfg, const QString &cfgPath, QWidget *parent)
+// ---------------------------------------------------------------------------
+// Construction
+// ---------------------------------------------------------------------------
+
+MainWindow::MainWindow(SessionModel *model, QWidget *parent)
     : QMainWindow(parent)
-    , m_client(new IrcClient(this))
-    , m_config(cfg)
-    , m_configPath(cfgPath)
+    , m_model(model)
 {
     setWindowTitle("UplinkIRC");
     resize(1100, 700);
-    setupUi();
-    setupMenuBar();
+    setDockOptions(QMainWindow::AllowNestedDocks | QMainWindow::AllowTabbedDocks);
 
-    connect(m_client, &IrcClient::messageReceived, this, &MainWindow::onMessageReceived);
-    connect(m_client, &IrcClient::connected,       this, &MainWindow::onConnected);
-    connect(m_client, &IrcClient::disconnected,    this, &MainWindow::onDisconnected);
+    setupToolbar();
+    setupSidebar();
+    setupNickDock();
+    setupChatArea();   // sets central widget
+    setupInputBar();   // injects input into central widget layout
+    connectModel();
+
+    statusBar()->showMessage("UplinkIRC ready");
 }
 
 MainWindow::~MainWindow() = default;
 
-void MainWindow::setupUi()
+// ---------------------------------------------------------------------------
+// Setup
+// ---------------------------------------------------------------------------
+
+void MainWindow::setupToolbar()
 {
-    m_splitter   = new QSplitter(Qt::Horizontal, this);
-    m_channelList = new QListWidget;
-    m_chatView    = new QTextEdit;
-    m_nickList    = new QListWidget;
-    m_inputBar    = new QLineEdit;
+    auto *tb = addToolBar("Main");
+    tb->setMovable(false);
+    tb->setFloatable(false);
 
-    m_chatView->setReadOnly(true);
-    m_channelList->setMaximumWidth(180);
-    m_nickList->setMaximumWidth(140);
+    // Hamburger
+    m_hamburger = new QToolButton;
+    m_hamburger->setText("☰");
+    m_hamburger->setPopupMode(QToolButton::InstantPopup);
 
-    auto *center = new QWidget;
-    auto *vbox   = new QVBoxLayout(center);
-    vbox->setContentsMargins(0, 0, 0, 0);
-    vbox->setSpacing(2);
-    vbox->addWidget(m_chatView);
-    vbox->addWidget(m_inputBar);
+    auto *menu = new QMenu(m_hamburger);
 
-    m_splitter->addWidget(m_channelList);
-    m_splitter->addWidget(center);
-    m_splitter->addWidget(m_nickList);
-    m_splitter->setStretchFactor(1, 1);
+    auto *aboutAct = menu->addAction("About UplinkIRC");
+    connect(aboutAct, &QAction::triggered, this, [this]{
+        // TODO: about dialog
+    });
 
-    setCentralWidget(m_splitter);
-    statusBar()->showMessage("Not connected");
+    menu->addAction("Documentation"); // TODO: open docs
 
-    connect(m_inputBar, &QLineEdit::returnPressed, this, &MainWindow::onInputSubmit);
+    menu->addSeparator();
+
+    auto *topicAct = menu->addAction("Show Topic Bar");
+    topicAct->setCheckable(true);
+    topicAct->setChecked(m_showTopic);
+    m_toggleTopicAction = topicAct;
+    connect(topicAct, &QAction::toggled, this, [this](bool on){
+        m_showTopic = on;
+        m_topicBar->setVisible(on);
+    });
+
+    auto *nickPrefixAct = menu->addAction("Show Nick in Input");
+    nickPrefixAct->setCheckable(true);
+    nickPrefixAct->setChecked(m_showNickPrefix);
+    connect(nickPrefixAct, &QAction::toggled, this, [this](bool on){
+        m_showNickPrefix = on;
+        m_nickPrefix->setVisible(on);
+    });
+
+    auto *emojiAct = menu->addAction("Show Emoji Button");
+    emojiAct->setCheckable(true);
+    emojiAct->setChecked(m_showEmojiBtn);
+    connect(emojiAct, &QAction::toggled, this, [this](bool on){
+        m_showEmojiBtn = on;
+        m_emojiBtn->setVisible(on);
+    });
+
+    m_hamburger->setMenu(menu);
+    tb->addWidget(m_hamburger);
+
+    // App label
+    auto *appLabel = new QLabel("  Uplink");
+    QFont f = appLabel->font();
+    f.setBold(true);
+    f.setPointSize(f.pointSize() + 1);
+    appLabel->setFont(f);
+    tb->addWidget(appLabel);
+
+    tb->addSeparator();
 }
 
-void MainWindow::setupMenuBar()
+void MainWindow::setupSidebar()
 {
-    auto *fileMenu = menuBar()->addMenu("&File");
-    fileMenu->addAction("&Connect",    this, []{ /* TODO */ });
-    fileMenu->addAction("&Disconnect", this, []{ /* TODO */ });
-    fileMenu->addSeparator();
-    fileMenu->addAction("&Quit", qApp, &QApplication::quit);
+    m_sidebar = new QTreeWidget;
+    m_sidebar->setHeaderHidden(true);
+    m_sidebar->setRootIsDecorated(true);
+    m_sidebar->setIndentation(12);
+    m_sidebar->setMinimumWidth(140);
+    m_sidebar->setMaximumWidth(220);
 
-    auto *helpMenu = menuBar()->addMenu("&Help");
-    helpMenu->addAction("&About UplinkIRC", this, []{ /* TODO */ });
+    auto *dock = new QDockWidget("Servers", this);
+    dock->setWidget(m_sidebar);
+    dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    addDockWidget(Qt::LeftDockWidgetArea, dock);
+
+    connect(m_sidebar, &QTreeWidget::currentItemChanged,
+            this, [this](QTreeWidgetItem *, QTreeWidgetItem *){ onSidebarSelectionChanged(); });
+}
+
+void MainWindow::setupNickDock()
+{
+    m_nickList = new QListWidget;
+    m_nickList->setMinimumWidth(120);
+    m_nickList->setMaximumWidth(180);
+
+    m_nickDock = new QDockWidget("Users", this);
+    m_nickDock->setWidget(m_nickList);
+    m_nickDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    addDockWidget(Qt::RightDockWidgetArea, m_nickDock);
+}
+
+void MainWindow::setupChatArea()
+{
+    auto *central = new QWidget;
+    auto *vbox    = new QVBoxLayout(central);
+    vbox->setContentsMargins(0, 0, 0, 0);
+    vbox->setSpacing(0);
+
+    // Topic bar
+    m_topicBar   = new QWidget;
+    auto *tHbox  = new QHBoxLayout(m_topicBar);
+    tHbox->setContentsMargins(6, 3, 6, 3);
+
+    m_modesLabel = new QLabel;
+    m_modesLabel->setStyleSheet("font-family: monospace; color: gray;");
+    m_topicLabel = new QLabel;
+    m_topicLabel->setWordWrap(false);
+    m_topicLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    m_topicLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+
+    tHbox->addWidget(m_modesLabel);
+    tHbox->addWidget(m_topicLabel, 1);
+    m_topicBar->setVisible(m_showTopic);
+    m_topicBar->setStyleSheet("background: palette(mid);");
+    vbox->addWidget(m_topicBar);
+
+    // Chat view
+    m_chatView = new QTextEdit;
+    m_chatView->setReadOnly(true);
+    m_chatView->setLineWrapMode(QTextEdit::WidgetWidth);
+    vbox->addWidget(m_chatView, 1);
+
+    setCentralWidget(central);
+}
+
+void MainWindow::setupInputBar()
+{
+    // Inject into central widget's layout
+    auto *bar  = new QWidget;
+    auto *hbox = new QHBoxLayout(bar);
+    hbox->setContentsMargins(4, 3, 4, 3);
+    hbox->setSpacing(4);
+
+    m_nickPrefix = new QLabel;
+    m_nickPrefix->setStyleSheet("font-weight: bold; padding-right: 4px;");
+    m_nickPrefix->setVisible(m_showNickPrefix);
+
+    m_input = new QLineEdit;
+    m_input->setPlaceholderText("Type a message...");
+
+    m_emojiBtn = new QPushButton("😊");
+    m_emojiBtn->setFixedWidth(32);
+    m_emojiBtn->setVisible(m_showEmojiBtn);
+
+    hbox->addWidget(m_nickPrefix);
+    hbox->addWidget(m_input, 1);
+    hbox->addWidget(m_emojiBtn);
+
+    bar->setStyleSheet("background: palette(base); border-top: 1px solid palette(mid);");
+
+    auto *layout = qobject_cast<QVBoxLayout *>(centralWidget()->layout());
+    layout->addWidget(bar);
+
+    connect(m_input, &QLineEdit::returnPressed, this, &MainWindow::onInputSubmit);
+}
+
+void MainWindow::connectModel()
+{
+    connect(m_model, &SessionModel::serverAdded,       this, &MainWindow::onServerAdded);
+    connect(m_model, &SessionModel::serverConnected,   this, &MainWindow::onServerConnected);
+    connect(m_model, &SessionModel::serverDisconnected,this, &MainWindow::onServerDisconnected);
+    connect(m_model, &SessionModel::channelAdded,      this, &MainWindow::onChannelAdded);
+    connect(m_model, &SessionModel::channelRemoved,    this, &MainWindow::onChannelRemoved);
+    connect(m_model, &SessionModel::messageAdded,      this, &MainWindow::onMessageAdded);
+    connect(m_model, &SessionModel::topicChanged,      this, &MainWindow::onTopicChanged);
+    connect(m_model, &SessionModel::nickListChanged,   this, &MainWindow::onNickListChanged);
+    connect(m_model, &SessionModel::unreadChanged,     this, &MainWindow::onUnreadChanged);
+    connect(m_model, &SessionModel::selfNickChanged,   this, &MainWindow::onSelfNickChanged);
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar helpers
+// ---------------------------------------------------------------------------
+
+QTreeWidgetItem *MainWindow::findServerItem(const QString &host) const
+{
+    for (int i = 0; i < m_sidebar->topLevelItemCount(); ++i) {
+        auto *item = m_sidebar->topLevelItem(i);
+        if (item->data(0, Qt::UserRole).toString() == host)
+            return item;
+    }
+    return nullptr;
+}
+
+QTreeWidgetItem *MainWindow::findChannelItem(const QString &host, const QString &channel) const
+{
+    auto *srv = findServerItem(host);
+    if (!srv) return nullptr;
+    for (int i = 0; i < srv->childCount(); ++i) {
+        auto *item = srv->child(i);
+        if (item->data(0, Qt::UserRole + 1).toString().toLower() == channel.toLower())
+            return item;
+    }
+    return nullptr;
+}
+
+// ---------------------------------------------------------------------------
+// Model → UI slots
+// ---------------------------------------------------------------------------
+
+void MainWindow::onServerAdded(const QString &host)
+{
+    if (findServerItem(host)) return;
+    auto *item = new QTreeWidgetItem(m_sidebar);
+    item->setText(0, host);
+    item->setData(0, Qt::UserRole, host);
+    item->setExpanded(true);
+    // Add "(server)" pseudo-channel
+    auto *srvBuf = new QTreeWidgetItem(item);
+    srvBuf->setText(0, "(server)");
+    srvBuf->setData(0, Qt::UserRole,     host);
+    srvBuf->setData(0, Qt::UserRole + 1, "(server)");
+}
+
+void MainWindow::onServerConnected(const QString &host)
+{
+    auto *item = findServerItem(host);
+    if (item) item->setText(0, host);
+    statusBar()->showMessage("Connected to " + host);
+}
+
+void MainWindow::onServerDisconnected(const QString &host)
+{
+    auto *item = findServerItem(host);
+    if (item) item->setText(0, host + " (disconnected)");
+    statusBar()->showMessage("Disconnected from " + host);
+}
+
+void MainWindow::onChannelAdded(const QString &host, const QString &channel)
+{
+    if (findChannelItem(host, channel)) return;
+    auto *srv = findServerItem(host);
+    if (!srv) return;
+    auto *item = new QTreeWidgetItem(srv);
+    item->setText(0, channel);
+    item->setData(0, Qt::UserRole,     host);
+    item->setData(0, Qt::UserRole + 1, channel);
+
+    // Auto-select first real channel
+    if (m_model->activeChannel().isEmpty() && channel != "(server)") {
+        m_sidebar->setCurrentItem(item);
+        switchToChannel(host, channel);
+    }
+}
+
+void MainWindow::onChannelRemoved(const QString &host, const QString &channel)
+{
+    auto *item = findChannelItem(host, channel);
+    if (item) delete item;
+}
+
+void MainWindow::onMessageAdded(const QString &host, const QString &channel, const Message &msg)
+{
+    if (host == m_model->activeHost() &&
+        channel.toLower() == m_model->activeChannel().toLower())
+    {
+        appendMessage(msg);
+    }
+}
+
+void MainWindow::onTopicChanged(const QString &host, const QString &channel, const QString &topic)
+{
+    if (host == m_model->activeHost() &&
+        channel.toLower() == m_model->activeChannel().toLower())
+    {
+        m_topicLabel->setText(topic);
+    }
+}
+
+void MainWindow::onNickListChanged(const QString &host, const QString &channel)
+{
+    if (host != m_model->activeHost() ||
+        channel.toLower() != m_model->activeChannel().toLower()) return;
+    refreshNickList(host, channel);
+}
+
+void MainWindow::onUnreadChanged(const QString &host, const QString &channel, int count)
+{
+    auto *item = findChannelItem(host, channel);
+    if (!item) return;
+    if (count > 0)
+        item->setText(0, channel + " (" + QString::number(count) + ")");
+    else
+        item->setText(0, channel);
+}
+
+void MainWindow::onSelfNickChanged(const QString &host, const QString &nick)
+{
+    if (host == m_model->activeHost())
+        m_nickPrefix->setText(nick);
+}
+
+// ---------------------------------------------------------------------------
+// UI → Model
+// ---------------------------------------------------------------------------
+
+void MainWindow::onSidebarSelectionChanged()
+{
+    auto *item = m_sidebar->currentItem();
+    if (!item) return;
+    const QString host    = item->data(0, Qt::UserRole).toString();
+    const QString channel = item->data(0, Qt::UserRole + 1).toString();
+    if (host.isEmpty() || channel.isEmpty()) return;
+    switchToChannel(host, channel);
 }
 
 void MainWindow::onInputSubmit()
 {
-    const QString text = m_inputBar->text().trimmed();
+    const QString text = m_input->text().trimmed();
     if (text.isEmpty()) return;
-    m_inputBar->clear();
-    // TODO: route to active channel / command parser
+    m_input->clear();
+
+    const QString host    = m_model->activeHost();
+    const QString channel = m_model->activeChannel();
+    if (host.isEmpty() || channel.isEmpty()) return;
+
+    if (text.startsWith('/')) {
+        // Minimal command handling
+        const QString cmd  = text.section(' ', 0, 0).toLower();
+        const QString args = text.section(' ', 1);
+
+        if (cmd == "/join") {
+            m_model->sendJoin(host, args.section(' ', 0, 0), args.section(' ', 1, 1));
+        } else if (cmd == "/part") {
+            m_model->sendPart(host, channel, args);
+        } else if (cmd == "/nick") {
+            m_model->sendNick(host, args.trimmed());
+        } else if (cmd == "/me") {
+            m_model->sendAction(host, channel, args);
+        } else if (cmd == "/msg") {
+            const QString target  = args.section(' ', 0, 0);
+            const QString message = args.section(' ', 1);
+            m_model->sendMessage(host, target, message);
+        } else if (cmd == "/quote" || cmd == "/raw") {
+            m_model->sendRaw(host, args);
+        } else if (cmd == "/quit") {
+            if (auto *cl = m_model->clientFor(host)) cl->quit(args.isEmpty() ? "UplinkIRC" : args);
+        } else {
+            appendMessage(Message::make(MessageType::Error, "", "Unknown command: " + cmd));
+        }
+        return;
+    }
+
+    if (channel == "(server)") return; // can't message server buffer
+    m_model->sendMessage(host, channel, text);
 }
 
-void MainWindow::onMessageReceived(const QString &, const QString &, const QString &nick, const QString &text)
+// ---------------------------------------------------------------------------
+// View helpers
+// ---------------------------------------------------------------------------
+
+void MainWindow::switchToChannel(const QString &host, const QString &channel)
 {
-    m_chatView->append(QString("<%1> %2").arg(nick, text));
+    m_model->setActive(host, channel);
+    refreshChatView(host, channel);
+    refreshNickList(host, channel);
+    refreshTopicBar(host, channel);
+
+    // Update nick prefix label
+    if (auto *sess = m_model->session(host))
+        m_nickPrefix->setText(sess->nick);
+
+    setWindowTitle("UplinkIRC — " + channel + " @ " + host);
 }
 
-void MainWindow::onConnected(const QString &server)
+void MainWindow::refreshChatView(const QString &host, const QString &channel)
 {
-    statusBar()->showMessage("Connected to " + server);
+    m_chatView->clear();
+    auto *ch = m_model->channel(host, channel);
+    if (!ch) return;
+    for (const auto &msg : std::as_const(ch->messages))
+        appendMessage(msg);
 }
 
-void MainWindow::onDisconnected(const QString &server)
+void MainWindow::refreshNickList(const QString &host, const QString &channel)
 {
-    statusBar()->showMessage("Disconnected from " + server);
+    m_nickList->clear();
+    auto *ch = m_model->channel(host, channel);
+    if (!ch) return;
+    for (const auto &e : std::as_const(ch->nicks))
+        m_nickList->addItem(e.display());
+    m_nickDock->setWindowTitle(
+        QString("Users (%1)").arg(ch->nicks.size()));
+}
+
+void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
+{
+    auto *ch = m_model->channel(host, channel);
+    m_topicLabel->setText(ch ? ch->topic  : QString());
+    m_modesLabel->setText(ch ? ch->modes  : QString());
+}
+
+void MainWindow::appendMessage(const Message &msg)
+{
+    m_chatView->append(formatMessage(msg));
+    // Keep scroll pinned to bottom
+    auto *sb = m_chatView->verticalScrollBar();
+    sb->setValue(sb->maximum());
+}
+
+QString MainWindow::formatMessage(const Message &msg) const
+{
+    const QString ts = msg.timestamp.toString("hh:mm");
+
+    auto wrap = [](const QString &color, const QString &text) {
+        return QString("<span style='color:%1'>%2</span>").arg(color, text.toHtmlEscaped());
+    };
+
+    switch (msg.type) {
+    case MessageType::Privmsg:
+        return QString("<span style='color:gray'>%1</span> "
+                       "<b>&lt;%2&gt;</b> %3")
+            .arg(ts, msg.nick.toHtmlEscaped(), msg.text.toHtmlEscaped());
+
+    case MessageType::Action:
+        return QString("<span style='color:gray'>%1</span> "
+                       "<i>* %2 %3</i>")
+            .arg(ts, msg.nick.toHtmlEscaped(), msg.text.toHtmlEscaped());
+
+    case MessageType::Notice:
+        return QString("<span style='color:gray'>%1</span> "
+                       "<span style='color:#cc8800'>-%2- %3</span>")
+            .arg(ts, msg.nick.toHtmlEscaped(), msg.text.toHtmlEscaped());
+
+    case MessageType::Join:
+        return wrap("seagreen",  ts + " → " + msg.text);
+    case MessageType::Part:
+        return wrap("firebrick", ts + " ← " + msg.text);
+    case MessageType::Quit:
+        return wrap("firebrick", ts + " ✕ " + msg.text);
+    case MessageType::Nick:
+        return wrap("steelblue", ts + " ~ "  + msg.text);
+    case MessageType::Kick:
+        return wrap("firebrick", ts + " ✕ " + msg.text);
+    case MessageType::Topic:
+        return wrap("steelblue", ts + " ⦁ Topic: " + msg.text);
+    case MessageType::Error:
+        return wrap("red",       ts + " !! " + msg.text);
+    case MessageType::Server:
+    default:
+        return wrap("gray",      ts + " * "  + msg.text);
+    }
 }

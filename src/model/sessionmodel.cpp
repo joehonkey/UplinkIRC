@@ -36,6 +36,57 @@ Channel *SessionModel::channel(const QString &host, const QString &name)
     return s ? s->get(name) : nullptr;
 }
 
+IrcClient *SessionModel::clientFor(const QString &host)
+{
+    for (IrcClient *cl : m_clients)
+        if (cl->host() == host) return cl;
+    return nullptr;
+}
+
+void SessionModel::sendMessage(const QString &host, const QString &target, const QString &text)
+{
+    auto *cl = clientFor(host);
+    if (!cl) return;
+    cl->privmsg(target, text);
+    // Echo own message into the model
+    auto *sess = session(host);
+    if (sess)
+        postMessage(host, target, Message::make(MessageType::Privmsg, sess->nick, text));
+}
+
+void SessionModel::sendRaw(const QString &host, const QString &line)
+{
+    auto *cl = clientFor(host);
+    if (cl) cl->sendRaw(line);
+}
+
+void SessionModel::sendJoin(const QString &host, const QString &channel, const QString &key)
+{
+    auto *cl = clientFor(host);
+    if (cl) cl->join(channel, key);
+}
+
+void SessionModel::sendPart(const QString &host, const QString &channel, const QString &reason)
+{
+    auto *cl = clientFor(host);
+    if (cl) cl->part(channel, reason);
+}
+
+void SessionModel::sendNick(const QString &host, const QString &nick)
+{
+    auto *cl = clientFor(host);
+    if (cl) cl->setNick(nick);
+}
+
+void SessionModel::sendAction(const QString &host, const QString &target, const QString &text)
+{
+    auto *cl = clientFor(host);
+    if (!cl) return;
+    cl->privmsg(target, "\x01""ACTION " + text + "\x01");
+    if (auto *sess = session(host))
+        postMessage(host, target, Message::make(MessageType::Action, sess->nick, text));
+}
+
 void SessionModel::setActive(const QString &host, const QString &ch)
 {
     m_activeHost    = host;

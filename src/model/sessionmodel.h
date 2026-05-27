@@ -27,6 +27,15 @@ public:
     QString activeHost()    const { return m_activeHost; }
     QString activeChannel() const { return m_activeChannel; }
 
+    // Send on behalf of a session
+    void sendMessage(const QString &host, const QString &target, const QString &text);
+    void sendRaw    (const QString &host, const QString &line);
+    void sendJoin   (const QString &host, const QString &channel, const QString &key = {});
+    void sendPart   (const QString &host, const QString &channel, const QString &reason = {});
+    void sendNick   (const QString &host, const QString &nick);
+    void sendAction (const QString &host, const QString &target, const QString &text);
+    IrcClient *clientFor(const QString &host);
+
 signals:
     // Structural changes — sidebar needs a repaint
     void serverAdded    (const QString &host);
