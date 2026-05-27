@@ -1,4 +1,6 @@
-# UplinkIRC
+<p align="center">
+  <img src="docs/about.png" alt="UplinkIRC" width="480" />
+</p>
 
 A fast, secure, IRCv3-featured IRC client built with Qt6 and C++.  
 Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
