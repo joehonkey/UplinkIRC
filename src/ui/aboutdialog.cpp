@@ -9,16 +9,16 @@ AboutDialog::AboutDialog(QWidget *parent)
     : QDialog(parent)
 {
     setWindowTitle("About UplinkIRC");
-    setWindowIcon(AppIcons::aboutIcon());
-    setFixedSize(400, 320);
+    setWindowIcon(AppIcons::appIcon());
+    setFixedSize(460, 280);
 
     auto *layout = new QVBoxLayout(this);
-    layout->setSpacing(12);
-    layout->setContentsMargins(24, 24, 24, 16);
+    layout->setSpacing(10);
+    layout->setContentsMargins(24, 20, 24, 16);
 
-    // Brand image
+    // Brand image — About.png is a wide horizontal logo
     auto *logo = new QLabel;
-    logo->setPixmap(AppIcons::aboutIcon().pixmap(320, 120));
+    logo->setPixmap(AppIcons::aboutIcon().pixmap(400, 100));
     logo->setAlignment(Qt::AlignCenter);
     layout->addWidget(logo);
 

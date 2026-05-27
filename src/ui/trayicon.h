@@ -14,6 +14,7 @@ public:
     explicit TrayIcon(SessionModel *model, MainWindow *window);
 
     void setUnread(bool hasUnread);
+    void setBaseIcon(const QIcon &icon);
 
 private slots:
     void onActivated(QSystemTrayIcon::ActivationReason reason);

@@ -24,7 +24,7 @@ TrayIcon::TrayIcon(SessionModel *model, MainWindow *window)
     , m_window(window)
     , m_model(model)
 {
-    m_baseIcon = AppIcons::platformIcon();
+    m_baseIcon = AppIcons::appIcon();
     setIcon(m_baseIcon);
     setToolTip("UplinkIRC");
 
@@ -55,6 +55,12 @@ void TrayIcon::buildMenu()
     m_menu->addAction("Quit", qApp, &QApplication::quit);
 
     updateShowAction();
+}
+
+void TrayIcon::setBaseIcon(const QIcon &icon)
+{
+    m_baseIcon = icon;
+    setIcon(m_totalUnread > 0 ? withUnreadBadge(m_baseIcon) : m_baseIcon);
 }
 
 void TrayIcon::updateShowAction()

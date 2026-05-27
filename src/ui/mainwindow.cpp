@@ -37,7 +37,7 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
     , m_config(cfg)
 {
     setWindowTitle("UplinkIRC");
-    setWindowIcon(AppIcons::platformIcon());
+    setWindowIcon(AppIcons::appIcon());
     resize(1100, 700);
 
     ThemeLoader::apply(m_config.ui.theme);
@@ -82,6 +82,26 @@ void MainWindow::setupToolbar()
     });
 
     menu->addAction("Documentation"); // TODO: open docs
+
+    // App icon picker
+    auto *iconMenu = menu->addMenu("App Icon");
+    auto *iconDefault = iconMenu->addAction("Default");
+    auto *iconAlt     = iconMenu->addAction("Alternative");
+    iconDefault->setCheckable(true);
+    iconAlt->setCheckable(true);
+    iconDefault->setChecked(AppIcons::activeIconName() == "maindefault");
+    iconAlt->setChecked(AppIcons::activeIconName() == "mainalt");
+
+    auto applyIcon = [this, iconDefault, iconAlt](const QString &name) {
+        AppIcons::setActiveIconName(name);
+        const QIcon icon = AppIcons::appIcon();
+        setWindowIcon(icon);
+        if (m_tray) m_tray->setBaseIcon(icon);
+        iconDefault->setChecked(name == "maindefault");
+        iconAlt->setChecked(name == "mainalt");
+    };
+    connect(iconDefault, &QAction::triggered, this, [applyIcon]{ applyIcon("maindefault"); });
+    connect(iconAlt,     &QAction::triggered, this, [applyIcon]{ applyIcon("mainalt"); });
 
     // Theme picker submenu
     auto *themeMenu = menu->addMenu("Theme");
