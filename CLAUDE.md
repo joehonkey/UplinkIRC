@@ -6,6 +6,11 @@
 - **Purpose:** Fast, secure, IRCv3-featured IRC client for LinuxDojo.org and general use
 - **Owner:** joehonkey
 
+## Default Network
+- **Server:** LinuxDojo — `irc.linuxdojo.org:6697` (SSL)
+- **Default channel:** `#uplinkirc`
+- **Config template:** `config.toml.example` — auto-copied to `~/.config/uplinkirc/config.toml` on first launch
+
 ## Key Directories
 - `src/irc/` — IRC protocol layer (parser, client, cap negotiation)
 - `src/ui/` — Qt Widgets UI (main window, panels, dialogs)

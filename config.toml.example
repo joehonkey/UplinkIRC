@@ -1,0 +1,11 @@
+[server]
+name    = "LinuxDojo"
+host    = "irc.linuxdojo.org"
+port    = 6697
+ssl     = true
+nick    = "yournick"
+user    = "uplink"
+real    = "UplinkIRC User"
+
+[[server.channels]]
+name    = "#uplinkirc"
