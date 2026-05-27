@@ -60,6 +60,7 @@ Config Config::load(const QString &path)
         // [ui]
         if (auto ui = tbl["ui"].as_table()) {
             cfg.ui.theme           = QString::fromStdString((*ui)["theme"].value_or<std::string>("default"));
+            cfg.ui.icon            = QString::fromStdString((*ui)["icon"].value_or<std::string>("maindefault"));
             cfg.ui.showNickPrefix  = (*ui)["show_nick_prefix"].value_or(true);
             cfg.ui.showTopic       = (*ui)["show_topic"].value_or(true);
             cfg.ui.showEmojiButton = (*ui)["show_emoji_button"].value_or(false);
@@ -119,6 +120,7 @@ void Config::save(const Config &cfg, const QString &path)
 
     out << "[ui]\n";
     out << "theme             = \"" << cfg.ui.theme << "\"\n";
+    out << "icon              = \"" << cfg.ui.icon  << "\"\n";
     out << "show_nick_prefix  = " << (cfg.ui.showNickPrefix  ? "true" : "false") << "\n";
     out << "show_topic        = " << (cfg.ui.showTopic       ? "true" : "false") << "\n";
     out << "show_emoji_button = " << (cfg.ui.showEmojiButton ? "true" : "false") << "\n";

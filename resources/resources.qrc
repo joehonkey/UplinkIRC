@@ -5,4 +5,11 @@
         <file alias="about.png">icons/about.png</file>
         <file alias="about1.png">icons/about1.png</file>
     </qresource>
+    <qresource prefix="/docs">
+        <file alias="configuration.md">../docs/configuration.md</file>
+        <file alias="commands.md">../docs/commands.md</file>
+        <file alias="ircv3.md">../docs/ircv3.md</file>
+        <file alias="faq.md">../docs/faq.md</file>
+        <file alias="keyboard-shortcuts.md">../docs/keyboard-shortcuts.md</file>
+    </qresource>
 </RCC>

@@ -2,11 +2,14 @@
 #include "irc/ircclient.h"
 #include "ui/trayicon.h"
 #include "ui/aboutdialog.h"
+#include "ui/docsdialog.h"
 #include "ui/appicons.h"
 #include "ui/themeloader.h"
+#include "config/config.h"
 
 #include <QApplication>
 #include <QCloseEvent>
+#include <QKeyEvent>
 #include <QToolBar>
 #include <QToolButton>
 #include <QMenu>
@@ -14,6 +17,7 @@
 #include <QDockWidget>
 #include <QTreeWidget>
 #include <QListWidget>
+#include <QListWidgetItem>
 #include <QTextEdit>
 #include <QLineEdit>
 #include <QLabel>
@@ -28,6 +32,22 @@
 #include <QInputDialog>
 
 // ---------------------------------------------------------------------------
+// Nick color — consistent hash-based color per nick
+// ---------------------------------------------------------------------------
+
+QColor MainWindow::nickColor(const QString &nick)
+{
+    static const char *palette[] = {
+        "#e06c75", "#98c379", "#e5c07b", "#61afef",
+        "#c678dd", "#56b6c2", "#d19a66", "#7ec8a0",
+        "#ff7b72", "#79c0ff", "#ffa657", "#85e89d",
+        "#f78166", "#58a6ff", "#d4a0f5", "#4db5bd",
+    };
+    static constexpr int N = int(sizeof(palette) / sizeof(palette[0]));
+    return QColor(palette[qHash(nick.toLower()) % N]);
+}
+
+// ---------------------------------------------------------------------------
 // Construction
 // ---------------------------------------------------------------------------
 
@@ -36,6 +56,14 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
     , m_model(model)
     , m_config(cfg)
 {
+    // Init UI toggles from config
+    m_showNickPrefix = cfg.ui.showNickPrefix;
+    m_showTopic      = cfg.ui.showTopic;
+    m_showEmojiBtn   = cfg.ui.showEmojiButton;
+
+    // Sync icon preference from config (config takes precedence over QSettings)
+    AppIcons::setActiveIconName(m_config.ui.icon);
+
     setWindowTitle("UplinkIRC");
     setWindowIcon(AppIcons::appIcon());
     resize(1100, 700);
@@ -46,8 +74,8 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
     setupToolbar();
     setupSidebar();
     setupNickDock();
-    setupChatArea();   // sets central widget
-    setupInputBar();   // injects input into central widget layout
+    setupChatArea();
+    setupInputBar();
     connectModel();
 
     if (QSystemTrayIcon::isSystemTrayAvailable())
@@ -68,81 +96,100 @@ void MainWindow::setupToolbar()
     tb->setMovable(false);
     tb->setFloatable(false);
 
-    // Hamburger
     m_hamburger = new QToolButton;
     m_hamburger->setText("☰");
     m_hamburger->setPopupMode(QToolButton::InstantPopup);
 
     auto *menu = new QMenu(m_hamburger);
 
+    // About
     auto *aboutAct = menu->addAction("About UplinkIRC");
     connect(aboutAct, &QAction::triggered, this, [this]{
         AboutDialog dlg(this);
         dlg.exec();
     });
 
-    menu->addAction("Documentation"); // TODO: open docs
+    // Documentation
+    auto *docsAct = menu->addAction("Documentation");
+    connect(docsAct, &QAction::triggered, this, [this]{
+        if (!m_docsDialog)
+            m_docsDialog = new DocsDialog(this);
+        m_docsDialog->show();
+        m_docsDialog->raise();
+        m_docsDialog->activateWindow();
+    });
 
     // App icon picker
-    auto *iconMenu = menu->addMenu("App Icon");
+    auto *iconMenu    = menu->addMenu("App Icon");
     auto *iconDefault = iconMenu->addAction("Default");
     auto *iconAlt     = iconMenu->addAction("Alternative");
     iconDefault->setCheckable(true);
     iconAlt->setCheckable(true);
-    iconDefault->setChecked(AppIcons::activeIconName() == "maindefault");
-    iconAlt->setChecked(AppIcons::activeIconName() == "mainalt");
+    iconDefault->setChecked(m_config.ui.icon == "maindefault");
+    iconAlt->setChecked(m_config.ui.icon == "mainalt");
 
     auto applyIcon = [this, iconDefault, iconAlt](const QString &name) {
         AppIcons::setActiveIconName(name);
+        m_config.ui.icon = name;
         const QIcon icon = AppIcons::appIcon();
         setWindowIcon(icon);
         if (m_tray) m_tray->setBaseIcon(icon);
         iconDefault->setChecked(name == "maindefault");
         iconAlt->setChecked(name == "mainalt");
+        Config::save(m_config, Config::defaultPath());
     };
     connect(iconDefault, &QAction::triggered, this, [applyIcon]{ applyIcon("maindefault"); });
     connect(iconAlt,     &QAction::triggered, this, [applyIcon]{ applyIcon("mainalt"); });
 
-    // Theme picker submenu
+    // Theme picker
     auto *themeMenu = menu->addMenu("Theme");
     for (const QString &name : ThemeLoader::availableThemes()) {
         themeMenu->addAction(name, this, [this, name]{
             m_config.ui.theme = name;
             ThemeLoader::apply(name);
+            Config::save(m_config, Config::defaultPath());
         });
     }
 
     menu->addSeparator();
 
+    // Topic toggle
     auto *topicAct = menu->addAction("Show Topic Bar");
     topicAct->setCheckable(true);
     topicAct->setChecked(m_showTopic);
     m_toggleTopicAction = topicAct;
     connect(topicAct, &QAction::toggled, this, [this](bool on){
         m_showTopic = on;
+        m_config.ui.showTopic = on;
         m_topicBar->setVisible(on);
+        Config::save(m_config, Config::defaultPath());
     });
 
+    // Nick prefix toggle
     auto *nickPrefixAct = menu->addAction("Show Nick in Input");
     nickPrefixAct->setCheckable(true);
     nickPrefixAct->setChecked(m_showNickPrefix);
     connect(nickPrefixAct, &QAction::toggled, this, [this](bool on){
         m_showNickPrefix = on;
+        m_config.ui.showNickPrefix = on;
         m_nickPrefix->setVisible(on);
+        Config::save(m_config, Config::defaultPath());
     });
 
+    // Emoji button toggle
     auto *emojiAct = menu->addAction("Show Emoji Button");
     emojiAct->setCheckable(true);
     emojiAct->setChecked(m_showEmojiBtn);
     connect(emojiAct, &QAction::toggled, this, [this](bool on){
         m_showEmojiBtn = on;
+        m_config.ui.showEmojiButton = on;
         m_emojiBtn->setVisible(on);
+        Config::save(m_config, Config::defaultPath());
     });
 
     m_hamburger->setMenu(menu);
     tb->addWidget(m_hamburger);
 
-    // App label
     auto *appLabel = new QLabel("  Uplink");
     QFont f = appLabel->font();
     f.setBold(true);
@@ -191,8 +238,8 @@ void MainWindow::setupChatArea()
     vbox->setSpacing(0);
 
     // Topic bar
-    m_topicBar   = new QWidget;
-    auto *tHbox  = new QHBoxLayout(m_topicBar);
+    m_topicBar  = new QWidget;
+    auto *tHbox = new QHBoxLayout(m_topicBar);
     tHbox->setContentsMargins(6, 3, 6, 3);
 
     m_modesLabel = new QLabel;
@@ -219,7 +266,6 @@ void MainWindow::setupChatArea()
 
 void MainWindow::setupInputBar()
 {
-    // Inject into central widget's layout
     auto *bar  = new QWidget;
     auto *hbox = new QHBoxLayout(bar);
     hbox->setContentsMargins(4, 3, 4, 3);
@@ -231,6 +277,7 @@ void MainWindow::setupInputBar()
 
     m_input = new QLineEdit;
     m_input->setPlaceholderText("Type a message...");
+    m_input->installEventFilter(this);
 
     m_emojiBtn = new QPushButton("😊");
     m_emojiBtn->setFixedWidth(32);
@@ -260,6 +307,101 @@ void MainWindow::connectModel()
     connect(m_model, &SessionModel::nickListChanged,   this, &MainWindow::onNickListChanged);
     connect(m_model, &SessionModel::unreadChanged,     this, &MainWindow::onUnreadChanged);
     connect(m_model, &SessionModel::selfNickChanged,   this, &MainWindow::onSelfNickChanged);
+}
+
+// ---------------------------------------------------------------------------
+// Event filter — Tab completion + input history
+// ---------------------------------------------------------------------------
+
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+    if (obj != m_input || event->type() != QEvent::KeyPress)
+        return QMainWindow::eventFilter(obj, event);
+
+    auto *ke = static_cast<QKeyEvent *>(event);
+
+    if (ke->key() == Qt::Key_Tab) {
+        handleTabComplete();
+        return true;
+    }
+
+    // Any non-Tab key resets completion cycle
+    m_tabActive = false;
+    m_tabCandidates.clear();
+
+    if (ke->key() == Qt::Key_Up) {
+        handleHistoryUp();
+        return true;
+    }
+    if (ke->key() == Qt::Key_Down) {
+        handleHistoryDown();
+        return true;
+    }
+
+    return QMainWindow::eventFilter(obj, event);
+}
+
+void MainWindow::handleTabComplete()
+{
+    const QString text = m_input->text();
+    const int pos = m_input->cursorPosition();
+
+    // Find start of word before cursor
+    const int wordStart = text.lastIndexOf(' ', pos - 1) + 1;
+    const QString prefix = text.mid(wordStart, pos - wordStart);
+
+    if (prefix.isEmpty()) return;
+
+    // Build candidate list if this is a new cycle or prefix changed
+    if (!m_tabActive || prefix != m_tabPrefix) {
+        m_tabPrefix = prefix;
+        m_tabCandidates.clear();
+        m_tabCandidateIndex = 0;
+        m_tabActive = true;
+
+        auto *ch = m_model->channel(m_model->activeHost(), m_model->activeChannel());
+        if (ch) {
+            for (const auto &e : std::as_const(ch->nicks))
+                if (e.nick.startsWith(prefix, Qt::CaseInsensitive))
+                    m_tabCandidates << e.nick;
+        }
+    }
+
+    if (m_tabCandidates.isEmpty()) return;
+
+    const QString completed = m_tabCandidates[m_tabCandidateIndex];
+    m_tabCandidateIndex = (m_tabCandidateIndex + 1) % m_tabCandidates.size();
+
+    // Suffix: ": " at start of line, " " otherwise (only when at end of input)
+    QString suffix;
+    if (pos == text.length())
+        suffix = (wordStart == 0) ? QStringLiteral(": ") : QStringLiteral(" ");
+
+    m_input->setText(text.left(wordStart) + completed + suffix + text.mid(pos));
+    m_input->setCursorPosition(wordStart + completed.length() + suffix.length());
+}
+
+void MainWindow::handleHistoryUp()
+{
+    if (m_inputHistory.isEmpty()) return;
+    if (m_historyIndex == -1)
+        m_historyDraft = m_input->text();
+    m_historyIndex = qMin(m_historyIndex + 1, m_inputHistory.size() - 1);
+    m_input->setText(m_inputHistory[m_historyIndex]);
+    m_input->end(false);
+}
+
+void MainWindow::handleHistoryDown()
+{
+    if (m_historyIndex == -1) return;
+    m_historyIndex--;
+    if (m_historyIndex < 0) {
+        m_historyIndex = -1;
+        m_input->setText(m_historyDraft);
+    } else {
+        m_input->setText(m_inputHistory[m_historyIndex]);
+    }
+    m_input->end(false);
 }
 
 // ---------------------------------------------------------------------------
@@ -299,7 +441,6 @@ void MainWindow::onServerAdded(const QString &host)
     item->setText(0, host);
     item->setData(0, Qt::UserRole, host);
     item->setExpanded(true);
-    // Add "(server)" pseudo-channel
     auto *srvBuf = new QTreeWidgetItem(item);
     srvBuf->setText(0, "(server)");
     srvBuf->setData(0, Qt::UserRole,     host);
@@ -330,7 +471,6 @@ void MainWindow::onChannelAdded(const QString &host, const QString &channel)
     item->setData(0, Qt::UserRole,     host);
     item->setData(0, Qt::UserRole + 1, channel);
 
-    // Auto-select first real channel
     if (m_model->activeChannel().isEmpty() && channel != "(server)") {
         m_sidebar->setCurrentItem(item);
         switchToChannel(host, channel);
@@ -372,10 +512,7 @@ void MainWindow::onUnreadChanged(const QString &host, const QString &channel, in
 {
     auto *item = findChannelItem(host, channel);
     if (!item) return;
-    if (count > 0)
-        item->setText(0, channel + " (" + QString::number(count) + ")");
-    else
-        item->setText(0, channel);
+    item->setText(0, count > 0 ? channel + " (" + QString::number(count) + ")" : channel);
 }
 
 void MainWindow::onSelfNickChanged(const QString &host, const QString &nick)
@@ -402,6 +539,17 @@ void MainWindow::onInputSubmit()
 {
     const QString text = m_input->text().trimmed();
     if (text.isEmpty()) return;
+
+    // Push to history (newest first, skip consecutive duplicates)
+    if (m_inputHistory.isEmpty() || m_inputHistory.first() != text) {
+        m_inputHistory.prepend(text);
+        if (m_inputHistory.size() > 100)
+            m_inputHistory.removeLast();
+    }
+    m_historyIndex = -1;
+    m_tabActive = false;
+    m_tabCandidates.clear();
+
     m_input->clear();
 
     const QString host    = m_model->activeHost();
@@ -409,7 +557,6 @@ void MainWindow::onInputSubmit()
     if (host.isEmpty() || channel.isEmpty()) return;
 
     if (text.startsWith('/')) {
-        // Minimal command handling
         const QString cmd  = text.section(' ', 0, 0).toLower();
         const QString args = text.section(' ', 1);
 
@@ -422,9 +569,7 @@ void MainWindow::onInputSubmit()
         } else if (cmd == "/me") {
             m_model->sendAction(host, channel, args);
         } else if (cmd == "/msg") {
-            const QString target  = args.section(' ', 0, 0);
-            const QString message = args.section(' ', 1);
-            m_model->sendMessage(host, target, message);
+            m_model->sendMessage(host, args.section(' ', 0, 0), args.section(' ', 1));
         } else if (cmd == "/quote" || cmd == "/raw") {
             m_model->sendRaw(host, args);
         } else if (cmd == "/quit") {
@@ -435,7 +580,7 @@ void MainWindow::onInputSubmit()
         return;
     }
 
-    if (channel == "(server)") return; // can't message server buffer
+    if (channel == "(server)") return;
     m_model->sendMessage(host, channel, text);
 }
 
@@ -450,7 +595,6 @@ void MainWindow::switchToChannel(const QString &host, const QString &channel)
     refreshNickList(host, channel);
     refreshTopicBar(host, channel);
 
-    // Update nick prefix label
     if (auto *sess = m_model->session(host))
         m_nickPrefix->setText(sess->nick);
 
@@ -471,23 +615,27 @@ void MainWindow::refreshNickList(const QString &host, const QString &channel)
     m_nickList->clear();
     auto *ch = m_model->channel(host, channel);
     if (!ch) return;
-    for (const auto &e : std::as_const(ch->nicks))
-        m_nickList->addItem(e.display());
-    m_nickDock->setWindowTitle(
-        QString("Users (%1)").arg(ch->nicks.size()));
+
+    for (const auto &e : std::as_const(ch->nicks)) {
+        auto *item = new QListWidgetItem(e.display());
+        if (m_config.ui.coloredNicks)
+            item->setForeground(nickColor(e.nick));
+        m_nickList->addItem(item);
+    }
+
+    m_nickDock->setWindowTitle(QString("Users (%1)").arg(ch->nicks.size()));
 }
 
 void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
 {
     auto *ch = m_model->channel(host, channel);
-    m_topicLabel->setText(ch ? ch->topic  : QString());
-    m_modesLabel->setText(ch ? ch->modes  : QString());
+    m_topicLabel->setText(ch ? ch->topic : QString());
+    m_modesLabel->setText(ch ? ch->modes : QString());
 }
 
 void MainWindow::appendMessage(const Message &msg)
 {
     m_chatView->append(formatMessage(msg));
-    // Keep scroll pinned to bottom
     auto *sb = m_chatView->verticalScrollBar();
     sb->setValue(sb->maximum());
 }
@@ -511,11 +659,16 @@ QString MainWindow::formatMessage(const Message &msg) const
     };
 
     switch (msg.type) {
-    case MessageType::Privmsg:
+    case MessageType::Privmsg: {
+        const QString color = m_config.ui.coloredNicks
+            ? nickColor(msg.nick).name()
+            : QString("palette(text)");
         return QString("<span style='color:gray'>%1</span> "
-                       "<b>&lt;%2&gt;</b> %3")
-            .arg(ts, msg.nick.toHtmlEscaped(), msg.text.toHtmlEscaped());
-
+                       "<b style='color:%2'>&lt;%3&gt;</b> %4")
+            .arg(ts, color,
+                 msg.nick.toHtmlEscaped(),
+                 msg.text.toHtmlEscaped());
+    }
     case MessageType::Action:
         return QString("<span style='color:gray'>%1</span> "
                        "<i>* %2 %3</i>")

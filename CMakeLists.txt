@@ -27,6 +27,8 @@ qt_add_executable(UplinkIRC
     src/ui/trayicon.h
     src/ui/aboutdialog.cpp
     src/ui/aboutdialog.h
+    src/ui/docsdialog.cpp
+    src/ui/docsdialog.h
     src/ui/appicons.h
     src/ui/themeloader.cpp
     src/ui/themeloader.h

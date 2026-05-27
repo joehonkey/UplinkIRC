@@ -23,6 +23,7 @@ struct ServerConfig {
 
 struct UiConfig {
     QString  theme{"default"};
+    QString  icon{"maindefault"};
     bool     showNickPrefix{true};
     bool     showTopic{true};
     bool     showEmojiButton{false};

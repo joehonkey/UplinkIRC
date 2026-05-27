@@ -1,10 +1,13 @@
 #pragma once
 
 #include <QMainWindow>
+#include <QStringList>
+#include <QColor>
 #include "model/sessionmodel.h"
 #include "config/config.h"
 
 class TrayIcon;
+class DocsDialog;
 
 class QTreeWidget;
 class QTreeWidgetItem;
@@ -24,6 +27,10 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(SessionModel *model, const Config &cfg, QWidget *parent = nullptr);
     ~MainWindow() override;
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     // Model → UI
@@ -56,7 +63,22 @@ private:
     void refreshTopicBar(const QString &host, const QString &channel);
     void appendMessage  (const Message &msg);
 
-    QString formatMessage(const Message &msg) const;
+    QString    formatMessage(const Message &msg) const;
+    static QColor nickColor(const QString &nick);
+
+    // Tab completion
+    void handleTabComplete();
+    QStringList m_tabCandidates;
+    int         m_tabCandidateIndex{0};
+    QString     m_tabPrefix;
+    bool        m_tabActive{false};
+
+    // Input history
+    void handleHistoryUp();
+    void handleHistoryDown();
+    QStringList m_inputHistory;
+    int         m_historyIndex{-1};
+    QString     m_historyDraft;
 
     QTreeWidgetItem *findServerItem (const QString &host) const;
     QTreeWidgetItem *findChannelItem(const QString &host, const QString &channel) const;
@@ -74,16 +96,13 @@ private:
     QLabel       *m_modesLabel;
     QAction      *m_toggleTopicAction;
     QToolButton  *m_hamburger;
+    DocsDialog   *m_docsDialog{nullptr};
 
     SessionModel *m_model;
     TrayIcon     *m_tray{nullptr};
     Config        m_config;
 
-    // UI state (persisted to config eventually)
     bool m_showNickPrefix{true};
     bool m_showEmojiBtn{false};
     bool m_showTopic{true};
-
-protected:
-    void closeEvent(QCloseEvent *event) override;
 };
