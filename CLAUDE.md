@@ -39,6 +39,11 @@ Requires: `qt6-base` (Qt6 Core, Widgets, Network)
 - Reuse existing helpers before creating new ones.
 - Do not add new dependencies unless necessary.
 
+## HARD RULES — never break these
+- **NEVER** add Claude, AI, or any assistant as a contributor, co-author, or collaborator in any git commit, PR, push, or GitHub action. This means no `Co-Authored-By:`, no `Co-authored-by:`, no `Signed-off-by: Claude`, no AI attribution lines of any kind in commit messages or PR descriptions.
+- **NEVER** tag, label, mention, or reference AI/Claude involvement anywhere in commits, PRs, release notes, changelogs, or code comments.
+- All commits and contributions are authored solely by joehonkey.
+
 ## Code Style
 - C++17, Qt6 conventions
 - Use Qt signal/slot for all async communication
