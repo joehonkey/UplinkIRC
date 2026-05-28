@@ -162,6 +162,18 @@ void MainWindow::setupToolbar()
         Config::save(m_config, Config::defaultPath());
     });
 
+    // Colored nicks toggle
+    auto *colorNicksAct = menu->addAction("Colored Nicks");
+    colorNicksAct->setCheckable(true);
+    colorNicksAct->setChecked(m_config.ui.coloredNicks);
+    connect(colorNicksAct, &QAction::toggled, this, [this](bool on){
+        m_config.ui.coloredNicks = on;
+        Config::save(m_config, Config::defaultPath());
+        // Refresh nick list so color change takes effect immediately
+        if (!m_model->activeHost().isEmpty() && !m_model->activeChannel().isEmpty())
+            refreshNickList(m_model->activeHost(), m_model->activeChannel());
+    });
+
     m_hamburger->setMenu(menu);
     tb->addWidget(m_hamburger);
 
@@ -397,6 +409,7 @@ QTreeWidgetItem *MainWindow::findChannelItem(const QString &host, const QString 
 {
     auto *srv = findServerItem(host);
     if (!srv) return nullptr;
+    if (channel == "(server)") return srv;
     for (int i = 0; i < srv->childCount(); ++i) {
         auto *item = srv->child(i);
         if (item->data(0, Qt::UserRole + 1).toString().toLower() == channel.toLower())
@@ -412,27 +425,37 @@ QTreeWidgetItem *MainWindow::findChannelItem(const QString &host, const QString 
 void MainWindow::onServerAdded(const QString &host)
 {
     if (findServerItem(host)) return;
+    QString label = host;
+    for (const auto &sc : std::as_const(m_config.servers))
+        if (sc.host == host && !sc.name.isEmpty()) { label = sc.name; break; }
     auto *item = new QTreeWidgetItem(m_sidebar);
-    item->setText(0, host);
-    item->setData(0, Qt::UserRole, host);
+    item->setText(0, label);
+    item->setData(0, Qt::UserRole,     host);
+    item->setData(0, Qt::UserRole + 1, QString("(server)"));
     item->setExpanded(true);
-    auto *srvBuf = new QTreeWidgetItem(item);
-    srvBuf->setText(0, "(server)");
-    srvBuf->setData(0, Qt::UserRole,     host);
-    srvBuf->setData(0, Qt::UserRole + 1, "(server)");
 }
 
 void MainWindow::onServerConnected(const QString &host)
 {
     auto *item = findServerItem(host);
-    if (item) item->setText(0, host);
+    if (item) {
+        QString label = host;
+        for (const auto &sc : std::as_const(m_config.servers))
+            if (sc.host == host && !sc.name.isEmpty()) { label = sc.name; break; }
+        item->setText(0, label);
+    }
     statusBar()->showMessage("Connected to " + host);
 }
 
 void MainWindow::onServerDisconnected(const QString &host)
 {
     auto *item = findServerItem(host);
-    if (item) item->setText(0, host + " (disconnected)");
+    if (item) {
+        QString label = host;
+        for (const auto &sc : std::as_const(m_config.servers))
+            if (sc.host == host && !sc.name.isEmpty()) { label = sc.name; break; }
+        item->setText(0, label + " (disconnected)");
+    }
     statusBar()->showMessage("Disconnected from " + host);
 }
 
@@ -446,7 +469,7 @@ void MainWindow::onChannelAdded(const QString &host, const QString &channel)
     item->setData(0, Qt::UserRole,     host);
     item->setData(0, Qt::UserRole + 1, channel);
 
-    if (m_model->activeChannel().isEmpty() && channel != "(server)") {
+    if (m_model->activeChannel().isEmpty()) {
         m_sidebar->setCurrentItem(item);
         switchToChannel(host, channel);
     }
@@ -487,7 +510,13 @@ void MainWindow::onUnreadChanged(const QString &host, const QString &channel, in
 {
     auto *item = findChannelItem(host, channel);
     if (!item) return;
-    item->setText(0, count > 0 ? channel + " (" + QString::number(count) + ")" : channel);
+    QString label = channel;
+    if (channel == "(server)") {
+        label = host;
+        for (const auto &sc : std::as_const(m_config.servers))
+            if (sc.host == host && !sc.name.isEmpty()) { label = sc.name; break; }
+    }
+    item->setText(0, count > 0 ? label + " (" + QString::number(count) + ")" : label);
 }
 
 void MainWindow::onSelfNickChanged(const QString &host, const QString &nick)
