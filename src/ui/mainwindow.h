@@ -101,9 +101,9 @@ private:
     QDockWidget  *m_nickDock;
     QListWidget  *m_nickList;
     QWidget      *m_topicBar;
-    QPushButton  *m_topicToggleBtn{nullptr};
-    QLabel       *m_topicLabel;
-    QLabel       *m_modesLabel;
+    QLabel       *m_topicLabel{nullptr};   // channel name
+    QLabel       *m_modesLabel{nullptr};   // channel modes
+    QLabel       *m_userInfoLabel{nullptr}; // server — N users
     QAction      *m_toggleTopicAction;
     QToolButton  *m_hamburger;
     QLabel       *m_appLabel{nullptr};

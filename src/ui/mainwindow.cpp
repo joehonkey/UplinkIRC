@@ -247,9 +247,9 @@ void MainWindow::applyFontSizes()
     if (m_chatView)       m_chatView->setFont(makeFont(fs.chat));
     if (m_nickList)       m_nickList->setFont(makeFont(fs.nickList));
     if (m_nickDock)       m_nickDock->setFont(makeFont(fs.nickDock));
-    if (m_topicToggleBtn) m_topicToggleBtn->setFont(makeFont(fs.topicBar));
-    if (m_topicLabel)     m_topicLabel->setFont(makeFont(fs.topicBar));
-    if (m_modesLabel)     m_modesLabel->setFont(makeFont(fs.topicBar));
+    if (m_topicLabel)    m_topicLabel->setFont(makeFont(fs.topicBar));
+    if (m_modesLabel)    m_modesLabel->setFont(makeFont(fs.topicBar));
+    if (m_userInfoLabel) m_userInfoLabel->setFont(makeFont(fs.topicBar));
     if (m_nickPrefix)   m_nickPrefix->setFont(makeFont(fs.inputNick));
     if (m_input)        m_input->setFont(makeFont(fs.input));
     if (m_typingLabel) {
@@ -296,30 +296,26 @@ void MainWindow::setupChatArea()
     vbox->setContentsMargins(0, 0, 0, 0);
     vbox->setSpacing(0);
 
-    // Topic bar
+    // Topic bar — shows: #channel (modes)  ·  Server — N users
     m_topicBar  = new QWidget;
     auto *tHbox = new QHBoxLayout(m_topicBar);
-    tHbox->setContentsMargins(4, 2, 6, 2);
+    tHbox->setContentsMargins(6, 3, 6, 3);
     tHbox->setSpacing(6);
 
-    m_topicToggleBtn = new QPushButton("Topic");
-    m_topicToggleBtn->setFlat(true);
-    m_topicToggleBtn->setCursor(Qt::PointingHandCursor);
+    m_topicLabel = new QLabel;
+    m_topicLabel->setObjectName("channelLabel");
 
     m_modesLabel = new QLabel;
-    m_modesLabel->setStyleSheet("color: gray;");
-    m_topicLabel = new QLabel;
-    m_topicLabel->setWordWrap(false);
-    m_topicLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
-    m_topicLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+    m_modesLabel->setObjectName("modesLabel");
 
-    connect(m_topicToggleBtn, &QPushButton::clicked, this, [this]{
-        m_topicLabel->setVisible(!m_topicLabel->isVisible());
-    });
+    m_userInfoLabel = new QLabel;
+    m_userInfoLabel->setObjectName("userInfoLabel");
+    m_userInfoLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
-    tHbox->addWidget(m_topicToggleBtn);
+    tHbox->addWidget(m_topicLabel);
     tHbox->addWidget(m_modesLabel);
-    tHbox->addWidget(m_topicLabel, 1);
+    tHbox->addStretch(1);
+    tHbox->addWidget(m_userInfoLabel);
     m_topicBar->setVisible(m_showTopic);
     m_topicBar->setStyleSheet("background: palette(mid);");
     vbox->addWidget(m_topicBar);
@@ -608,11 +604,10 @@ void MainWindow::onMessageAdded(const QString &host, const QString &channel, con
 
 void MainWindow::onTopicChanged(const QString &host, const QString &channel, const QString &topic)
 {
+    Q_UNUSED(topic)
     if (host == m_model->activeHost() &&
         channel.toLower() == m_model->activeChannel().toLower())
-    {
-        m_topicLabel->setText(topic);
-    }
+        refreshTopicBar(host, channel);
 }
 
 void MainWindow::onNickListChanged(const QString &host, const QString &channel)
@@ -857,13 +852,28 @@ void MainWindow::refreshNickList(const QString &host, const QString &channel)
     }
 
     m_nickDock->setWindowTitle(QString("Users (%1)").arg(ch->nicks.size()));
+    refreshTopicBar(host, channel);
 }
 
 void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
 {
     auto *ch = m_model->channel(host, channel);
-    m_topicLabel->setText(ch ? ch->topic : QString());
-    m_modesLabel->setText(ch ? ch->modes : QString());
+
+    if (channel == "(server)") {
+        m_topicLabel->setText(host);
+        m_modesLabel->clear();
+    } else {
+        m_topicLabel->setText(channel);
+        const QString modes = ch ? ch->modes : QString();
+        m_modesLabel->setText(modes.isEmpty() ? QString() : "(" + modes + ")");
+    }
+
+    QString serverName = host;
+    for (const auto &sc : std::as_const(m_config.servers))
+        if (sc.host == host && !sc.name.isEmpty()) { serverName = sc.name; break; }
+
+    const int users = (ch && channel != "(server)") ? ch->nicks.size() : 0;
+    m_userInfoLabel->setText(serverName + " — " + QString::number(users) + " users");
 }
 
 void MainWindow::appendMessage(const Message &msg)

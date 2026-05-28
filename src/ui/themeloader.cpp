@@ -275,6 +275,18 @@ QDialogButtonBox QPushButton {
     min-width: 70px;
 }
 
+/* ── Topic / info bar ── */
+QLabel#channelLabel {
+    color: {{accent}};
+    font-weight: bold;
+}
+QLabel#modesLabel {
+    color: {{placeholder}};
+}
+QLabel#userInfoLabel {
+    color: {{placeholder}};
+}
+
 /* ── Typing indicator ── */
 QLabel#typingLabel {
     color: {{placeholder}};
