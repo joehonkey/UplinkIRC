@@ -18,6 +18,8 @@ struct ServerConfig {
     QString            user;
     QString            realname;
     QString            password;   // PASS / bouncer
+    QString            saslUser;
+    QString            saslPassword;
     QList<ChannelConfig> channels;
 };
 

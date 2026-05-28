@@ -101,7 +101,9 @@ Config Config::load(const QString &path)
                 sc.nick     = QString::fromStdString((*s)["nick"].value_or<std::string>(""));
                 sc.user     = QString::fromStdString((*s)["user"].value_or<std::string>("uplink"));
                 sc.realname = QString::fromStdString((*s)["realname"].value_or<std::string>("UplinkIRC User"));
-                sc.password = QString::fromStdString((*s)["password"].value_or<std::string>(""));
+                sc.password     = QString::fromStdString((*s)["password"].value_or<std::string>(""));
+                sc.saslUser     = QString::fromStdString((*s)["sasl_user"].value_or<std::string>(""));
+                sc.saslPassword = QString::fromStdString((*s)["sasl_password"].value_or<std::string>(""));
 
                 if (auto chans = (*s)["channels"].as_array()) {
                     for (auto &cn : *chans) {
@@ -165,7 +167,11 @@ void Config::save(const Config &cfg, const QString &path)
         out << "user     = \"" << s.user     << "\"\n";
         out << "realname = \"" << s.realname << "\"\n";
         if (!s.password.isEmpty())
-            out << "password = \"" << s.password << "\"\n";
+            out << "password     = \"" << s.password << "\"\n";
+        if (!s.saslUser.isEmpty())
+            out << "sasl_user     = \"" << s.saslUser << "\"\n";
+        if (!s.saslPassword.isEmpty())
+            out << "sasl_password = \"" << s.saslPassword << "\"\n";
         for (const auto &ch : s.channels) {
             out << "\n[[server.channels]]\n";
             out << "name = \"" << ch.name << "\"\n";

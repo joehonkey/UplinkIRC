@@ -26,7 +26,10 @@ void IrcClient::connectToServer(const ServerConfig &cfg)
     m_nick     = cfg.nick;
     m_user     = cfg.user;
     m_realname = cfg.realname;
-    m_password = cfg.password;
+    m_password     = cfg.password;
+    m_saslUser     = cfg.saslUser;
+    m_saslPassword = cfg.saslPassword;
+    m_saslPending  = false;
 
     if (m_ssl)
         m_socket->connectToHostEncrypted(m_host, m_port);
@@ -103,6 +106,7 @@ void IrcClient::onDisconnected()
 {
     m_namesBuffer.clear();
     m_requestedCaps.clear();
+    m_saslPending = false;
     emit disconnected(m_host);
 }
 
@@ -152,6 +156,17 @@ void IrcClient::processLine(const QString &line)
     // CAP
     if (cmd == "CAP") {
         handleCap(msg.params, msg.trailing);
+        return;
+    }
+
+    // SASL challenge
+    if (cmd == "AUTHENTICATE") {
+        if (!msg.params.isEmpty() && msg.params[0] == "+") {
+            const QByteArray payload =
+                QByteArray("\0", 1) + m_saslUser.toUtf8() +
+                QByteArray("\0", 1) + m_saslPassword.toUtf8();
+            sendRaw("AUTHENTICATE " + QString::fromLatin1(payload.toBase64()));
+        }
         return;
     }
 
@@ -276,10 +291,12 @@ void IrcClient::handleCap(const QStringList &params, const QString &trailing)
         // Request caps we care about
         QStringList want;
         const QStringList available = trailing.split(' ', Qt::SkipEmptyParts);
-        const QStringList desired = {
+        QStringList desired = {
             "multi-prefix", "away-notify", "server-time",
             "message-tags", "batch", "labeled-response", "draft/typing"
         };
+        if (!m_saslUser.isEmpty() && !m_saslPassword.isEmpty())
+            desired << "sasl";
         for (const QString &cap : desired)
             if (available.contains(cap))
                 want << cap;
@@ -294,7 +311,13 @@ void IrcClient::handleCap(const QStringList &params, const QString &trailing)
     }
 
     if (subCmd == "ACK") {
-        sendRaw("CAP END");
+        const QStringList acked = trailing.split(' ', Qt::SkipEmptyParts);
+        if (acked.contains("sasl") && !m_saslUser.isEmpty() && !m_saslPassword.isEmpty()) {
+            m_saslPending = true;
+            sendRaw("AUTHENTICATE PLAIN");
+        } else {
+            sendRaw("CAP END");
+        }
         return;
     }
 
@@ -373,6 +396,24 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
         }
         break;
     }
+
+    case 900: // RPL_LOGGEDIN
+        emit serverMessage(m_host, trailing);
+        break;
+
+    case 903: // RPL_SASLSUCCESS
+        emit serverMessage(m_host, "SASL authentication successful");
+        m_saslPending = false;
+        sendRaw("CAP END");
+        break;
+
+    case 904: // ERR_SASLFAIL
+    case 905: // ERR_SASLTOOLONG
+    case 906: // ERR_SASLABORTED
+        emit serverMessage(m_host, "SASL authentication failed: " + trailing);
+        m_saslPending = false;
+        sendRaw("CAP END");
+        break;
 
     case 433: // ERR_NICKNAMEINUSE
         setNick(m_nick + "_");
