@@ -41,19 +41,28 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Save theme + icon choice to config.toml (persists across restarts)
 - [x] about.png background normalized — logo visible on both light and dark backgrounds
 - [x] IRC color code rendering — mIRC bold, italic, underline, strikethrough, reverse, 16 colors (fg+bg)
+- [x] Per-widget font size config — Font Config dialog in hamburger; independent sizes for all UI zones; persists to config.toml
+- [x] Typing indicator — IRCv3 draft/typing TAGMSG; debounced send + receive; hamburger toggle
+- [x] Extended slash commands — /away, /back, /motd, /whois, /topic, /kick, /notice, /version, /ctcp, /sysinfo
+- [x] CTCP auto-replies — incoming VERSION and PING answered automatically
+- [x] Channel info bar — shows #channel (modes) ServerName; modes from 324 RPL_CHANNELMODEIS
+- [x] Sidebar server item clickable — opens server buffer, shows config short name
+- [x] Colored nicks hamburger toggle — was config-only, now in UI
+- [x] GitHub Actions CI — builds on every push across Linux, Windows, macOS
+- [x] GitHub Actions release workflow — builds platform binaries on tag push, attaches to GitHub releases
+- [x] v0.2.0 released
 
 ---
 
 ## In Progress
 
-*(nothing currently in progress)*
+- [ ] CI release workflow — confirm green end-to-end on all three platforms
 
 ---
 
 ## Planned — Near Term
 
 - [ ] /help command — lists available commands in chat view
-- [ ] Topic click to edit — click topic bar to set a new topic
 - [ ] SASL authentication — PLAIN and EXTERNAL mechanisms
 - [ ] NickServ IDENTIFY auto — password field in config triggers identify on connect
 - [ ] Multiple servers — add/remove servers from UI, not just config
@@ -80,13 +89,10 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 ## Planned — Polish + Distribution
 
 - [ ] Virtual scrolling — render only visible messages (performance on busy channels)
-- [ ] Font size controls — per-zone font size adjustment
 - [ ] Window state persistence — remember size, position, dock layout
 - [ ] Config editor UI — edit servers/channels from within the app
 - [ ] FreeBSD port skeleton
-- [ ] Flatpak / AppImage packaging
-- [ ] macOS .app bundle
-- [ ] Windows installer
+- [ ] AppImage packaging for Linux
 - [ ] Auto-update check
 
 ---

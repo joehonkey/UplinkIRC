@@ -28,6 +28,16 @@ show_nick_prefix  = true
 show_topic        = true
 show_emoji_button = false
 colored_nicks     = true
+typing_indicator  = true
+font_family       = "IBM Plex Mono"
+font_toolbar      = 10
+font_sidebar      = 10
+font_chat         = 10
+font_nick_list    = 10
+font_nick_dock    = 10
+font_topic_bar    = 10
+font_input_nick   = 10
+font_input        = 10
 
 [[server]]
 name     = "LinuxDojo"
@@ -57,7 +67,19 @@ Controls the look and feel of the interface. All keys are optional — if omitte
 | `show_nick_prefix` | bool | `true` | Show your nickname next to the message input box |
 | `show_topic` | bool | `true` | Show the topic bar at the top of the chat view |
 | `show_emoji_button` | bool | `false` | Show the emoji button to the right of the message input (emoji picker is coming soon) |
-| `colored_nicks` | bool | `true` | Give each nickname a unique color in chat |
+| `colored_nicks` | bool | `true` | Give each nickname a unique color in chat and the nick list |
+| `typing_indicator` | bool | `true` | Show "nick is typing..." notifications (IRCv3 `draft/typing`) |
+| `font_family` | string | `"IBM Plex Mono"` | Font family for all UI zones |
+| `font_toolbar` | integer | `10` | Font size (pt) for the hamburger button and app label |
+| `font_sidebar` | integer | `10` | Font size (pt) for the server/channel tree |
+| `font_chat` | integer | `10` | Font size (pt) for the message area |
+| `font_nick_list` | integer | `10` | Font size (pt) for the user list |
+| `font_nick_dock` | integer | `10` | Font size (pt) for the "Users (N)" dock title |
+| `font_topic_bar` | integer | `10` | Font size (pt) for the channel info bar |
+| `font_input_nick` | integer | `10` | Font size (pt) for your nick label next to the input |
+| `font_input` | integer | `10` | Font size (pt) for the message input box |
+
+All font sizes can be changed live from **Hamburger → Font Config...** without editing the file.
 
 ### Example
 
@@ -68,6 +90,11 @@ show_nick_prefix  = true
 show_topic        = true
 show_emoji_button = false
 colored_nicks     = true
+typing_indicator  = true
+font_family       = "IBM Plex Mono"
+font_chat         = 12
+font_sidebar      = 10
+font_input        = 11
 ```
 
 ---

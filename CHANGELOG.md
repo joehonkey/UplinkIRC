@@ -181,6 +181,82 @@ Known issues open:
   - Emoji picker not yet built (button toggle is wired).
 -->
 
+<!--
+Session summary — v0.2.0 sprint:
+
+What was built:
+  - Sidebar: server item is now the server buffer — clicking "LinuxDojo" (or
+    whatever the server short name is) opens the server message buffer.
+    The redundant "(server)" child item is gone. Short name pulled from config.
+  - Per-widget font config: Font Config dialog in hamburger lets the user set
+    independent font sizes for Toolbar, Sidebar, Chat, User List, Users Title,
+    Topic Bar, Nick Label, and Input. Family picker + live preview. Persists to
+    config.toml under font_* keys.
+  - Topic bar replaced with channel info bar: shows #channel (modes) ServerName
+    all left-aligned. Modes come from actual server data (324 RPL_CHANNELMODEIS
+    now parsed). No toggle button — hamburger "Show Topic Bar" controls the bar.
+    Bar uses theme sidebarBg color so it works correctly on dark themes.
+  - Typing indicator: IRCv3 draft/typing via TAGMSG. Sends typing=active after
+    1s debounce, typing=done on send or clear. Receives and displays "nick is
+    typing..." above the input bar. Per-nick 6s auto-clear. Hamburger toggle,
+    on by default.
+  - CTCP: auto-replies to incoming VERSION and PING. CTCP replies shown in server
+    buffer. Outgoing CTCP via /ctcp command.
+  - New slash commands: /away, /back, /motd, /whois, /topic, /kick, /notice,
+    /version, /ctcp, /sysinfo. Version string sourced from version.h macro.
+  - Colored nicks toggle added to hamburger menu (was config-only before).
+  - GitHub Actions CI: per-platform Qt install (apt on Linux, aqtinstall on
+    Windows, Homebrew on macOS). Builds on every push to main.
+  - GitHub Actions release workflow: builds Linux tarball, Windows zip (windeployqt),
+    macOS dmg (macdeployqt) and attaches them to GitHub releases on tag push.
+  - v0.2.0 tagged and pushed. Tag re-pushed to trigger release workflow.
+  - CMakeLists.txt: FetchContent fallback for tomlplusplus so CI doesn't need
+    the system package.
+
+Bugs fixed:
+  - 324 RPL_CHANNELMODEIS was never parsed — channel modes always empty on join.
+    Fixed: ircclient.cpp now handles numeric 324 and emits modesReceived.
+    modesChanged signal added to SessionModel so the UI refreshes.
+  - Topic bar used palette(mid) background which rendered invisible on dark themes.
+    Fixed: objectName "topicBar" + QSS rule using theme sidebarBg/border colors.
+  - CI failing: jurplel/install-qt-action with Qt 6.7.3 caused aqt package-not-found
+    errors on all platforms. Fixed: Linux uses apt, Windows aqtinstall 6.8.2,
+    macOS Homebrew. qtsvg is included in base Qt6 install, not a separate module.
+
+Known issues open:
+  - CI release workflow untested end-to-end (tag re-push happened after workflows
+    were committed; outcome unknown at session close).
+  - No auto-reconnect on disconnect.
+  - Emoji picker not yet built.
+  - /help command not yet implemented.
+-->
+
+## [0.2.0] — 2026-05-28
+
+**Font config, typing indicator, info bar, extended commands, CI/CD**
+
+- Per-widget font size config — Font Config dialog (hamburger) sets independent sizes for Toolbar, Sidebar, Chat, User List, Users Title, Topic Bar, Nick Label, and Input; family picker with live preview; persists to `config.toml`
+- Typing indicator — IRCv3 `draft/typing` via TAGMSG; debounced send + receive; shows "nick is typing..." above input bar; hamburger toggle, on by default
+- Channel info bar — replaces topic text bar; shows `#channel (modes) ServerName` left-aligned; modes populated from `324 RPL_CHANNELMODEIS`; uses theme colors
+- Sidebar server item is now clickable — shows server buffer (MOTD, numerics); redundant `(server)` child removed; displays short name from config
+- Extended slash commands — `/away`, `/back`, `/motd`, `/whois`, `/topic`, `/kick`, `/notice`, `/version`, `/ctcp`, `/sysinfo`
+- CTCP — auto-replies to incoming VERSION and PING; `/ctcp` for arbitrary requests; replies shown in server buffer
+- Colored nicks toggle added to hamburger menu
+- GitHub Actions CI — builds on every push to main across Linux, Windows, macOS
+- GitHub Actions release — builds platform binaries (Linux tarball, Windows zip, macOS dmg) and attaches to GitHub releases on tag push
+- `tomlplusplus` FetchContent fallback in CMakeLists — CI no longer needs the system package
+- Bumped version to 0.2.0
+
+**Fix:** `324 RPL_CHANNELMODEIS` now parsed — channel modes populate correctly on join  
+**Fix:** Topic bar background now uses theme `sidebarBg` — visible on all dark themes  
+**Fix:** CI Qt install — switched to per-platform install to avoid aqtinstall mirror failures
+
+**Known:** Release CI workflow not yet confirmed green end-to-end  
+**Known:** No auto-reconnect on disconnect  
+**Known:** Emoji picker not yet implemented
+
+---
+
 ## [Unreleased] — v0.1.0
 
 **Initial release — full IRC client foundation**
