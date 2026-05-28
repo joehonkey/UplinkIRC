@@ -33,6 +33,9 @@
 #include <QInputDialog>
 #include <QSysInfo>
 #include <QTimer>
+#include <QFile>
+#include <QTextStream>
+#include <QProcess>
 #include "version.h"
 
 // ---------------------------------------------------------------------------
@@ -714,6 +717,137 @@ void MainWindow::onSidebarSelectionChanged()
     switchToChannel(host, channel);
 }
 
+// ---------------------------------------------------------------------------
+// /sysinfo helpers
+// ---------------------------------------------------------------------------
+
+static QString sysinfoOS()
+{
+#if defined(Q_OS_LINUX)
+    QFile f("/etc/os-release");
+    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&f);
+        while (!in.atEnd()) {
+            QString line = in.readLine();
+            if (line.startsWith("PRETTY_NAME=")) {
+                QString val = line.mid(12);
+                if (val.startsWith('"') && val.endsWith('"'))
+                    val = val.mid(1, val.length() - 2);
+                return val;
+            }
+        }
+    }
+    return "Linux";
+#elif defined(Q_OS_FREEBSD)
+    QProcess p;
+    p.start("uname", {"-s"});
+    p.waitForFinished(2000);
+    const QString name = QString::fromLocal8Bit(p.readAllStandardOutput()).trimmed();
+    QProcess r;
+    r.start("uname", {"-r"});
+    r.waitForFinished(2000);
+    const QString rel = QString::fromLocal8Bit(r.readAllStandardOutput()).trimmed();
+    return name + " " + rel;
+#else
+    return QSysInfo::prettyProductName();
+#endif
+}
+
+static QString sysinfoKernel()
+{
+    QProcess p;
+    p.start("uname", {"-r"});
+    p.waitForFinished(2000);
+    const QString out = QString::fromLocal8Bit(p.readAllStandardOutput()).trimmed();
+    return out.isEmpty() ? "Unknown" : out;
+}
+
+static QString sysinfoCPU()
+{
+#if defined(Q_OS_LINUX)
+    QFile f("/proc/cpuinfo");
+    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&f);
+        QString model;
+        int threads = 0;
+        while (!in.atEnd()) {
+            const QString line = in.readLine();
+            if (line.startsWith("model name") && model.isEmpty()) {
+                const int colon = line.indexOf(':');
+                if (colon != -1)
+                    model = line.mid(colon + 1).trimmed();
+            }
+            if (line.startsWith("processor"))
+                ++threads;
+        }
+        if (!model.isEmpty())
+            return QString("%1 (%2 threads)").arg(model).arg(threads);
+    }
+    return QSysInfo::currentCpuArchitecture();
+#elif defined(Q_OS_FREEBSD) || defined(Q_OS_DARWIN)
+    QProcess pm;
+    pm.start("sysctl", {"-n", "hw.model"});
+    pm.waitForFinished(2000);
+    const QString model = QString::fromLocal8Bit(pm.readAllStandardOutput()).trimmed();
+    QProcess pc;
+    pc.start("sysctl", {"-n", "hw.ncpu"});
+    pc.waitForFinished(2000);
+    const QString ncpu = QString::fromLocal8Bit(pc.readAllStandardOutput()).trimmed();
+    if (!model.isEmpty() && !ncpu.isEmpty())
+        return QString("%1 (%2 threads)").arg(model, ncpu);
+    return model.isEmpty() ? "Unknown" : model;
+#else
+    return QSysInfo::currentCpuArchitecture();
+#endif
+}
+
+static QString sysinfoRAM()
+{
+#if defined(Q_OS_LINUX)
+    QFile f("/proc/meminfo");
+    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&f);
+        quint64 total = 0, available = 0;
+        while (!in.atEnd()) {
+            const QStringList parts = in.readLine().split(' ', Qt::SkipEmptyParts);
+            if (parts.size() >= 2) {
+                if (parts[0] == "MemTotal:")     total     = parts[1].toULongLong();
+                if (parts[0] == "MemAvailable:") available = parts[1].toULongLong();
+            }
+        }
+        if (total > 0) {
+            const quint64 used = total - available;
+            return QString("%1/%2GB")
+                .arg(double(used)  / 1024.0 / 1024.0, 0, 'f', 1)
+                .arg(double(total) / 1024.0 / 1024.0, 0, 'f', 0);
+        }
+    }
+    return "Unknown";
+#elif defined(Q_OS_FREEBSD)
+    QProcess pp;
+    pp.start("sysctl", {"-n", "hw.physmem"});
+    pp.waitForFinished(2000);
+    const quint64 total = QString::fromLocal8Bit(pp.readAllStandardOutput()).trimmed().toULongLong();
+    QProcess pf;
+    pf.start("sysctl", {"-n", "vm.stats.vm.v_free_count"});
+    pf.waitForFinished(2000);
+    const quint64 freePages = QString::fromLocal8Bit(pf.readAllStandardOutput()).trimmed().toULongLong();
+    QProcess ps;
+    ps.start("sysctl", {"-n", "hw.pagesize"});
+    ps.waitForFinished(2000);
+    const quint64 pageSize = QString::fromLocal8Bit(ps.readAllStandardOutput()).trimmed().toULongLong();
+    if (total > 0 && pageSize > 0) {
+        const quint64 used = total - freePages * pageSize;
+        return QString("%1/%2GB")
+            .arg(double(used)  / 1024.0 / 1024.0 / 1024.0, 0, 'f', 1)
+            .arg(double(total) / 1024.0 / 1024.0 / 1024.0, 0, 'f', 0);
+    }
+    return "Unknown";
+#else
+    return "Unknown";
+#endif
+}
+
 void MainWindow::onInputSubmit()
 {
     const QString text = m_input->text().trimmed();
@@ -798,11 +932,32 @@ void MainWindow::onInputSubmit()
                 m_model->sendRaw(host, "PRIVMSG " + target + " :" + ctcp);
             }
         } else if (cmd == "/sysinfo") {
-            const QString info = QString("UplinkIRC " UPLINKIRC_VERSION " | Qt %1 | %2 | %3")
-                .arg(qVersion(),
-                     QSysInfo::prettyProductName(),
-                     QSysInfo::currentCpuArchitecture());
+            const QString info = QString("OS: %1 | Kernel: %2 | CPU: %3 | RAM: %4")
+                .arg(sysinfoOS(), sysinfoKernel(), sysinfoCPU(), sysinfoRAM());
             m_model->sendMessage(host, channel, info);
+        } else if (cmd == "/help") {
+            const QStringList lines = {
+                "Available commands:",
+                "  /join <channel> [key]       — join a channel",
+                "  /part [message]             — leave the current channel",
+                "  /nick <newnick>             — change your nick",
+                "  /me <action>                — send an action (/me waves)",
+                "  /msg <target> <message>     — send a private message",
+                "  /notice <target> <message>  — send a NOTICE",
+                "  /topic [text]               — show or set the channel topic",
+                "  /kick <nick> [reason]       — kick a user",
+                "  /away [message]             — set away status",
+                "  /back                       — clear away status",
+                "  /whois <nick>               — request WHOIS info",
+                "  /motd [server]              — request the MOTD",
+                "  /version [nick]             — request VERSION (nick optional)",
+                "  /ctcp <target> <cmd> [args] — send a CTCP request",
+                "  /sysinfo                    — post client/system info to channel",
+                "  /quote <raw>  /raw <raw>    — send a raw IRC line",
+                "  /quit [message]             — disconnect from server",
+            };
+            for (const QString &line : lines)
+                appendMessage(Message::make(MessageType::Server, "", line));
         } else {
             appendMessage(Message::make(MessageType::Error, "", "Unknown command: " + cmd));
         }
