@@ -56,7 +56,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## In Progress
 
-- [ ] CI release workflow — confirm green end-to-end on all three platforms
+- [ ] Release workflow — confirm green end-to-end on all three platforms (CI confirmed green; release needs a tag push to verify)
 
 ---
 

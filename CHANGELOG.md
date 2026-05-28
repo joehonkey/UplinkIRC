@@ -182,6 +182,26 @@ Known issues open:
 -->
 
 <!--
+Session summary — CI green sprint:
+
+What was fixed:
+  - CI was failing on Windows only. Linux and macOS were already passing after
+    the per-platform Qt install switch. Windows aqtinstall was using arch
+    'win64_msvc2019_64' which doesn't exist for Qt 6.8.x — Qt 6.7+ moved to
+    MSVC 2022 builds. Fixed: changed arch to 'win64_msvc2022_64'.
+  - Windows runner was hitting a Python permission error on the Windows Store
+    python.EXE stub. Fixed: added explicit actions/setup-python@v5 step before
+    jurplel/install-qt-action so aqtinstall gets a clean Python install.
+  - Both fixes applied to ci.yml and release.yml.
+  - All three platforms (ubuntu-24.04, windows-latest, macos-latest) now pass.
+
+Known issues open:
+  - Release workflow not yet confirmed end-to-end (no new tag pushed this session).
+  - No auto-reconnect on disconnect.
+  - Emoji picker not yet built.
+-->
+
+<!--
 Session summary — v0.2.0 sprint:
 
 What was built:
