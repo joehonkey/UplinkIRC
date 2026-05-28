@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            qt-arch: gcc_64
+          - os: windows-latest
+            qt-arch: win64_msvc2019_64
+          - os: macos-latest
+            qt-arch: ''
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.7.3'
+          arch: ${{ matrix.qt-arch }}
+          modules: 'qtsvg'
+          cache: true
+
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      # ── Linux ────────────────────────────────────────────────────────────
+      - name: Package (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p artifact/UplinkIRC
+          cp build/UplinkIRC artifact/UplinkIRC/
+          cp -r build/themes artifact/UplinkIRC/
+          tar -czf UplinkIRC-${{ github.ref_name }}-linux-x86_64.tar.gz \
+              -C artifact UplinkIRC
+
+      # ── Windows ──────────────────────────────────────────────────────────
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path artifact\UplinkIRC | Out-Null
+          Copy-Item build\Release\UplinkIRC.exe artifact\UplinkIRC\
+          Copy-Item -Recurse build\Release\themes artifact\UplinkIRC\themes
+          windeployqt --release artifact\UplinkIRC\UplinkIRC.exe
+          Compress-Archive -Path artifact\UplinkIRC\* `
+              -DestinationPath UplinkIRC-${{ github.ref_name }}-windows-x64.zip
+
+      # ── macOS ────────────────────────────────────────────────────────────
+      - name: Package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          macdeployqt build/UplinkIRC.app -dmg
+          mv build/UplinkIRC.dmg \
+              UplinkIRC-${{ github.ref_name }}-macos-${{ runner.arch == 'ARM64' && 'arm64' || 'x86_64' }}.dmg
+
+      # ── Upload ───────────────────────────────────────────────────────────
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          files: UplinkIRC-${{ github.ref_name }}-*
+          generate_release_notes: true

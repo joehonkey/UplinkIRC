@@ -8,7 +8,16 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Widgets Network Svg)
-find_package(tomlplusplus REQUIRED)
+find_package(tomlplusplus QUIET)
+if(NOT tomlplusplus_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(tomlplusplus
+        GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+        GIT_TAG        v3.4.0
+        GIT_SHALLOW    TRUE
+    )
+    FetchContent_MakeAvailable(tomlplusplus)
+endif()
 qt_standard_project_setup()
 
 qt_add_executable(UplinkIRC
