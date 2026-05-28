@@ -96,6 +96,25 @@ Known issues open:
 -->
 
 <!--
+Session summary — font and input bar polish:
+
+What was built:
+  - IBM Plex Mono set as default application font (size 10, monospace fallback hint).
+    Applied via QApplication::setFont() in main.cpp before any window is created.
+  - Nick prefix label background fix committed: moved QWidget#inputBar and
+    QWidget#inputBar QLabel rules into the theme QSS template. Removed inline
+    stylesheet from the inputBar widget. This was built last session but the code
+    commit landed after the docs close — documented here for completeness.
+
+Bugs found and fixed:
+  - Nick prefix QLabel white-background artifact: confirmed fix committed as 63c89a9.
+
+Known issues open:
+  - No auto-reconnect on disconnect.
+  - Emoji picker not yet built.
+-->
+
+<!--
 Session summary — icon, color codes, and input bar fix sprint:
 
 What was built:
