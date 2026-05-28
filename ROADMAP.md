@@ -26,7 +26,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] System tray — minimize to tray on close, left-click shows window, right-click menu (Show/Quit)
 - [x] Unread badge — tray icon gets red dot on unread messages, balloon notification when hidden
 - [x] Theme loader — 55 TOML themes, applies as QSS stylesheet, live switching from hamburger
-- [x] App icons — Maindefault (flat satellite) and Mainalt (3D satellite), user picks in hamburger, persists via QSettings
+- [x] App icon — single uplink.svg via Qt6::Svg; icon picker removed (one icon)
 - [x] About dialog — horizontal Uplink IRC Client brand image, version, server info
 - [x] Signal ordering fix — config loads after MainWindow connects signals
 - [x] Version baked into binary — `version.h` generated from CMake `PROJECT_VERSION` at build time
@@ -40,6 +40,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] In-app Documentation panel — Hamburger → Documentation opens tabbed help viewer
 - [x] Save theme + icon choice to config.toml (persists across restarts)
 - [x] about.png background normalized — logo visible on both light and dark backgrounds
+- [x] IRC color code rendering — mIRC bold, italic, underline, strikethrough, reverse, 16 colors (fg+bg)
 
 ---
 
@@ -52,7 +53,6 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 ## Planned — Near Term
 
 - [ ] /help command — lists available commands in chat view
-- [ ] IRC color code rendering — parse mIRC color codes in messages
 - [ ] Topic click to edit — click topic bar to set a new topic
 - [ ] SASL authentication — PLAIN and EXTERNAL mechanisms
 - [ ] NickServ IDENTIFY auto — password field in config triggers identify on connect

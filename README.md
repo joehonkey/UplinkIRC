@@ -20,7 +20,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - Message buffer cap (2000 per channel) for stable long sessions
 - Movable nick list dock (left or right)
 - Per-session nick dialog if config has placeholder `yournick`
-- Two app icon styles, user-selectable from hamburger menu
+- mIRC color code rendering — bold, italic, underline, colors in chat
 
 ---
 
@@ -29,7 +29,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 ### Dependencies
 
 - CMake 3.16+
-- Qt 6.2+ (Core, Widgets, Network)
+- Qt 6.2+ (Core, Widgets, Network, Svg)
 - C++17 compiler (GCC, Clang, MSVC)
 - [tomlplusplus](https://github.com/marzer/tomlplusplus)
 
@@ -37,22 +37,22 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 **Arch Linux**
 ```bash
-sudo pacman -S qt6-base cmake tomlplusplus
+sudo pacman -S qt6-base qt6-svg cmake tomlplusplus
 ```
 
 **Ubuntu / Debian**
 ```bash
-sudo apt install cmake qt6-base-dev libtomlplusplus-dev
+sudo apt install cmake qt6-base-dev libqt6svg6-dev libtomlplusplus-dev
 ```
 
 **Fedora**
 ```bash
-sudo dnf install cmake qt6-qtbase-devel tomlplusplus-devel
+sudo dnf install cmake qt6-qtbase-devel qt6-qtsvg-devel tomlplusplus-devel
 ```
 
 **FreeBSD**
 ```bash
-sudo pkg install cmake qt6-base tomlplusplus
+sudo pkg install cmake qt6-base qt6-svg tomlplusplus
 ```
 
 **macOS (Homebrew)**

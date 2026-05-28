@@ -96,6 +96,39 @@ Known issues open:
 -->
 
 <!--
+Session summary — icon, color codes, and input bar fix sprint:
+
+What was built:
+  - Synced ROADMAP/CHANGELOG: 4 commits from prior session landed after close-session
+    had already run. Brought all docs surfaces back in line.
+  - UserPromptSubmit hook: .claude/hooks/close-session-check.sh + .claude/settings.json
+    detect "close session" / "end session" and inject the 8-step checklist into Claude's
+    context so it cannot be skipped regardless of where in the session it fires.
+  - Single SVG icon: replaced maindefault.png, mainalt.png, about1.png with one
+    uplink.svg. Added Qt6::Svg to CMakeLists.txt find_package and target_link_libraries.
+    Removed icon picker submenu from hamburger. Removed `icon` field from UiConfig,
+    config.cpp load/save, and config.toml. AppIcons simplified to two inline functions.
+  - mIRC color code rendering: ircToHtml() static function in mainwindow.cpp processes
+    raw IRC text before HTML insertion. Handles \x02 bold, \x1D italic, \x1F underline,
+    \x1E strikethrough, \x16 reverse (fg/bg swap), \x03fg,bg color (16 mIRC colors),
+    \x0F reset. Applied to Privmsg, Action, Notice message types.
+  - Nick prefix label background fix: moved inputBar and nick label styling entirely into
+    the theme QSS template (QWidget#inputBar, QWidget#inputBar QLabel rules). Removed
+    inline stylesheet from the inputBar widget. Fixes white-box artifact caused by Qt's
+    stylesheet inheritance breaking background:transparent on children of styled parents.
+
+Bugs found and fixed:
+  - Nick prefix QLabel rendered with white background on themed builds. Root cause: Qt
+    does not correctly propagate background:transparent through parent widgets that have
+    inline stylesheets. Fix: remove inline stylesheet from inputBar, move all input bar
+    styling into the theme QSS where Qt can resolve it in one pass.
+
+Known issues open:
+  - No auto-reconnect on disconnect.
+  - Emoji picker not yet built.
+-->
+
+<!--
 Session summary — UX features + docs panel sprint:
 
 What was built:

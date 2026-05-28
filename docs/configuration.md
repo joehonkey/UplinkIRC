@@ -24,7 +24,6 @@ This is a complete config file showing every available option. Copy it, change t
 ```toml
 [ui]
 theme             = "catppuccin-mocha"
-icon              = "maindefault"
 show_nick_prefix  = true
 show_topic        = true
 show_emoji_button = false
@@ -55,7 +54,6 @@ Controls the look and feel of the interface. All keys are optional — if omitte
 | Key | Type | Default | Description |
 |---|---|---|---|
 | `theme` | string | `"default"` | Theme to apply. Must match the filename in `themes/` without the `.toml` extension. See [Themes](#themes) below |
-| `icon` | string | `"maindefault"` | App icon style. `"maindefault"` = flat satellite dish, `"mainalt"` = 3D satellite. Also selectable from the hamburger menu |
 | `show_nick_prefix` | bool | `true` | Show your nickname next to the message input box |
 | `show_topic` | bool | `true` | Show the topic bar at the top of the chat view |
 | `show_emoji_button` | bool | `false` | Show the emoji button to the right of the message input (emoji picker is coming soon) |
@@ -66,7 +64,6 @@ Controls the look and feel of the interface. All keys are optional — if omitte
 ```toml
 [ui]
 theme             = "nord"
-icon              = "maindefault"
 show_nick_prefix  = true
 show_topic        = true
 show_emoji_button = false
