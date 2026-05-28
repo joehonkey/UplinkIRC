@@ -248,7 +248,6 @@ QToolButton {
     color: {{text}};
     border: none;
     padding: 2px 6px;
-    font-size: 16px;
 }
 QToolButton:hover {
     background-color: {{border}};
@@ -274,6 +273,13 @@ QPushButton:pressed { background-color: {{sidebarBg}}; }
 /* ── Dialog buttons ── */
 QDialogButtonBox QPushButton {
     min-width: 70px;
+}
+
+/* ── Typing indicator ── */
+QLabel#typingLabel {
+    color: {{placeholder}};
+    background: {{inputBg}};
+    padding: 1px 6px;
 }
 )";
 

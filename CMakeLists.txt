@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(UplinkIRC VERSION 0.1.0 LANGUAGES CXX)
+project(UplinkIRC VERSION 0.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,6 +29,8 @@ qt_add_executable(UplinkIRC
     src/ui/aboutdialog.h
     src/ui/docsdialog.cpp
     src/ui/docsdialog.h
+    src/ui/fontdialog.cpp
+    src/ui/fontdialog.h
     src/ui/appicons.h
     src/ui/themeloader.cpp
     src/ui/themeloader.h

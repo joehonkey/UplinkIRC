@@ -12,12 +12,12 @@ int main(int argc, char *argv[])
     app.setApplicationVersion("0.1.0");
     app.setOrganizationName("LinuxDojo");
 
-    QFont font("IBM Plex Mono", 10);
-    font.setStyleHint(QFont::Monospace);
-    app.setFont(font);
-
     const QString cfgPath = Config::defaultPath();
     Config cfg = Config::load(cfgPath);
+
+    QFont font(cfg.ui.fontFamily);
+    font.setStyleHint(QFont::Monospace);
+    app.setFont(font);
 
     // First-run nick setup
     if (cfg.needsNickSetup()) {

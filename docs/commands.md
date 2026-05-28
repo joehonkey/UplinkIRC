@@ -12,6 +12,9 @@ Type any of these commands in the message input box and press Enter.
 | `/j #channel` | Short alias for `/join` |
 | `/part [#channel]` | Leave a channel. Defaults to the current channel if omitted |
 | `/part #channel reason` | Leave with a part message |
+| `/topic` | Show the current channel topic |
+| `/topic <text>` | Set the channel topic |
+| `/kick <nick> [reason]` | Kick a user from the current channel (requires op) |
 
 ### Examples
 
@@ -20,6 +23,8 @@ Type any of these commands in the message input box and press Enter.
 /j #uplink
 /part
 /part #linux see you later
+/topic new topic here
+/kick baduser spamming
 ```
 
 ---
@@ -30,12 +35,14 @@ Type any of these commands in the message input box and press Enter.
 |---|---|
 | `/me <text>` | Send an action message. Shown as `* yournick text` in chat |
 | `/msg <nick> <text>` | Send a private message to a user |
+| `/notice <target> <text>` | Send a NOTICE to a user or channel |
 
 ### Examples
 
 ```
 /me waves hello
 /msg alice hey, are you around?
+/notice alice heads up
 ```
 
 ---
@@ -45,14 +52,18 @@ Type any of these commands in the message input box and press Enter.
 | Command | Description |
 |---|---|
 | `/nick <name>` | Change your nickname |
+| `/away [message]` | Set yourself as away with an optional message |
+| `/back` | Clear your away status |
+| `/whois <nick>` | Look up info about a user |
 
-### Example
+### Examples
 
 ```
 /nick coolnick
+/away grabbing coffee
+/back
+/whois alice
 ```
-
-Nick changes take effect immediately. If the nick is already in use on the server you will get an error in the server buffer.
 
 ---
 
@@ -61,12 +72,36 @@ Nick changes take effect immediately. If the nick is already in use on the serve
 | Command | Description |
 |---|---|
 | `/quit [message]` | Disconnect from the current server with an optional quit message |
+| `/motd [server]` | Request the message of the day |
 
 ### Examples
 
 ```
 /quit
 /quit later everyone
+/motd
+```
+
+---
+
+## CTCP
+
+| Command | Description |
+|---|---|
+| `/version [nick]` | Request server version, or CTCP VERSION from a nick |
+| `/ctcp <nick> <command> [args]` | Send a CTCP request to a user |
+| `/sysinfo` | Post your OS and client info to the current channel |
+
+Incoming CTCP VERSION and PING requests are answered automatically.
+
+### Examples
+
+```
+/version
+/version alice
+/ctcp alice PING
+/ctcp alice TIME
+/sysinfo
 ```
 
 ---
@@ -83,10 +118,8 @@ Use these when you need to send a command that UplinkIRC does not have a built-i
 ### Examples
 
 ```
-/raw PRIVMSG #uplink :hello
 /raw MODE #uplink +m
-/raw WHOIS alice
-/raw TOPIC #uplink New topic here
+/raw INVITE alice #uplink
 /quote JOIN #test
 ```
 

@@ -3,6 +3,7 @@
 #include "ui/trayicon.h"
 #include "ui/aboutdialog.h"
 #include "ui/docsdialog.h"
+#include "ui/fontdialog.h"
 #include "ui/appicons.h"
 #include "ui/themeloader.h"
 #include "config/config.h"
@@ -30,6 +31,9 @@
 #include <QTextCharFormat>
 #include <QScrollBar>
 #include <QInputDialog>
+#include <QSysInfo>
+#include <QTimer>
+#include "version.h"
 
 // ---------------------------------------------------------------------------
 // Nick color — consistent hash-based color per nick
@@ -74,6 +78,7 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
     setupChatArea();
     setupInputBar();
     connectModel();
+    applyFontSizes();
 
     if (QSystemTrayIcon::isSystemTrayAvailable())
         m_tray = new TrayIcon(model, this);
@@ -114,6 +119,21 @@ void MainWindow::setupToolbar()
         m_docsDialog->show();
         m_docsDialog->raise();
         m_docsDialog->activateWindow();
+    });
+
+    // Font config
+    auto *fontAct = menu->addAction("Font Config...");
+    connect(fontAct, &QAction::triggered, this, [this]{
+        FontDialog dlg(m_config.ui.fontFamily, m_config.ui.fontSizes, this);
+        if (dlg.exec() == QDialog::Accepted) {
+            m_config.ui.fontFamily = dlg.selectedFamily();
+            m_config.ui.fontSizes  = dlg.selectedSizes();
+            Config::save(m_config, Config::defaultPath());
+            QFont appFont(m_config.ui.fontFamily);
+            appFont.setStyleHint(QFont::Monospace);
+            QApplication::setFont(appFont);
+            applyFontSizes();
+        }
     });
 
     // Theme picker
@@ -162,6 +182,22 @@ void MainWindow::setupToolbar()
         Config::save(m_config, Config::defaultPath());
     });
 
+    // Typing indicator toggle
+    auto *typingAct = menu->addAction("Typing Indicator");
+    typingAct->setCheckable(true);
+    typingAct->setChecked(m_config.ui.typingIndicator);
+    connect(typingAct, &QAction::toggled, this, [this](bool on){
+        m_config.ui.typingIndicator = on;
+        Config::save(m_config, Config::defaultPath());
+        if (!on) {
+            m_typingOutTimer->stop();
+            m_typingNicks.clear();
+            for (auto *t : std::as_const(m_typingNickTimers)) { t->stop(); t->deleteLater(); }
+            m_typingNickTimers.clear();
+            m_typingLabel->setVisible(false);
+        }
+    });
+
     // Colored nicks toggle
     auto *colorNicksAct = menu->addAction("Colored Nicks");
     colorNicksAct->setCheckable(true);
@@ -177,14 +213,50 @@ void MainWindow::setupToolbar()
     m_hamburger->setMenu(menu);
     tb->addWidget(m_hamburger);
 
-    auto *appLabel = new QLabel("  Uplink");
-    QFont f = appLabel->font();
+    m_appLabel = new QLabel("  Uplink");
+    QFont f = m_appLabel->font();
     f.setBold(true);
-    f.setPointSize(f.pointSize() + 1);
-    appLabel->setFont(f);
-    tb->addWidget(appLabel);
+    m_appLabel->setFont(f);
+    tb->addWidget(m_appLabel);
 
     tb->addSeparator();
+}
+
+void MainWindow::applyFontSizes()
+{
+    const QString &fam = m_config.ui.fontFamily;
+    const FontSizes &fs = m_config.ui.fontSizes;
+
+    auto makeFont = [&](int pt) {
+        QFont f(fam, pt);
+        f.setStyleHint(QFont::Monospace);
+        return f;
+    };
+
+    if (m_hamburger) {
+        QFont f = makeFont(fs.toolbar);
+        f.setBold(false);
+        m_hamburger->setFont(f);
+    }
+    if (m_appLabel) {
+        QFont f = makeFont(fs.toolbar);
+        f.setBold(true);
+        m_appLabel->setFont(f);
+    }
+    if (m_sidebar)        m_sidebar->setFont(makeFont(fs.sidebar));
+    if (m_chatView)       m_chatView->setFont(makeFont(fs.chat));
+    if (m_nickList)       m_nickList->setFont(makeFont(fs.nickList));
+    if (m_nickDock)       m_nickDock->setFont(makeFont(fs.nickDock));
+    if (m_topicToggleBtn) m_topicToggleBtn->setFont(makeFont(fs.topicBar));
+    if (m_topicLabel)     m_topicLabel->setFont(makeFont(fs.topicBar));
+    if (m_modesLabel)     m_modesLabel->setFont(makeFont(fs.topicBar));
+    if (m_nickPrefix)   m_nickPrefix->setFont(makeFont(fs.inputNick));
+    if (m_input)        m_input->setFont(makeFont(fs.input));
+    if (m_typingLabel) {
+        QFont f = makeFont(qMax(fs.input - 1, 7));
+        f.setItalic(true);
+        m_typingLabel->setFont(f);
+    }
 }
 
 void MainWindow::setupSidebar()
@@ -227,15 +299,25 @@ void MainWindow::setupChatArea()
     // Topic bar
     m_topicBar  = new QWidget;
     auto *tHbox = new QHBoxLayout(m_topicBar);
-    tHbox->setContentsMargins(6, 3, 6, 3);
+    tHbox->setContentsMargins(4, 2, 6, 2);
+    tHbox->setSpacing(6);
+
+    m_topicToggleBtn = new QPushButton("Topic");
+    m_topicToggleBtn->setFlat(true);
+    m_topicToggleBtn->setCursor(Qt::PointingHandCursor);
 
     m_modesLabel = new QLabel;
-    m_modesLabel->setStyleSheet("font-family: monospace; color: gray;");
+    m_modesLabel->setStyleSheet("color: gray;");
     m_topicLabel = new QLabel;
     m_topicLabel->setWordWrap(false);
     m_topicLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
     m_topicLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
+    connect(m_topicToggleBtn, &QPushButton::clicked, this, [this]{
+        m_topicLabel->setVisible(!m_topicLabel->isVisible());
+    });
+
+    tHbox->addWidget(m_topicToggleBtn);
     tHbox->addWidget(m_modesLabel);
     tHbox->addWidget(m_topicLabel, 1);
     m_topicBar->setVisible(m_showTopic);
@@ -277,7 +359,40 @@ void MainWindow::setupInputBar()
     bar->setObjectName("inputBar");
 
     auto *layout = qobject_cast<QVBoxLayout *>(centralWidget()->layout());
+
+    // Typing indicator label — sits just above the input bar
+    m_typingLabel = new QLabel;
+    m_typingLabel->setObjectName("typingLabel");
+    m_typingLabel->setContentsMargins(6, 1, 6, 1);
+    m_typingLabel->setVisible(false);
+    layout->addWidget(m_typingLabel);
+
     layout->addWidget(bar);
+
+    // Debounce timer: sends typing=active 1s after the user starts typing
+    m_typingOutTimer = new QTimer(this);
+    m_typingOutTimer->setSingleShot(true);
+    m_typingOutTimer->setInterval(1000);
+    connect(m_typingOutTimer, &QTimer::timeout, this, [this]{
+        if (!m_config.ui.typingIndicator) return;
+        const QString host = m_model->activeHost();
+        const QString ch   = m_model->activeChannel();
+        if (ch.isEmpty() || ch == "(server)") return;
+        m_model->sendTyping(host, ch, "active");
+    });
+
+    connect(m_input, &QLineEdit::textChanged, this, [this](const QString &text){
+        if (!m_config.ui.typingIndicator) return;
+        const QString host = m_model->activeHost();
+        const QString ch   = m_model->activeChannel();
+        if (ch.isEmpty() || ch == "(server)") return;
+        if (!text.isEmpty()) {
+            m_typingOutTimer->start();
+        } else {
+            m_typingOutTimer->stop();
+            m_model->sendTyping(host, ch, "done");
+        }
+    });
 
     connect(m_input, &QLineEdit::returnPressed, this, &MainWindow::onInputSubmit);
 }
@@ -294,6 +409,7 @@ void MainWindow::connectModel()
     connect(m_model, &SessionModel::nickListChanged,   this, &MainWindow::onNickListChanged);
     connect(m_model, &SessionModel::unreadChanged,     this, &MainWindow::onUnreadChanged);
     connect(m_model, &SessionModel::selfNickChanged,   this, &MainWindow::onSelfNickChanged);
+    connect(m_model, &SessionModel::typingReceived,    this, &MainWindow::onTypingReceived);
 }
 
 // ---------------------------------------------------------------------------
@@ -525,6 +641,68 @@ void MainWindow::onSelfNickChanged(const QString &host, const QString &nick)
         m_nickPrefix->setText(nick);
 }
 
+void MainWindow::onTypingReceived(const QString &host, const QString &channel,
+                                   const QString &nick, const QString &state)
+{
+    if (!m_config.ui.typingIndicator) return;
+
+    const QString key      = host + "|" + channel;
+    const QString timerKey = host + "|" + channel + "|" + nick;
+
+    if (state == "active" || state == "paused") {
+        m_typingNicks[key].insert(nick);
+
+        if (m_typingNickTimers.contains(timerKey)) {
+            m_typingNickTimers[timerKey]->start(6000);
+        } else {
+            auto *t = new QTimer(this);
+            t->setSingleShot(true);
+            connect(t, &QTimer::timeout, this, [this, key, timerKey, nick]{
+                m_typingNicks[key].remove(nick);
+                if (auto *timer = m_typingNickTimers.value(timerKey)) {
+                    m_typingNickTimers.remove(timerKey);
+                    timer->deleteLater();
+                }
+                updateTypingLabel();
+            });
+            m_typingNickTimers.insert(timerKey, t);
+            t->start(6000);
+        }
+    } else {
+        m_typingNicks[key].remove(nick);
+        if (auto *t = m_typingNickTimers.value(timerKey)) {
+            t->stop();
+            t->deleteLater();
+            m_typingNickTimers.remove(timerKey);
+        }
+    }
+
+    updateTypingLabel();
+}
+
+void MainWindow::updateTypingLabel()
+{
+    const QString key = m_model->activeHost() + "|" + m_model->activeChannel();
+    const QSet<QString> &typers = m_typingNicks.value(key);
+
+    if (typers.isEmpty() || !m_config.ui.typingIndicator) {
+        m_typingLabel->setVisible(false);
+        return;
+    }
+
+    QStringList names(typers.begin(), typers.end());
+    QString text;
+    if (names.size() == 1)
+        text = names[0] + " is typing...";
+    else if (names.size() == 2)
+        text = names[0] + " and " + names[1] + " are typing...";
+    else
+        text = QString::number(names.size()) + " people are typing...";
+
+    m_typingLabel->setText(text);
+    m_typingLabel->setVisible(true);
+}
+
 // ---------------------------------------------------------------------------
 // UI → Model
 // ---------------------------------------------------------------------------
@@ -560,6 +738,11 @@ void MainWindow::onInputSubmit()
     const QString channel = m_model->activeChannel();
     if (host.isEmpty() || channel.isEmpty()) return;
 
+    // Stop typing notification on send
+    m_typingOutTimer->stop();
+    if (m_config.ui.typingIndicator && channel != "(server)")
+        m_model->sendTyping(host, channel, "done");
+
     if (text.startsWith('/')) {
         const QString cmd  = text.section(' ', 0, 0).toLower();
         const QString args = text.section(' ', 1);
@@ -574,10 +757,55 @@ void MainWindow::onInputSubmit()
             m_model->sendAction(host, channel, args);
         } else if (cmd == "/msg") {
             m_model->sendMessage(host, args.section(' ', 0, 0), args.section(' ', 1));
+        } else if (cmd == "/notice") {
+            const QString target = args.section(' ', 0, 0);
+            const QString msg    = args.section(' ', 1);
+            if (!target.isEmpty() && !msg.isEmpty())
+                m_model->sendRaw(host, "NOTICE " + target + " :" + msg);
         } else if (cmd == "/quote" || cmd == "/raw") {
             m_model->sendRaw(host, args);
         } else if (cmd == "/quit") {
             if (auto *cl = m_model->clientFor(host)) cl->quit(args.isEmpty() ? "UplinkIRC" : args);
+        } else if (cmd == "/away") {
+            m_model->sendRaw(host, args.isEmpty() ? "AWAY" : "AWAY :" + args);
+        } else if (cmd == "/back") {
+            m_model->sendRaw(host, "AWAY");
+        } else if (cmd == "/motd") {
+            m_model->sendRaw(host, args.isEmpty() ? "MOTD" : "MOTD " + args.trimmed());
+        } else if (cmd == "/whois") {
+            m_model->sendRaw(host, "WHOIS " + args.trimmed());
+        } else if (cmd == "/topic") {
+            if (args.isEmpty())
+                m_model->sendRaw(host, "TOPIC " + channel);
+            else
+                m_model->sendRaw(host, "TOPIC " + channel + " :" + args);
+        } else if (cmd == "/kick") {
+            const QString target = args.section(' ', 0, 0);
+            const QString reason = args.section(' ', 1);
+            if (!target.isEmpty())
+                m_model->sendRaw(host, "KICK " + channel + " " + target
+                                 + (reason.isEmpty() ? "" : " :" + reason));
+        } else if (cmd == "/version") {
+            if (args.isEmpty())
+                m_model->sendRaw(host, "VERSION");
+            else
+                m_model->sendRaw(host, "PRIVMSG " + args.trimmed() + " :\x01VERSION\x01");
+        } else if (cmd == "/ctcp") {
+            const QString target   = args.section(' ', 0, 0);
+            const QString ctcpcmd  = args.section(' ', 1, 1).toUpper();
+            const QString ctcpargs = args.section(' ', 2);
+            if (!target.isEmpty() && !ctcpcmd.isEmpty()) {
+                const QString ctcp = ctcpargs.isEmpty()
+                    ? "\x01" + ctcpcmd + "\x01"
+                    : "\x01" + ctcpcmd + " " + ctcpargs + "\x01";
+                m_model->sendRaw(host, "PRIVMSG " + target + " :" + ctcp);
+            }
+        } else if (cmd == "/sysinfo") {
+            const QString info = QString("UplinkIRC " UPLINKIRC_VERSION " | Qt %1 | %2 | %3")
+                .arg(qVersion(),
+                     QSysInfo::prettyProductName(),
+                     QSysInfo::currentCpuArchitecture());
+            m_model->sendMessage(host, channel, info);
         } else {
             appendMessage(Message::make(MessageType::Error, "", "Unknown command: " + cmd));
         }
@@ -603,6 +831,7 @@ void MainWindow::switchToChannel(const QString &host, const QString &channel)
         m_nickPrefix->setText(sess->nick);
 
     setWindowTitle("UplinkIRC — " + channel + " @ " + host);
+    updateTypingLabel();
 }
 
 void MainWindow::refreshChatView(const QString &host, const QString &channel)

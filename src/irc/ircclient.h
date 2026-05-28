@@ -23,6 +23,7 @@ public:
     void privmsg(const QString &target, const QString &text);
     void notice(const QString &target, const QString &text);
     void setNick(const QString &nick);
+    void sendTyping(const QString &channel, const QString &state);
     void sendRaw(const QString &line);
 
     QString currentNick() const { return m_nick; }
@@ -60,6 +61,8 @@ signals:
     void serverMessage(const QString &server, const QString &text);
     void rawReceived  (const QString &line);
     void selfNickChanged(const QString &server, const QString &newNick);
+    void typingReceived(const QString &server, const QString &channel,
+                        const QString &nick,   const QString &state);
 
 private slots:
     void onConnected();

@@ -34,6 +34,7 @@ public:
     void sendPart   (const QString &host, const QString &channel, const QString &reason = {});
     void sendNick   (const QString &host, const QString &nick);
     void sendAction (const QString &host, const QString &target, const QString &text);
+    void sendTyping (const QString &host, const QString &channel, const QString &state);
     IrcClient *clientFor(const QString &host);
 
 signals:
@@ -52,6 +53,10 @@ signals:
 
     // Self
     void selfNickChanged(const QString &host, const QString &nick);
+
+    // Typing
+    void typingReceived(const QString &host, const QString &channel,
+                        const QString &nick, const QString &state);
 
 private:
     void attachClient(IrcClient *client, const ServerConfig &cfg);

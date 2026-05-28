@@ -1,6 +1,7 @@
 #include "ircclient.h"
 #include "ircparser.h"
 #include "config/config.h"
+#include "version.h"
 
 #include <QSslSocket>
 
@@ -68,6 +69,11 @@ void IrcClient::setNick(const QString &nick)
 {
     m_nick = nick;
     sendRaw("NICK " + nick);
+}
+
+void IrcClient::sendTyping(const QString &channel, const QString &state)
+{
+    sendRaw("@+typing=" + state + " TAGMSG " + channel);
 }
 
 void IrcClient::sendRaw(const QString &line)
@@ -157,21 +163,49 @@ void IrcClient::processLine(const QString &line)
         return;
     }
 
-    // PRIVMSG / CTCP ACTION
+    // PRIVMSG / CTCP
     if (cmd == "PRIVMSG" && msg.params.size() >= 1) {
         const QString target = msg.params[0];
         const QString text   = msg.trailing;
-        if (text.startsWith("\x01""ACTION ") && text.endsWith("\x01")) {
-            emit actionReceived(m_host, target, msg.nick, text.mid(8, text.size() - 9));
+        if (text.startsWith('\x01') && text.endsWith('\x01')) {
+            const QString ctcp    = text.mid(1, text.size() - 2);
+            const QString ctcpCmd = ctcp.section(' ', 0, 0).toUpper();
+            if (ctcpCmd == "ACTION") {
+                emit actionReceived(m_host, target, msg.nick, ctcp.mid(7));
+            } else if (ctcpCmd == "VERSION") {
+                sendRaw("NOTICE " + msg.nick + " :\x01VERSION UplinkIRC " UPLINKIRC_VERSION "\x01");
+                emit serverMessage(m_host, "CTCP VERSION from " + msg.nick);
+            } else if (ctcpCmd == "PING") {
+                sendRaw("NOTICE " + msg.nick + " :\x01PING " + ctcp.section(' ', 1) + "\x01");
+            } else {
+                emit serverMessage(m_host, "CTCP " + ctcpCmd + " from " + msg.nick);
+            }
         } else {
             emit messageReceived(m_host, target, msg.nick, text);
         }
         return;
     }
 
-    // NOTICE
+    // NOTICE / CTCP replies
     if (cmd == "NOTICE" && msg.params.size() >= 1) {
-        emit noticeReceived(m_host, msg.params[0], msg.nick, msg.trailing);
+        const QString text = msg.trailing;
+        if (text.startsWith('\x01') && text.endsWith('\x01')) {
+            emit serverMessage(m_host, "CTCP reply from " + msg.nick + ": "
+                               + text.mid(1, text.size() - 2));
+        } else {
+            emit noticeReceived(m_host, msg.params[0], msg.nick, text);
+        }
+        return;
+    }
+
+    // TAGMSG (typing notifications)
+    if (cmd == "TAGMSG" && !msg.params.isEmpty()) {
+        for (const QString &tag : msg.tags.split(';', Qt::SkipEmptyParts)) {
+            if (tag.section('=', 0, 0) == "+typing") {
+                emit typingReceived(m_host, msg.params[0], msg.nick, tag.section('=', 1));
+                break;
+            }
+        }
         return;
     }
 
@@ -244,7 +278,7 @@ void IrcClient::handleCap(const QStringList &params, const QString &trailing)
         const QStringList available = trailing.split(' ', Qt::SkipEmptyParts);
         const QStringList desired = {
             "multi-prefix", "away-notify", "server-time",
-            "message-tags", "batch", "labeled-response"
+            "message-tags", "batch", "labeled-response", "draft/typing"
         };
         for (const QString &cap : desired)
             if (available.contains(cap))

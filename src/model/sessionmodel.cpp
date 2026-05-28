@@ -87,6 +87,12 @@ void SessionModel::sendAction(const QString &host, const QString &target, const 
         postMessage(host, target, Message::make(MessageType::Action, sess->nick, text));
 }
 
+void SessionModel::sendTyping(const QString &host, const QString &channel, const QString &state)
+{
+    if (auto *cl = clientFor(host))
+        cl->sendTyping(channel, state);
+}
+
 void SessionModel::setActive(const QString &host, const QString &ch)
 {
     m_activeHost    = host;
@@ -120,6 +126,7 @@ void SessionModel::attachClient(IrcClient *cl, const ServerConfig &cfg)
     connect(cl, &IrcClient::namesReceived,   this, &SessionModel::onNamesReceived);
     connect(cl, &IrcClient::serverMessage,   this, &SessionModel::onServerMessage);
     connect(cl, &IrcClient::selfNickChanged, this, &SessionModel::onSelfNickChanged);
+    connect(cl, &IrcClient::typingReceived,  this, &SessionModel::typingReceived);
 
     // Pre-create server buffer and configured channels in the session
     auto *sess = session(cfg.host);

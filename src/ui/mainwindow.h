@@ -3,12 +3,15 @@
 #include <QMainWindow>
 #include <QStringList>
 #include <QColor>
+#include <QHash>
+#include <QSet>
 #include "model/sessionmodel.h"
 #include "config/config.h"
 
 class TrayIcon;
 class DocsDialog;
 
+class QTimer;
 class QTreeWidget;
 class QTreeWidgetItem;
 class QTextEdit;
@@ -49,6 +52,10 @@ private slots:
     void onSidebarSelectionChanged();
     void onInputSubmit();
 
+    // Typing
+    void onTypingReceived(const QString &host, const QString &channel,
+                          const QString &nick, const QString &state);
+
 private:
     void setupToolbar();
     void setupSidebar();
@@ -62,6 +69,8 @@ private:
     void refreshNickList(const QString &host, const QString &channel);
     void refreshTopicBar(const QString &host, const QString &channel);
     void appendMessage  (const Message &msg);
+    void applyFontSizes();
+    void updateTypingLabel();
 
     QString    formatMessage(const Message &msg) const;
     static QColor nickColor(const QString &nick);
@@ -92,11 +101,19 @@ private:
     QDockWidget  *m_nickDock;
     QListWidget  *m_nickList;
     QWidget      *m_topicBar;
+    QPushButton  *m_topicToggleBtn{nullptr};
     QLabel       *m_topicLabel;
     QLabel       *m_modesLabel;
     QAction      *m_toggleTopicAction;
     QToolButton  *m_hamburger;
+    QLabel       *m_appLabel{nullptr};
+    QLabel       *m_typingLabel{nullptr};
     DocsDialog   *m_docsDialog{nullptr};
+
+    // Typing indicator state
+    QTimer                      *m_typingOutTimer{nullptr};
+    QHash<QString, QSet<QString>> m_typingNicks;       // "host|channel" → nicks
+    QHash<QString, QTimer*>       m_typingNickTimers;  // "host|channel|nick" → timeout
 
     SessionModel *m_model;
     TrayIcon     *m_tray{nullptr};
