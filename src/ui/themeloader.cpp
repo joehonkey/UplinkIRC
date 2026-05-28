@@ -193,11 +193,19 @@ QListWidget::item:hover {
 }
 
 /* ── Input bar ── */
+QWidget#inputBar {
+    background-color: {{inputBg}};
+    border-top: 1px solid {{border}};
+}
+QWidget#inputBar QLabel {
+    background-color: {{inputBg}};
+    color: {{inputNick}};
+    border: none;
+}
 QLineEdit {
     background-color: {{inputBg}};
     color: {{inputText}};
     border: none;
-    border-top: 1px solid {{border}};
     padding: 4px 6px;
     selection-background-color: {{accent}};
 }
@@ -283,6 +291,7 @@ QDialogButtonBox QPushButton {
         {"inputBg",      t.inputBg},
         {"inputText",    t.inputText},
         {"placeholder",  t.placeholder},
+        {"inputNick",    t.inputNick},
         {"srvText",      t.sidebarServer},
     });
 }

@@ -263,7 +263,6 @@ void MainWindow::setupInputBar()
     hbox->addWidget(m_emojiBtn);
 
     bar->setObjectName("inputBar");
-    bar->setStyleSheet("QWidget#inputBar { background: palette(base); border-top: 1px solid palette(mid); }");
 
     auto *layout = qobject_cast<QVBoxLayout *>(centralWidget()->layout());
     layout->addWidget(bar);
