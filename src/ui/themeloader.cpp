@@ -276,6 +276,10 @@ QDialogButtonBox QPushButton {
 }
 
 /* ── Topic / info bar ── */
+QWidget#topicBar {
+    background-color: {{sidebarBg}};
+    border-bottom: 1px solid {{border}};
+}
 QLabel#channelLabel {
     color: {{accent}};
     font-weight: bold;

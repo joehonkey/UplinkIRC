@@ -310,14 +310,12 @@ void MainWindow::setupChatArea()
 
     m_userInfoLabel = new QLabel;
     m_userInfoLabel->setObjectName("userInfoLabel");
-    m_userInfoLabel->setAlignment(Qt::AlignRight | Qt::AlignVCenter);
-
     tHbox->addWidget(m_topicLabel);
     tHbox->addWidget(m_modesLabel);
-    tHbox->addStretch(1);
     tHbox->addWidget(m_userInfoLabel);
+    tHbox->addStretch(1);
+    m_topicBar->setObjectName("topicBar");
     m_topicBar->setVisible(m_showTopic);
-    m_topicBar->setStyleSheet("background: palette(mid);");
     vbox->addWidget(m_topicBar);
 
     // Chat view
@@ -402,6 +400,10 @@ void MainWindow::connectModel()
     connect(m_model, &SessionModel::channelRemoved,    this, &MainWindow::onChannelRemoved);
     connect(m_model, &SessionModel::messageAdded,      this, &MainWindow::onMessageAdded);
     connect(m_model, &SessionModel::topicChanged,      this, &MainWindow::onTopicChanged);
+    connect(m_model, &SessionModel::modesChanged, this, [this](const QString &host, const QString &channel){
+        if (host == m_model->activeHost() && channel.toLower() == m_model->activeChannel().toLower())
+            refreshTopicBar(host, channel);
+    });
     connect(m_model, &SessionModel::nickListChanged,   this, &MainWindow::onNickListChanged);
     connect(m_model, &SessionModel::unreadChanged,     this, &MainWindow::onUnreadChanged);
     connect(m_model, &SessionModel::selfNickChanged,   this, &MainWindow::onSelfNickChanged);
@@ -852,7 +854,6 @@ void MainWindow::refreshNickList(const QString &host, const QString &channel)
     }
 
     m_nickDock->setWindowTitle(QString("Users (%1)").arg(ch->nicks.size()));
-    refreshTopicBar(host, channel);
 }
 
 void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
@@ -872,8 +873,7 @@ void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
     for (const auto &sc : std::as_const(m_config.servers))
         if (sc.host == host && !sc.name.isEmpty()) { serverName = sc.name; break; }
 
-    const int users = (ch && channel != "(server)") ? ch->nicks.size() : 0;
-    m_userInfoLabel->setText(serverName + " — " + QString::number(users) + " users");
+    m_userInfoLabel->setText(serverName);
 }
 
 void MainWindow::appendMessage(const Message &msg)

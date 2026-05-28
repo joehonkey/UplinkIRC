@@ -322,6 +322,7 @@ void SessionModel::onModesReceived(const QString &host, const QString &channel, 
     auto *ch = sess->get(channel);
     if (ch) ch->modes = modes;
     postMessage(host, channel, Message::make(MessageType::Server, "", "Mode " + channel + " " + modes));
+    emit modesChanged(host, channel);
 }
 
 void SessionModel::onNamesReceived(const QString &host, const QString &channel, const QStringList &nicks)

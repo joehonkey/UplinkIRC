@@ -340,12 +340,19 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
         // Auto-join configured channels — handled by MainWindow on connected()
         break;
 
+    case 324: // RPL_CHANNELMODEIS — params: me #channel +modes [args...]
+        if (params.size() >= 3) {
+            QStringList modeParts = params.mid(2);
+            emit modesReceived(m_host, params[1], modeParts.join(' '));
+        }
+        break;
+
     case 332: // RPL_TOPIC
         if (params.size() >= 2)
             emit topicReceived(m_host, params[1], trailing);
         break;
 
-    case 333: // RPL_TOPICWHOTIME — ignore, no signal needed yet
+    case 333: // RPL_TOPICWHOTIME — ignore
         break;
 
     case 353: { // RPL_NAMREPLY

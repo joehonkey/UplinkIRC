@@ -47,7 +47,8 @@ signals:
 
     // Content changes — chat view needs updating
     void messageAdded(const QString &host, const QString &channel, const Message &msg);
-    void topicChanged(const QString &host, const QString &channel, const QString &topic);
+    void topicChanged  (const QString &host, const QString &channel, const QString &topic);
+    void modesChanged  (const QString &host, const QString &channel);
     void nickListChanged(const QString &host, const QString &channel);
     void unreadChanged(const QString &host, const QString &channel, int count);
 
