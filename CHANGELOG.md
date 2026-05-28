@@ -3,6 +3,40 @@
 ---
 
 <!--
+Session summary — 2026-05-28 sprint:
+
+What was built:
+  - /help command: lists all available slash commands in the active chat buffer
+    as Server-type messages. One appendMessage call per line for clean display.
+  - /sysinfo rewritten: replaces the old Qt-only QSysInfo one-liner with real
+    system data. On Linux reads /etc/os-release (PRETTY_NAME), /proc/cpuinfo
+    (model name + thread count), /proc/meminfo (MemTotal/MemAvailable), and
+    uname -r for kernel. On FreeBSD uses sysctl hw.model/hw.ncpu/hw.physmem/
+    vm.stats.vm.v_free_count/hw.pagesize. macOS uses sysctl hw.model/hw.ncpu
+    for CPU. Output format: OS: <name> | Kernel: <ver> | CPU: <model> (N threads) | RAM: <used>/<total>GB
+  - SASL PLAIN: full IRCv3 SASL flow. Config keys sasl_user/sasl_password in
+    [[server]] block. If set: sasl cap added to CAP REQ, CAP END held until
+    SASL completes, AUTHENTICATE PLAIN sent on CAP ACK, base64(\0user\0pass)
+    payload sent on AUTHENTICATE +. 903 success → CAP END. 904/905/906
+    failure → CAP END + server message. Numerics 900/903/904/905/906 handled.
+
+Bugs fixed:
+  None — all three changes are new features with clean builds.
+
+Known issues left open:
+  - Release workflow end-to-end not yet confirmed (needs a tag push)
+  - SASL EXTERNAL not implemented
+  - No reconnect on disconnect
+  - Emoji picker not yet built
+
+Next priorities:
+  - NickServ IDENTIFY auto
+  - Reconnect with backoff
+  - Connection status indicator per server
+  - AppImage packaging
+-->
+
+<!--
 Session summary — initial build sprint:
 
 What was built:
@@ -250,6 +284,16 @@ Known issues open:
   - Emoji picker not yet built.
   - /help command not yet implemented.
 -->
+
+## [Unreleased]
+
+**SASL PLAIN, /help, /sysinfo rewrite**
+
+- SASL PLAIN authentication — add `sasl_user` and `sasl_password` to any `[[server]]` block; full CAP negotiation flow; CAP END held until 903/904/906; server buffer shows success or failure
+- `/help` command — lists all available slash commands in the chat buffer
+- `/sysinfo` rewritten — output format: `OS: Arch Linux | Kernel: 7.0.10-arch1-1 | CPU: AMD Ryzen AI 9 HX PRO 370 (24 threads) | RAM: 8.2/24GB`; reads `/proc/cpuinfo`, `/proc/meminfo`, `/etc/os-release` on Linux; `sysctl` fallback on FreeBSD/macOS
+
+---
 
 ## [0.2.0] — 2026-05-28
 

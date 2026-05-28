@@ -47,6 +47,8 @@ ssl      = true
 nick     = "yournick"
 user     = "uplink"
 realname = "UplinkIRC User"
+# sasl_user     = "yournick"      # uncomment to enable SASL PLAIN
+# sasl_password = "yourpassword"
 
 [[server.channels]]
 name = "#uplink"
@@ -113,6 +115,8 @@ Each server you want to connect to gets its own `[[server]]` block. The double b
 | `user` | string | no | Username shown in your hostmask (defaults to `"uplink"`) |
 | `realname` | string | no | Your "real name" shown in WHOIS (defaults to `"UplinkIRC User"`) |
 | `password` | string | no | Server password, sent as `PASS` during connection. Used for bouncers (ZNC, soju) and password-protected servers |
+| `sasl_user` | string | no | SASL username for SASL PLAIN authentication. Must be set together with `sasl_password` |
+| `sasl_password` | string | no | SASL password for SASL PLAIN authentication. Must be set together with `sasl_user` |
 
 ### Minimal server block
 
@@ -128,6 +132,30 @@ nick     = "yournick"
 user     = "uplink"
 realname = "UplinkIRC User"
 ```
+
+---
+
+### SASL PLAIN authentication
+
+If the server requires SASL authentication (common on Libera.Chat, OFTC, and others), add `sasl_user` and `sasl_password` to the server block. UplinkIRC will negotiate the `sasl` CAP and authenticate before completing registration.
+
+```toml
+[[server]]
+name         = "Libera"
+host         = "irc.libera.chat"
+port         = 6697
+ssl          = true
+nick         = "yournick"
+user         = "uplink"
+realname     = "UplinkIRC User"
+sasl_user     = "yournick"
+sasl_password = "yourpassword"
+
+[[server.channels]]
+name = "#linux"
+```
+
+The server buffer will show `SASL authentication successful` on connect, or an error message if it fails. Authentication failure does not disconnect — the connection continues (though services may require auth for certain channels).
 
 ---
 

@@ -43,7 +43,8 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] IRC color code rendering — mIRC bold, italic, underline, strikethrough, reverse, 16 colors (fg+bg)
 - [x] Per-widget font size config — Font Config dialog in hamburger; independent sizes for all UI zones; persists to config.toml
 - [x] Typing indicator — IRCv3 draft/typing TAGMSG; debounced send + receive; hamburger toggle
-- [x] Extended slash commands — /away, /back, /motd, /whois, /topic, /kick, /notice, /version, /ctcp, /sysinfo
+- [x] Extended slash commands — /away, /back, /motd, /whois, /topic, /kick, /notice, /version, /ctcp, /sysinfo, /help
+- [x] /sysinfo rewritten — reads OS/kernel/CPU/RAM from /proc and /etc/os-release on Linux; sysctl fallback on FreeBSD
 - [x] CTCP auto-replies — incoming VERSION and PING answered automatically
 - [x] Channel info bar — shows #channel (modes) ServerName; modes from 324 RPL_CHANNELMODEIS
 - [x] Sidebar server item clickable — opens server buffer, shows config short name
@@ -62,8 +63,9 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## Planned — Near Term
 
-- [ ] /help command — lists available commands in chat view
-- [ ] SASL authentication — PLAIN and EXTERNAL mechanisms
+- [x] /help command — lists available commands in chat view
+- [x] SASL authentication — PLAIN mechanism (CAP negotiation, AUTHENTICATE, 903/904/906)
+- [ ] SASL EXTERNAL — certificate-based auth (not yet implemented)
 - [ ] NickServ IDENTIFY auto — password field in config triggers identify on connect
 - [ ] Multiple servers — add/remove servers from UI, not just config
 - [ ] Reconnect logic — auto-reconnect with backoff on disconnect

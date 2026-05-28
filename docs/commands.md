@@ -90,7 +90,7 @@ Type any of these commands in the message input box and press Enter.
 |---|---|
 | `/version [nick]` | Request server version, or CTCP VERSION from a nick |
 | `/ctcp <nick> <command> [args]` | Send a CTCP request to a user |
-| `/sysinfo` | Post your OS and client info to the current channel |
+| `/sysinfo` | Post your OS, kernel, CPU, and RAM info to the current channel |
 
 Incoming CTCP VERSION and PING requests are answered automatically.
 
@@ -122,6 +122,14 @@ Use these when you need to send a command that UplinkIRC does not have a built-i
 /raw INVITE alice #uplink
 /quote JOIN #test
 ```
+
+---
+
+## Help
+
+| Command | Description |
+|---|---|
+| `/help` | Print a list of all available commands in the current chat buffer |
 
 ---
 

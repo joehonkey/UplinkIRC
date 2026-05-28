@@ -10,9 +10,10 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 ## Features
 
 - TLS/SSL connections via QSslSocket — plaintext IRC not supported
-- IRCv3 CAP LS 302 negotiation: `multi-prefix`, `away-notify`, `server-time`, `message-tags`, `batch`, `labeled-response`, `draft/typing`
+- SASL PLAIN authentication — set `sasl_user` and `sasl_password` in config for IRCv3 SASL login
+- IRCv3 CAP LS 302 negotiation: `multi-prefix`, `away-notify`, `server-time`, `message-tags`, `batch`, `labeled-response`, `draft/typing`, `sasl`
 - Full IRC numerics and commands: JOIN, PART, QUIT, NICK, KICK, MODE, TOPIC, PRIVMSG, NOTICE, CTCP
-- Slash commands: `/join`, `/part`, `/nick`, `/me`, `/msg`, `/away`, `/back`, `/motd`, `/whois`, `/topic`, `/kick`, `/notice`, `/version`, `/ctcp`, `/sysinfo`, `/raw`, `/quote`, `/quit`
+- Slash commands: `/help`, `/join`, `/part`, `/nick`, `/me`, `/msg`, `/away`, `/back`, `/motd`, `/whois`, `/topic`, `/kick`, `/notice`, `/version`, `/ctcp`, `/sysinfo`, `/raw`, `/quote`, `/quit`
 - Nick list sorted by prefix rank (~&@%+) with live updates
 - Channel info bar — shows `#channel (modes) ServerName`, toggleable
 - Typing indicator — IRCv3 `draft/typing`; shows "nick is typing..." in real time
