@@ -34,22 +34,24 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] GitHub repo — public, branch-protected, invite-only contributions
 - [x] GitHub Pages landing page — https://joehonkey.github.io/UplinkIRC/
 - [x] Global git hook — strips all AI attribution lines from every commit machine-wide
+- [x] Nick completion — Tab key completes nicks in input bar
+- [x] Input history — Up/Down arrow cycles through sent messages
+- [x] Colored nicks — consistent hash color per nick in chat and nick list
+- [x] In-app Documentation panel — Hamburger → Documentation opens tabbed help viewer
+- [x] Save theme + icon choice to config.toml (persists across restarts)
+- [x] about.png background normalized — logo visible on both light and dark backgrounds
 
 ---
 
 ## In Progress
 
-- [ ] In-app Documentation panel — Hamburger → Documentation opens a tabbed help viewer
-- [ ] Save theme + icon choice to config.toml (currently QSettings only)
+*(nothing currently in progress)*
 
 ---
 
 ## Planned — Near Term
 
-- [ ] Nick completion — Tab key completes nicks in input bar
-- [ ] Input history — Up/Down arrow cycles through sent messages
 - [ ] /help command — lists available commands in chat view
-- [ ] Colored nicks — consistent hash color per nick in chat and nick list
 - [ ] IRC color code rendering — parse mIRC color codes in messages
 - [ ] Topic click to edit — click topic bar to set a new topic
 - [ ] SASL authentication — PLAIN and EXTERNAL mechanisms
@@ -100,8 +102,5 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## Known Issues
 
-- Theme change does not persist to config.toml across restarts (QSettings only)
-- App icon choice does not persist to config.toml (QSettings only)
 - No reconnect on disconnect — must restart app
 - Emoji button toggle wired but picker not yet implemented
-- Documentation menu item opens nothing (in-app docs not yet built)

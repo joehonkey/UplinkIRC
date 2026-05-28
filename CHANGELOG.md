@@ -95,6 +95,40 @@ Known issues open:
   - In-app Documentation panel not yet built (resources/docs/ doesn't exist).
 -->
 
+<!--
+Session summary — UX features + docs panel sprint:
+
+What was built:
+  - Nick completion: Tab key at end of a word looks up matching nicks in the
+    current channel's nick list and cycles through them on repeated presses.
+  - Input history: Up/Down arrow in the input bar cycles through previously
+    sent messages per-channel (standard IRC client behavior).
+  - Colored nicks: consistent hash-based color per nick applied in chat view
+    and nick list. Toggle in hamburger menu, persists to config.toml.
+  - In-app Documentation panel: Hamburger → Documentation opens a QDialog
+    (DocsDialog) with a tab per doc file rendered as plain text. New files:
+    src/ui/docsdialog.h, src/ui/docsdialog.cpp. Resources registered in
+    resources.qrc.
+  - Save theme + icon to config.toml: previously these only persisted via
+    QSettings. Now written back to config file on change so they survive
+    reinstall / config copy.
+  - About.png logo added to README.md hero section.
+  - Configuration doc updated with icon key table.
+  - Keyboard shortcuts doc updated — Tab/Up/Down marked as implemented.
+
+Bugs found and fixed:
+  - about.png had a white background that rendered invisible against the dark
+    GitHub Pages hero section. Fix: normalized background to transparent /
+    dark-compatible. Updated both docs/about.png and resources/icons/about.png.
+  - Input bar config/QSettings interaction had a minor inconsistency causing
+    prefs not to round-trip correctly on first launch after a clean config.
+    Fixed in config.cpp.
+
+Known issues open:
+  - No auto-reconnect on disconnect — must restart app.
+  - Emoji picker not yet built (button toggle is wired).
+-->
+
 ## [Unreleased] — v0.1.0
 
 **Initial release — full IRC client foundation**
