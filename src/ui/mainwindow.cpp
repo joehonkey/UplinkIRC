@@ -91,6 +91,7 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
         m_tray = new TrayIcon(model, this);
 
     statusBar()->showMessage("UplinkIRC ready");
+    statusBar()->setSizeGripEnabled(false);
 
     QSettings settings("LinuxDojo", "UplinkIRC");
     restoreGeometry(settings.value("geometry").toByteArray());
@@ -117,11 +118,14 @@ void MainWindow::setupToolbar()
     tb->setContentsMargins(0, 0, 0, 0);
     if (tb->layout())
         tb->layout()->setContentsMargins(0, 0, 0, 0);
-    tb->setContextMenuPolicy(Qt::NoContextMenu);
+    tb->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(tb, &QWidget::customContextMenuRequested, this, [](const QPoint&){});
 
     m_hamburger = new QToolButton;
     m_hamburger->setText("☰");
     m_hamburger->setPopupMode(QToolButton::InstantPopup);
+    m_hamburger->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(m_hamburger, &QWidget::customContextMenuRequested, this, [](const QPoint&){});
 
     auto *menu = new QMenu(m_hamburger);
 

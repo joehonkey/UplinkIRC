@@ -141,6 +141,11 @@ QStatusBar {
     color: {{srvText}};
     border: none;
 }
+QSizeGrip {
+    width: 0px;
+    height: 0px;
+    image: none;
+}
 QMenuBar {
     background-color: {{bg}};
     color: {{text}};
