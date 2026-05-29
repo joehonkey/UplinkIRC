@@ -30,6 +30,8 @@
 #include <QSplitter>
 #include <QTextCharFormat>
 #include <QScrollBar>
+#include <QWidgetAction>
+#include <QFrame>
 #include <QInputDialog>
 #include <QSysInfo>
 #include <QTimer>
@@ -163,15 +165,25 @@ void MainWindow::setupToolbar()
 
     // Theme picker
     auto *themeMenu = menu->addMenu("Theme");
-    themeMenu->setMaximumHeight(300);
-    themeMenu->setStyleSheet("QMenu::item { padding: 2px 20px 2px 8px; }");
-    for (const QString &name : ThemeLoader::availableThemes()) {
-        themeMenu->addAction(name, this, [this, name]{
+    auto *themeAction = new QWidgetAction(themeMenu);
+    auto *themeList = new QListWidget;
+    themeList->setFrameShape(QFrame::NoFrame);
+    themeList->setFixedHeight(240);
+    themeList->setFixedWidth(200);
+    themeList->setStyleSheet("QListWidget::item { padding: 2px 4px; }");
+    for (const QString &name : ThemeLoader::availableThemes())
+        themeList->addItem(name);
+    connect(themeList, &QListWidget::itemClicked, this, [this, menu](QListWidgetItem *item){
+        const QString name = item->text();
+        menu->close();
+        QTimer::singleShot(0, this, [this, name]{
             m_config.ui.theme = name;
             ThemeLoader::apply(name);
             Config::save(m_config, Config::defaultPath());
         });
-    }
+    });
+    themeAction->setDefaultWidget(themeList);
+    themeMenu->addAction(themeAction);
 
     menu->addSeparator();
 
