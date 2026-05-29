@@ -65,14 +65,14 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Font Config: Network Name and Typing Indicator size controls
 - [x] Info bar always visible with channel, modes, network, user count
 - [x] Topic display — separate drop-down area with chat-window background, toggled by Show Topic
-- [x] Panel detach/float — sidebar panel can be detached, re-docked, and survives close without disappearing
+- [x] Panel detach/float — sidebar panel could be detached and re-docked (removed in v0.7.12; sidebar is now a fixed embedded panel)
 - [x] Topic bar layout — network/user count next to channel label, not far right
 - [x] /topic channel-name parsing — `/topic #channel text` correctly separates channel from topic text
 - [x] Topic bar background matches input area — info bar visually joins the input row
 - [x] Mode string spacing — gap between `(modes)` and `* Network` fixed
 - [x] Clickable URLs in topic display — http/https links open in browser
 - [x] Toolbar removed — nothing above the info bar; all panels start flush at top
-- [x] Minimal dock title bar — sidebar has a slim bar with only a ⧉ float button
+- [x] Minimal dock title bar — sidebar had a slim bar with a ⧉ float button (replaced in v0.7.12 by gear toggle in the info bar)
 - [x] Hamburger menu relocated — now in topic bar, left of #channel label
 - [x] Status bar text shrunk — 7pt via QSS
 - [x] Clickable URLs in chat messages — http/https links in PRIVMSG, actions, and notices open in browser
@@ -127,7 +127,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 - [ ] Virtual scrolling — render only visible messages (performance on busy channels)
 - [x] Window state persistence — sidebar dock size and position saved via QSettings on quit, restored on launch
-- [ ] Nick panel width persistence — QSplitter position in central widget not yet saved; resets to default on relaunch
+- [x] Nick panel width persistence — QSplitter position saved via QSettings on quit, restored on launch
 - [x] Config editor UI — Manage Servers dialog covers server-level editing
 - [x] Emoji picker — searchable popup grid with :shortcode: autocomplete and auto-substitution
 - [x] Bot nick indicators — 🤖/👾 shown for +B mode nicks; auto-detected on join via WHO reply; randomly assigned per nick each session, cached for stability
@@ -138,6 +138,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Close/Close Query in sidebar — right-clicking a channel shows Close (PARTs + removes buffer); right-clicking a PM query shows Close Query (removes buffer)
 - [x] Channel focus on join — joining a channel now always switches focus to it
 - [x] Nick panel redesign — replaced detachable QDockWidget with embedded panel in QSplitter; gear button (⚙) in header animates a full spin before toggling the user list; gear and user count remain visible when collapsed; panel background matches chat buffer color across all themes
+- [x] Sidebar gear toggle — ⚙ button in the info bar (left of hamburger) collapses the server/channel list to 0 px (full-width chat) and restores it; sidebar is a fixed-width embedded panel, not drag-resizable
 - [x] Native Windows style — windows11 Qt style by default; no alien dark theme on fresh installs
 - [ ] FreeBSD port skeleton
 - [ ] AppImage packaging for Linux
@@ -156,7 +157,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## Known Issues — UI
 
-- Dock separator line may be visible at the left edge of the chat area (sidebar dock border)
+- Sidebar is not drag-resizable by design; only the gear toggle controls its visibility
 
 ## Known Issues
 

@@ -3,6 +3,66 @@
 ---
 
 <!--
+Session summary — 2026-05-29  v0.7.12
+
+What was built / fixed:
+  - Sidebar gear toggle relocated to the info bar (topicBar), immediately left
+    of the hamburger button. The gear is now always visible regardless of
+    sidebar state; no need to hunt for a button that disappears when the panel
+    is hidden.
+  - Sidebar converted from QDockWidget to embedded QWidget panel inside the
+    new m_mainSplitter. Float/detach removed — the sidebar is no longer
+    detachable. The QDockWidget, its title bar widget, and the ⧉ float button
+    are gone.
+  - Sidebar toggle collapses the panel to 0 px (full-width chat). Re-clicking
+    the gear restores the fixed 180 px width. Handle width is 0 — users cannot
+    drag to resize; only the gear controls visibility.
+  - Nick panel gear header drift fixed: when the user list was hidden
+    (setVisible false), Qt's VBox removed the list's stretch=1 contribution and
+    floated the lone non-stretch header to vertical center. Fix: added a
+    stretch spacer (stretch=1) below the nick list so there is always a stretch
+    item anchoring the header at top. Nick list stretch bumped to 100 so the
+    spacer is visually imperceptible when the list is visible.
+  - Nick panel splitter width now persists across sessions: saved with
+    QSettings key "nickSplitter" on quit, restored on launch.
+  - Dark strip at bottom of sidebar eliminated: the old addStretch(1) in the
+    sidebar VBox created a ~1% gap that showed the panel background color
+    (different from the tree background). Removing it (sidebar tree fills
+    panel with stretch=1, no spacer) fixes the artifact. A CSS rule for
+    #sidebarPanel sets background to sidebarBg as a safety net.
+  - CSS added for #sidebarToggleBtn (inputBg background, matches topicBar,
+    accent on hover) and #sidebarPanel (sidebarBg background).
+  - QTimer::singleShot sets initial mainSplitter sizes to 180/rest after first
+    layout so the sidebar starts at the right width on every launch.
+
+Design decisions:
+  - Collapsed sidebar goes to 0 px (not a narrow strip) because the gear is
+    now in the topicBar — there is nothing that needs to stay visible in the
+    sidebar panel itself when hidden.
+  - Sidebar width is fixed; mainSplitter handle is 0 px. Users resize the nick
+    panel (right side) but cannot resize the sidebar. This matches the request
+    "limit to pretty much the length it was."
+  - addStretch approach for nick panel kept (needed to pin header to top) but
+    stretch ratio is 100:1 — spacer is <1 px tall at normal window heights.
+
+Known issues remaining:
+  - DCC Send File not implemented
+  - AppImage packaging not done
+  - Link preview for title-only pages (no og:title) needs verification
+-->
+
+## v0.7.12 — 2026-05-29
+
+- Sidebar gear toggle moved into the info bar, left of the hamburger — always visible, works whether the sidebar is open or closed
+- Sidebar converted from floating dock to embedded panel; float/detach removed
+- Sidebar collapses fully to 0 when hidden, expanding the chat to full width; fixed at ~180 px when shown; not drag-resizable
+- Nick panel gear now stays pinned at the top of the panel when the user list is collapsed (was drifting to vertical center)
+- Nick panel width persists across sessions
+- Dark strip at bottom of sidebar eliminated
+
+---
+
+<!--
 Session summary — 2026-05-29  v0.7.11
 
 What was built / fixed:

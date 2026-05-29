@@ -193,7 +193,7 @@ History messages are intentionally displayed at reduced opacity and with their o
 
 ### Where is the Preferences button?
 
-The `☰` button is at the **left end of the info bar** (top of the chat area, left of the #channel label). Click it to open the **Preferences** dialog — it stays open while you browse themes, toggle options, and try settings.
+The `☰` button is in the **info bar** at the top of the chat area. Click it to open the **Preferences** dialog — it stays open while you browse themes, toggle options, and try settings.
 
 ### How do I change the theme?
 
@@ -204,9 +204,15 @@ Click ☰ to open Preferences, then pick a theme from the list. The theme applie
 theme = "nord"
 ```
 
+### How do I hide or show the server/channel list?
+
+Click the ⚙ gear button at the **left end of the info bar** (just left of the ☰ hamburger). The sidebar collapses completely, giving the chat area the full window width. Click the gear again to bring it back. The gear stays visible in the info bar at all times, so you can always get the sidebar back.
+
+The sidebar width is fixed at its default size — it is not drag-resizable.
+
 ### How do I hide or show the user list?
 
-Click the ⚙ button in the header above the user list. The gear animates a brief spin, then the list collapses. The gear button and user count stay visible so you can click again to expand. You can also drag the splitter handle between the chat view and the user list to resize the panel.
+Click the ⚙ button in the **header above the user list** (right side of the window). The gear animates a brief spin, then the list collapses. The gear button and user count stay visible so you can click again to expand. Drag the splitter between the chat view and the user list to resize the panel — the width is saved and restored on the next launch.
 
 ### How do I show the channel topic?
 
