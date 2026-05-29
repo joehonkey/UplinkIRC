@@ -112,6 +112,11 @@ void SessionModel::sendRaw(const QString &host, const QString &line)
     if (cl) cl->sendRaw(line);
 }
 
+void SessionModel::localMessage(const QString &host, const QString &target, const QString &text)
+{
+    postMessage(host, target, Message::make(MessageType::Server, "", text));
+}
+
 void SessionModel::sendJoin(const QString &host, const QString &channel, const QString &key)
 {
     auto *cl = clientFor(host);

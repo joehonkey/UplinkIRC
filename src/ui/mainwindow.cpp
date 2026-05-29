@@ -1567,13 +1567,13 @@ void MainWindow::onInputSubmit()
             if (!nick.isEmpty()) {
                 const QString ts = QString::number(QDateTime::currentMSecsSinceEpoch());
                 m_model->sendRaw(host, "PRIVMSG " + nick + " :\x01PING " + ts + "\x01");
-                appendMessage(Message::make(MessageType::Server, "", "Pinged " + nick));
+                m_model->localMessage(host, channel, "Pinged " + nick);
             }
         } else if (cmd == "/time") {
             const QString nick = args.trimmed().section(' ', 0, 0);
             if (!nick.isEmpty()) {
                 m_model->sendRaw(host, "PRIVMSG " + nick + " :\x01TIME\x01");
-                appendMessage(Message::make(MessageType::Server, "", "Querying time for " + nick));
+                m_model->localMessage(host, channel, "Querying time for " + nick);
             }
         } else if (cmd == "/invite") {
             const QString nick = args.section(' ', 0, 0);
