@@ -47,8 +47,9 @@ ssl      = true
 nick     = "yournick"
 user     = "uplink"
 realname = "UplinkIRC User"
-# sasl_user     = "yournick"      # uncomment to enable SASL PLAIN
-# sasl_password = "yourpassword"
+# sasl_user         = "yournick"      # uncomment to enable SASL PLAIN
+# sasl_password     = "yourpassword"
+# nickserv_password = "yourpassword"  # alternative: NickServ IDENTIFY
 
 [[server.channels]]
 name = "#uplink"
@@ -117,6 +118,7 @@ Each server you want to connect to gets its own `[[server]]` block. The double b
 | `password` | string | no | Server password, sent as `PASS` during connection. Used for bouncers (ZNC, soju) and password-protected servers |
 | `sasl_user` | string | no | SASL username for SASL PLAIN authentication. Must be set together with `sasl_password` |
 | `sasl_password` | string | no | SASL password for SASL PLAIN authentication. Must be set together with `sasl_user` |
+| `nickserv_password` | string | no | If set, sends `PRIVMSG NickServ :IDENTIFY <password>` immediately after connecting. Use when the server does not support SASL |
 
 ### Minimal server block
 
@@ -132,6 +134,29 @@ nick     = "yournick"
 user     = "uplink"
 realname = "UplinkIRC User"
 ```
+
+---
+
+### NickServ auto-identify
+
+If the server uses NickServ for nick registration (common on older networks or those without SASL), add `nickserv_password` to the server block. UplinkIRC will send `PRIVMSG NickServ :IDENTIFY <password>` immediately after receiving `001 RPL_WELCOME`.
+
+```toml
+[[server]]
+name              = "LinuxDojo"
+host              = "irc.linuxdojo.org"
+port              = 6697
+ssl               = true
+nick              = "yournick"
+user              = "uplink"
+realname          = "UplinkIRC User"
+nickserv_password = "yourpassword"
+
+[[server.channels]]
+name = "#uplink"
+```
+
+The server buffer will show `Sent NickServ IDENTIFY` when this fires. If the server supports SASL, prefer `sasl_user`/`sasl_password` instead — SASL authenticates before you appear on the network.
 
 ---
 

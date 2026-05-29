@@ -3,6 +3,52 @@
 ---
 
 <!--
+Session summary — 2026-05-28 sprint #2:
+
+What was built:
+  - NickServ IDENTIFY auto: nickserv_password in [[server]] config;
+    PRIVMSG NickServ :IDENTIFY sent immediately after 001 RPL_WELCOME.
+  - Toolbar unified with sidebar: toolbar, status bar, hamburger button
+    all use sidebarBg; no border lines; QToolBar::handle zeroed; toolbar
+    layout margins zeroed; no right-click context menu.
+  - "Uplink" label removed from toolbar.
+  - Hamburger size doubled (font * 2); flush left with no padding.
+  - Panel size persistence: QMainWindow saveGeometry/saveState saved to
+    QSettings on quit (connected via aboutToQuit signal); restored in
+    constructor. Max-width caps on sidebar and nick list removed so panels
+    can be freely dragged.
+  - Topic bar fixed: channel+modes combined on left (m_topicLabel),
+    topic text in middle with stretch (m_modesLabel), server name right.
+    MODE #channel sent after 366 RPL_ENDOFNAMES so modes always arrive.
+  - /sysinfo full rewrite: format OS: ... CPU: ... MEM: ... GPU: ... UP: ...
+    GPU from vulkaninfo --summary (deviceName + last-parens of driverInfo
+    e.g. RADV STRIX1), lspci fallback. Uptime from /proc/uptime parsed to
+    days/hours/minutes/seconds. MEM is total GB rounded. CPU is model name
+    only (no thread count). OS is "Linux (Name version) (kernel)".
+    FreeBSD uptime from kern.boottime sysctl.
+
+Bugs fixed:
+  - Topic bar showed empty modes because MODE #channel was never requested;
+    fixed by sending MODE after 366 end-of-names.
+  - Topic text stored in ch->topic was never displayed; now shown in bar.
+  - /sysinfo CPU showed "x86_64" (arch fallback) because /proc/cpuinfo
+    parsing stopped before finding model name line. Fixed in rewrite.
+  - /sysinfo RAM showed "Unknown" for same reason — MEM field now reads
+    MemTotal only (no MemAvailable), clean and reliable.
+
+Known issues left open:
+  - Release workflow end-to-end not yet confirmed (needs a tag push)
+  - SASL EXTERNAL not implemented
+  - No reconnect on disconnect
+  - Emoji picker not yet built
+
+Next priorities:
+  - Reconnect with backoff
+  - Connection status indicator per server
+  - AppImage packaging
+-->
+
+<!--
 Session summary — 2026-05-28 sprint:
 
 What was built:
@@ -287,11 +333,20 @@ Known issues open:
 
 ## [Unreleased]
 
-**SASL PLAIN, /help, /sysinfo rewrite**
+**NickServ auto-identify, UI polish, panel persistence, topic bar fix, /sysinfo v2**
 
-- SASL PLAIN authentication — add `sasl_user` and `sasl_password` to any `[[server]]` block; full CAP negotiation flow; CAP END held until 903/904/906; server buffer shows success or failure
+- NickServ IDENTIFY auto — add `nickserv_password` to any `[[server]]` block; sent to NickServ on connect
+- SASL PLAIN authentication — add `sasl_user` and `sasl_password` to any `[[server]]` block; full CAP negotiation flow; 903/904/906 handled
 - `/help` command — lists all available slash commands in the chat buffer
-- `/sysinfo` rewritten — output format: `OS: Arch Linux | Kernel: 7.0.10-arch1-1 | CPU: AMD Ryzen AI 9 HX PRO 370 (24 threads) | RAM: 8.2/24GB`; reads `/proc/cpuinfo`, `/proc/meminfo`, `/etc/os-release` on Linux; `sysctl` fallback on FreeBSD/macOS
+- `/sysinfo` rewritten — format: `OS: Linux (Arch Linux rolling) (7.0.10-arch1-1) CPU: ... MEM: 24 GB GPU: AMD Radeon 890M Graphics (RADV STRIX1) (Vulkan) UP: 4 days 3 hours...`; GPU from `vulkaninfo`, fallback `lspci`; uptime from `/proc/uptime`
+- Panel size persistence — sidebar and nick list sizes saved on quit, restored on launch; no more max-width caps
+- Toolbar unified with sidebar — toolbar, status bar, hamburger all use `sidebarBg`; borders and handle gap removed; "Uplink" label removed; hamburger doubled in size and flush left; no right-click context menu
+- Topic bar — shows `#channel (modes)` left, topic text middle, server name right; `MODE #channel` requested after join so modes always populate
+
+**Fix:** Topic text was stored but never displayed — now shown in the topic bar  
+**Fix:** Channel modes never populated — `MODE #channel` now sent after 366 RPL_ENDOFNAMES  
+**Fix:** `/sysinfo` CPU showed `x86_64` fallback — fixed in rewrite  
+**Fix:** `/sysinfo` RAM showed `Unknown` — fixed in rewrite  
 
 ---
 

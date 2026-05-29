@@ -44,7 +44,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Per-widget font size config — Font Config dialog in hamburger; independent sizes for all UI zones; persists to config.toml
 - [x] Typing indicator — IRCv3 draft/typing TAGMSG; debounced send + receive; hamburger toggle
 - [x] Extended slash commands — /away, /back, /motd, /whois, /topic, /kick, /notice, /version, /ctcp, /sysinfo, /help
-- [x] /sysinfo rewritten — reads OS/kernel/CPU/RAM from /proc and /etc/os-release on Linux; sysctl fallback on FreeBSD
+- [x] /sysinfo rewritten (v2) — OS/CPU/MEM/GPU/UP format; GPU via vulkaninfo (deviceName + renderer), lspci fallback; uptime from /proc/uptime
 - [x] CTCP auto-replies — incoming VERSION and PING answered automatically
 - [x] Channel info bar — shows #channel (modes) ServerName; modes from 324 RPL_CHANNELMODEIS
 - [x] Sidebar server item clickable — opens server buffer, shows config short name
@@ -66,7 +66,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] /help command — lists available commands in chat view
 - [x] SASL authentication — PLAIN mechanism (CAP negotiation, AUTHENTICATE, 903/904/906)
 - [ ] SASL EXTERNAL — certificate-based auth (not yet implemented)
-- [ ] NickServ IDENTIFY auto — password field in config triggers identify on connect
+- [x] NickServ IDENTIFY auto — `nickserv_password` in config; sent to NickServ on RPL_WELCOME
 - [ ] Multiple servers — add/remove servers from UI, not just config
 - [ ] Reconnect logic — auto-reconnect with backoff on disconnect
 - [ ] Connection status indicator — visual connected/disconnected state per server
@@ -91,7 +91,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 ## Planned — Polish + Distribution
 
 - [ ] Virtual scrolling — render only visible messages (performance on busy channels)
-- [ ] Window state persistence — remember size, position, dock layout
+- [x] Window state persistence — dock sizes and positions saved via QSettings on quit, restored on launch
 - [ ] Config editor UI — edit servers/channels from within the app
 - [ ] FreeBSD port skeleton
 - [ ] AppImage packaging for Linux
