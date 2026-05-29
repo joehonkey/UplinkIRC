@@ -191,6 +191,7 @@ void SessionModel::attachClient(IrcClient *cl, const ServerConfig &cfg)
     connect(cl, &IrcClient::namesReceived,   this, &SessionModel::onNamesReceived);
     connect(cl, &IrcClient::whoEntryReceived,this, &SessionModel::onWhoEntry);
     connect(cl, &IrcClient::serverMessage,   this, &SessionModel::onServerMessage);
+    connect(cl, &IrcClient::errorMessage,    this, &SessionModel::onErrorMessage);
     connect(cl, &IrcClient::ctcpPingReply,   this, &SessionModel::onCtcpPingReply);
     connect(cl, &IrcClient::selfNickChanged, this, &SessionModel::onSelfNickChanged);
     connect(cl, &IrcClient::typingReceived,  this, &SessionModel::typingReceived);
@@ -458,12 +459,11 @@ void SessionModel::onModesReceived(const QString &host, const QString &channel, 
                     const QString target = parts[argIdx];
                     for (auto &e : ch->nicks) {
                         if (e.nick.toLower() == target.toLower()) {
-                            if (adding) {
-                                if (prefixRank(pre) > prefixRank(e.prefix))
-                                    e.prefix = pre;
-                            } else {
-                                if (e.prefix == pre) e.prefix = ' ';
-                            }
+                            if (adding)
+                                e.prefixes.insert(pre);
+                            else
+                                e.prefixes.remove(pre);
+                            e.recomputePrefix();
                             break;
                         }
                     }
@@ -525,6 +525,13 @@ void SessionModel::onWhoEntry(const QString &host, const QString &channel,
 void SessionModel::onServerMessage(const QString &host, const QString &text)
 {
     postMessage(host, "(server)", Message::make(MessageType::Server, "", text));
+}
+
+void SessionModel::onErrorMessage(const QString &host, const QString &text)
+{
+    const QString target = (host == m_activeHost && !m_activeChannel.isEmpty())
+        ? m_activeChannel : "(server)";
+    postMessage(host, target, Message::make(MessageType::Error, "", text));
 }
 
 void SessionModel::onCtcpPingReply(const QString &host, const QString &nick, qint64 rttMs)

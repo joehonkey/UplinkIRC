@@ -22,8 +22,17 @@ inline int prefixRank(QChar p)
 }
 
 struct NickEntry {
-    QString nick;
-    QChar   prefix{' '};
+    QString     nick;
+    QChar       prefix{' '};
+    QSet<QChar> prefixes;
+
+    void recomputePrefix()
+    {
+        prefix = ' ';
+        for (QChar p : std::as_const(prefixes))
+            if (prefixRank(p) > prefixRank(prefix))
+                prefix = p;
+    }
 
     QString display() const
     {
@@ -64,10 +73,10 @@ struct Channel {
             NickEntry e;
             int i = 0;
             while (i < n.size() && prefixRank(n[i]) > 0) {
-                if (prefixRank(n[i]) > prefixRank(e.prefix))
-                    e.prefix = n[i];
+                e.prefixes.insert(n[i]);
                 ++i;
             }
+            e.recomputePrefix();
             e.nick = n.mid(i);
             nicks.append(e);
         }
@@ -79,10 +88,10 @@ struct Channel {
         NickEntry e;
         int i = 0;
         while (i < raw.size() && prefixRank(raw[i]) > 0) {
-            if (prefixRank(raw[i]) > prefixRank(e.prefix))
-                e.prefix = raw[i];
+            e.prefixes.insert(raw[i]);
             ++i;
         }
+        e.recomputePrefix();
         e.nick = raw.mid(i);
         // avoid duplicates
         for (const auto &n : std::as_const(nicks))

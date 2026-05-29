@@ -619,12 +619,16 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
         break;
 
     case 431: case 432:
-        emit serverMessage(m_host, "Nick error: " + trailing);
+        emit errorMessage(m_host, "Nick error: " + trailing);
         break;
 
     default:
-        if (!trailing.isEmpty())
-            emit serverMessage(m_host, trailing);
+        if (!trailing.isEmpty()) {
+            if (n >= 400)
+                emit errorMessage(m_host, trailing);
+            else
+                emit serverMessage(m_host, trailing);
+        }
         break;
     }
 }

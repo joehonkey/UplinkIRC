@@ -69,6 +69,7 @@ signals:
                            const QString &nick,   const QString &flags);
 
     void serverMessage  (const QString &server, const QString &text);
+    void errorMessage   (const QString &server, const QString &text);
     void ctcpPingReply  (const QString &server, const QString &nick, qint64 rttMs);
     void rawReceived  (const QString &line);
     void selfNickChanged(const QString &server, const QString &newNick);
