@@ -6,10 +6,10 @@
 #include <QRegularExpression>
 #include <memory>
 
-static constexpr int kMaxBytes    = 16384;
+static constexpr int kMaxBytes    = 32768;   // 32 KB — more room for late <title> tags
 static constexpr int kMaxImgBytes = 204800;  // 200 KB
 static constexpr int kMaxCache    = 50;
-static constexpr int kTimeoutMs   = 4000;
+static constexpr int kTimeoutMs   = 6000;
 
 LinkPreview::LinkPreview(QObject *parent)
     : QObject(parent)
@@ -38,7 +38,13 @@ void LinkPreview::fetch(const QUrl &url)
     m_buf.clear();
 
     QNetworkRequest req(url);
-    req.setRawHeader("User-Agent", "WhatsApp/2");
+    req.setRawHeader("User-Agent",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36");
+    req.setRawHeader("Accept", "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8");
+    req.setRawHeader("Accept-Language", "en-US,en;q=0.5");
+    req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                     QNetworkRequest::NoLessSafeRedirectPolicy);
     req.setTransferTimeout(kTimeoutMs);
 
     m_reply = m_nam->get(req);
@@ -78,7 +84,11 @@ void LinkPreview::fetch(const QUrl &url)
 void LinkPreview::fetchImage(const QUrl &pageUrl, const QString &title, const QUrl &imageUrl)
 {
     QNetworkRequest req(imageUrl);
-    req.setRawHeader("User-Agent", "WhatsApp/2");
+    req.setRawHeader("User-Agent",
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36");
+    req.setAttribute(QNetworkRequest::RedirectPolicyAttribute,
+                     QNetworkRequest::NoLessSafeRedirectPolicy);
     req.setTransferTimeout(kTimeoutMs);
 
     auto *imgReply = m_nam->get(req);
@@ -128,10 +138,13 @@ QString LinkPreview::extractTitle(const QByteArray &data) const
     if (m.hasMatch()) return m.captured(1).trimmed();
 
     static const QRegularExpression titleTag(
-        R"(<title[^>]*>([^<]{1,200})</title>)",
+        R"(<title[^>]*>([\s\S]{1,300}?)</title>)",
         QRegularExpression::CaseInsensitiveOption);
     m = titleTag.match(html);
-    if (m.hasMatch()) return m.captured(1).trimmed();
+    if (m.hasMatch()) {
+        QString t = m.captured(1).simplified();
+        if (!t.isEmpty()) return t;
+    }
 
     return {};
 }

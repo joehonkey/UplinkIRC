@@ -2,25 +2,66 @@
 <svg xmlns="http://www.w3.org/2000/svg"
      width="2200" height="900" viewBox="0 0 2200 900"
      role="img" aria-labelledby="title desc">
-  <title id="title">Uplink top banner SVG</title>
-  <desc id="desc">Detailed top banner for the Uplink IRCv3 client with clean Uplink wordmark and correctly aligned tagline bullets.</desc>
+  <title id="title">Uplink dark mode banner</title>
+  <desc id="desc">Detailed dark theme banner for the Uplink IRCv3 client with glowing blue brand mark, bright wordmark, and aligned feature tagline.</desc>
 
   <defs>
-    <linearGradient id="uBlue" x1="140" y1="260" x2="555" y2="790" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#22C8FF"/>
-      <stop offset="44%" stop-color="#126CFF"/>
-      <stop offset="100%" stop-color="#0448D8"/>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#030A18"/>
+      <stop offset="45%" stop-color="#05112A"/>
+      <stop offset="100%" stop-color="#020714"/>
     </linearGradient>
 
-    <linearGradient id="uHighlight" x1="180" y1="295" x2="485" y2="720" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#8CEAFF" stop-opacity="0.42"/>
-      <stop offset="100%" stop-color="#8CEAFF" stop-opacity="0.04"/>
+    <radialGradient id="leftGlow" cx="23%" cy="45%" r="34%">
+      <stop offset="0%" stop-color="#0A58FF" stop-opacity="0.34"/>
+      <stop offset="45%" stop-color="#0A58FF" stop-opacity="0.10"/>
+      <stop offset="100%" stop-color="#0A58FF" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="uBlue" x1="150" y1="230" x2="560" y2="790" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#25D0FF"/>
+      <stop offset="42%" stop-color="#1589FF"/>
+      <stop offset="100%" stop-color="#1850FF"/>
     </linearGradient>
 
-    <linearGradient id="towerGrad" x1="310" y1="330" x2="310" y2="575" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stop-color="#102A4C"/>
-      <stop offset="100%" stop-color="#06172E"/>
+    <linearGradient id="uInner" x1="170" y1="280" x2="470" y2="730" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#88F1FF" stop-opacity="0.36"/>
+      <stop offset="100%" stop-color="#88F1FF" stop-opacity="0.02"/>
     </linearGradient>
+
+    <linearGradient id="wordLight" x1="760" y1="215" x2="1820" y2="560" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#DCE7FF"/>
+    </linearGradient>
+
+    <linearGradient id="towerGrad" x1="310" y1="345" x2="310" y2="575" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F7FBFF"/>
+      <stop offset="100%" stop-color="#C8D6F2"/>
+    </linearGradient>
+
+    <filter id="softBlueGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="1 0 0 0 0
+                                                   0 1 0 0 0.34
+                                                   0 0 1 0 1
+                                                   0 0 0 0.95 0" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="wordGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.4" result="b"/>
+      <feColorMatrix in="b" type="matrix" values="1 0 0 0 0
+                                                 0 1 0 0 0
+                                                 0 0 1 0 0.2
+                                                 0 0 0 0.22 0" result="g"/>
+      <feMerge>
+        <feMergeNode in="g"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
 
     <style><![CDATA[
       .word {
@@ -28,106 +69,161 @@
         font-size: 270px;
         font-weight: 900;
         letter-spacing: -6px;
-        fill: #071B33;
+        fill: url(#wordLight);
       }
-      .tagline {
+      .tag {
         font-family: Inter, "Segoe UI", Helvetica, Arial, sans-serif;
         font-size: 62px;
         font-weight: 650;
-        letter-spacing: -1px;
-        fill: #65768B;
+        letter-spacing: -0.5px;
+        fill: #E7EEF9;
       }
-      .bullet {
-        fill: #126CFF;
+      .circuit {
+        stroke: #153766;
+        stroke-width: 3;
+        stroke-linecap: round;
+        fill: none;
+        opacity: 0.56;
+      }
+      .circuitDot {
+        fill: #0D5DFF;
+        opacity: 0.75;
+      }
+      .microDot {
+        fill: #1B5AE8;
+        opacity: 0.45;
       }
     ]]></style>
   </defs>
 
-  <rect width="2200" height="900" fill="#FFFFFF"/>
+  <rect width="2200" height="900" fill="url(#bgGrad)"/>
+  <rect width="2200" height="900" fill="url(#leftGlow)"/>
 
-  <!-- U / antenna / chat mark -->
-  <g id="uplink-mark" transform="translate(105 38)">
-    <!-- radio waves: full top arc with clear margin -->
-    <path d="M125 96 C225 -4 385 -4 485 96"
-          fill="none" stroke="#126CFF" stroke-width="34" stroke-linecap="round"/>
-    <path d="M180 154 C252 82 358 82 430 154"
-          fill="none" stroke="#126CFF" stroke-width="34" stroke-linecap="round"/>
-    <path d="M235 211 C282 166 328 166 375 211"
-          fill="none" stroke="#126CFF" stroke-width="34" stroke-linecap="round"/>
+  <!-- subtle tech background -->
+  <g opacity="0.95">
+    <path class="circuit" d="M30 290 H170 L205 255 H320"/>
+    <circle class="circuitDot" cx="102" cy="290" r="7"/>
+    <circle class="circuitDot" cx="320" cy="255" r="7"/>
 
-    <!-- main U body -->
-    <path d="
-      M88 270
-      H195
-      V529
-      C195 641 235 707 305 707
-      C375 707 415 641 415 529
-      V270
-      H522
-      V541
-      C522 720 440 795 305 795
-      C170 795 88 720 88 541
-      Z"
-      fill="url(#uBlue)"/>
+    <path class="circuit" d="M0 480 H110 L145 445 H260"/>
+    <circle class="circuitDot" cx="135" cy="445" r="6"/>
 
-    <!-- inner depth/highlight -->
-    <path d="
-      M132 310
-      H166
-      V527
-      C166 659 215 732 305 732
-      C395 732 444 659 444 527
-      V310
-      H478"
-      fill="none" stroke="url(#uHighlight)" stroke-width="27" stroke-linecap="round"/>
+    <path class="circuit" d="M20 640 H215 L250 675 H350"/>
+    <circle class="circuitDot" cx="205" cy="640" r="6"/>
 
-    <path d="
-      M164 310
-      V525
-      C164 648 209 710 305 710
-      C401 710 446 648 446 525
-      V310"
-      fill="none" stroke="#77DFFF" stroke-width="11" stroke-linecap="round" stroke-opacity="0.18"/>
+    <path class="circuit" d="M1210 165 H1380 L1420 130 H1550"/>
+    <circle class="circuitDot" cx="1378" cy="165" r="6"/>
+    <circle class="circuitDot" cx="1550" cy="130" r="6"/>
 
-    <!-- antenna node -->
-    <circle cx="305" cy="295" r="45" fill="#126CFF"/>
+    <path class="circuit" d="M1190 230 H1450 L1484 198 H1668"/>
+    <circle class="circuitDot" cx="1342" cy="230" r="6"/>
 
-    <!-- radio tower -->
-    <path d="M305 336 L382 566 H228 Z" fill="url(#towerGrad)"/>
-    <path d="M305 365 L351 566 H259 Z" fill="#FFFFFF" opacity="0.95"/>
-    <path d="M305 378 L338 566 H272 Z" fill="url(#towerGrad)"/>
+    <path class="circuit" d="M1335 690 H1542 L1585 648 H1755"/>
+    <circle class="circuitDot" cx="1475" cy="690" r="6"/>
+    <circle class="circuitDot" cx="1755" cy="648" r="6"/>
 
-    <!-- tower braces -->
-    <path d="M254 529 L356 427
-             M356 529 L254 427
-             M271 483 L339 411
-             M339 483 L271 411"
-          fill="none" stroke="#FFFFFF" stroke-width="16" stroke-linecap="round" opacity="0.96"/>
+    <path class="circuit" d="M1205 780 H1305 L1344 742 H1490"/>
+    <circle class="circuitDot" cx="1490" cy="742" r="6"/>
 
-    <!-- chat bubble -->
-    <path d="
-      M202 611
-      C202 573 233 546 278 546
-      H358
-      C403 546 434 573 434 611
-      C434 650 403 676 358 676
-      H293
-      L220 730
-      L231 671
-      C213 660 202 638 202 611
-      Z"
-      fill="#FFFFFF"/>
-
-    <circle cx="274" cy="612" r="14" fill="#126CFF"/>
-    <circle cx="318" cy="612" r="14" fill="#126CFF"/>
-    <circle cx="362" cy="612" r="14" fill="#126CFF"/>
+    <path class="circuit" d="M1850 545 H2015 L2050 510 H2165"/>
+    <circle class="circuitDot" cx="2010" cy="545" r="6"/>
   </g>
 
-  <!-- Wordmark is one real text object so the l and i stay correctly spaced -->
-  <text x="785" y="474" class="word">Uplink</text>
+  <!-- dotted side patterns -->
+  <g>
+    <g transform="translate(32 680)">
+      <circle class="microDot" cx="0" cy="0" r="2.4"/>
+      <circle class="microDot" cx="24" cy="0" r="2.4"/>
+      <circle class="microDot" cx="48" cy="0" r="2.4"/>
+      <circle class="microDot" cx="72" cy="0" r="2.4"/>
+      <circle class="microDot" cx="96" cy="0" r="2.4"/>
+      <circle class="microDot" cx="120" cy="0" r="2.4"/>
+      <circle class="microDot" cx="144" cy="0" r="2.4"/>
+      <circle class="microDot" cx="168" cy="0" r="2.4"/>
+      <circle class="microDot" cx="0" cy="24" r="2.4"/>
+      <circle class="microDot" cx="24" cy="24" r="2.4"/>
+      <circle class="microDot" cx="48" cy="24" r="2.4"/>
+      <circle class="microDot" cx="72" cy="24" r="2.4"/>
+      <circle class="microDot" cx="96" cy="24" r="2.4"/>
+      <circle class="microDot" cx="120" cy="24" r="2.4"/>
+      <circle class="microDot" cx="144" cy="24" r="2.4"/>
+      <circle class="microDot" cx="168" cy="24" r="2.4"/>
+      <circle class="microDot" cx="0" cy="48" r="2.4"/>
+      <circle class="microDot" cx="24" cy="48" r="2.4"/>
+      <circle class="microDot" cx="48" cy="48" r="2.4"/>
+      <circle class="microDot" cx="72" cy="48" r="2.4"/>
+      <circle class="microDot" cx="96" cy="48" r="2.4"/>
+      <circle class="microDot" cx="120" cy="48" r="2.4"/>
+      <circle class="microDot" cx="144" cy="48" r="2.4"/>
+      <circle class="microDot" cx="168" cy="48" r="2.4"/>
+    </g>
+    <g transform="translate(2020 82)">
+      <circle class="microDot" cx="0" cy="0" r="2.4"/>
+      <circle class="microDot" cx="24" cy="0" r="2.4"/>
+      <circle class="microDot" cx="48" cy="0" r="2.4"/>
+      <circle class="microDot" cx="72" cy="0" r="2.4"/>
+      <circle class="microDot" cx="0" cy="24" r="2.4"/>
+      <circle class="microDot" cx="24" cy="24" r="2.4"/>
+      <circle class="microDot" cx="48" cy="24" r="2.4"/>
+      <circle class="microDot" cx="72" cy="24" r="2.4"/>
+      <circle class="microDot" cx="0" cy="48" r="2.4"/>
+      <circle class="microDot" cx="24" cy="48" r="2.4"/>
+      <circle class="microDot" cx="48" cy="48" r="2.4"/>
+      <circle class="microDot" cx="72" cy="48" r="2.4"/>
+      <circle class="microDot" cx="0" cy="72" r="2.4"/>
+      <circle class="microDot" cx="24" cy="72" r="2.4"/>
+      <circle class="microDot" cx="48" cy="72" r="2.4"/>
+      <circle class="microDot" cx="72" cy="72" r="2.4"/>
+    </g>
+  </g>
 
-  <!-- Tagline is one real text object with bullet glyphs on the same baseline -->
-  <text x="1350" y="610" class="tagline" text-anchor="middle">
-    IRCv3 Client <tspan class="bullet">•</tspan> Secure <tspan class="bullet">•</tspan> Fast <tspan class="bullet">•</tspan> Lightweight
+  <!-- faint concentric rings behind mark -->
+  <g opacity="0.20">
+    <circle cx="420" cy="450" r="200" fill="none" stroke="#205FFF" stroke-width="2"/>
+    <circle cx="420" cy="450" r="230" fill="none" stroke="#205FFF" stroke-width="2"/>
+    <circle cx="420" cy="450" r="260" fill="none" stroke="#205FFF" stroke-width="2"/>
+  </g>
+
+  <!-- brand mark -->
+  <g transform="translate(105 38)">
+    <!-- floor glow -->
+    <ellipse cx="315" cy="770" rx="190" ry="36" fill="none" stroke="#0D5FFF" stroke-opacity="0.24" stroke-width="2"/>
+    <ellipse cx="315" cy="770" rx="145" ry="26" fill="none" stroke="#0D5FFF" stroke-opacity="0.18" stroke-width="2"/>
+    <ellipse cx="315" cy="770" rx="100" ry="18" fill="#0D5FFF" fill-opacity="0.10"/>
+
+    <g filter="url(#softBlueGlow)">
+      <path d="M125 96 C225 -4 385 -4 485 96" fill="none" stroke="#22B8FF" stroke-width="30" stroke-linecap="round"/>
+      <path d="M180 154 C252 82 358 82 430 154" fill="none" stroke="#22B8FF" stroke-width="30" stroke-linecap="round"/>
+      <path d="M235 211 C282 166 328 166 375 211" fill="none" stroke="#22B8FF" stroke-width="30" stroke-linecap="round"/>
+
+      <path d="M88 270 H195 V529 C195 641 235 707 305 707 C375 707 415 641 415 529 V270 H522 V541 C522 720 440 795 305 795 C170 795 88 720 88 541 Z" fill="url(#uBlue)"/>
+
+      <path d="M132 310 H166 V527 C166 659 215 732 305 732 C395 732 444 659 444 527 V310 H478" fill="none" stroke="url(#uInner)" stroke-width="24" stroke-linecap="round"/>
+      <path d="M164 310 V525 C164 648 209 710 305 710 C401 710 446 648 446 525 V310" fill="none" stroke="#77DFFF" stroke-width="10" stroke-linecap="round" stroke-opacity="0.18"/>
+
+      <circle cx="305" cy="295" r="42" fill="#1697FF"/>
+
+      <!-- chat cavity dark fill -->
+      <path d="M202 611 C202 573 233 546 278 546 H358 C403 546 434 573 434 611 C434 650 403 676 358 676 H293 L220 730 L231 671 C213 660 202 638 202 611 Z" fill="#081225"/>
+      <path d="M222 608 C222 582 245 563 281 563 H355 C391 563 414 582 414 608 C414 634 391 653 355 653 H287 L238 694 L245 649 C230 642 222 628 222 608 Z" fill="#0B1221" opacity="0.75"/>
+
+      <!-- tower -->
+      <path d="M305 338 L382 566 H228 Z" fill="url(#towerGrad)"/>
+      <path d="M305 362 L352 566 H258 Z" fill="#0F2142" opacity="0.58"/>
+      <path d="M256 529 L356 427 M356 529 L256 427 M272 483 L340 411 M340 483 L272 411" fill="none" stroke="#F6FAFF" stroke-width="16" stroke-linecap="round" opacity="0.96"/>
+
+      <circle cx="274" cy="612" r="14" fill="#1B9DFF"/>
+      <circle cx="318" cy="612" r="14" fill="#1B9DFF"/>
+      <circle cx="362" cy="612" r="14" fill="#1B9DFF"/>
+    </g>
+  </g>
+
+  <!-- wordmark and tagline -->
+  <g transform="translate(760 0)" filter="url(#wordGlow)">
+    <text x="0" y="474" class="word">Uplink</text>
+  </g>
+
+  <text x="1345" y="610" class="tag" text-anchor="middle">
+    IRCv3 Client <tspan fill="#1491FF">•</tspan> Secure <tspan fill="#1491FF">•</tspan> Fast <tspan fill="#1491FF">•</tspan> Lightweight
   </text>
 </svg>
