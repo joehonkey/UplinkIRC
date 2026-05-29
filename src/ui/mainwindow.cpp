@@ -21,7 +21,8 @@
 #include <QTreeWidget>
 #include <QListWidget>
 #include <QListWidgetItem>
-#include <QTextEdit>
+#include <QTextBrowser>
+#include <QDesktopServices>
 #include <QLineEdit>
 #include <QLabel>
 #include <QPushButton>
@@ -461,9 +462,12 @@ void MainWindow::setupChatArea()
     vbox->addWidget(m_topicDisplay);
 
     // Chat view
-    m_chatView = new QTextEdit;
+    m_chatView = new QTextBrowser;
     m_chatView->setReadOnly(true);
     m_chatView->setLineWrapMode(QTextEdit::WidgetWidth);
+    m_chatView->setOpenLinks(false);
+    connect(m_chatView, &QTextBrowser::anchorClicked,
+            this, [](const QUrl &url){ QDesktopServices::openUrl(url); });
     vbox->addWidget(m_chatView, 1);
 
     setCentralWidget(central);
@@ -1290,6 +1294,16 @@ static QString linkifyTopic(const QString &text)
     return result;
 }
 
+static QString linkifyHtml(const QString &html)
+{
+    static const QRegularExpression urlRe(
+        R"((https?://[^\s<>"]+))",
+        QRegularExpression::CaseInsensitiveOption);
+    QString result = html;
+    result.replace(urlRe, R"(<a href="\1">\1</a>)");
+    return result;
+}
+
 void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
 {
     auto *ch = m_model->channel(host, channel);
@@ -1447,17 +1461,17 @@ QString MainWindow::formatMessage(const Message &msg) const
                        "<b style='color:%2'>&lt;%3&gt;</b> %4")
             .arg(ts, color,
                  msg.nick.toHtmlEscaped(),
-                 ircToHtml(msg.text));
+                 linkifyHtml(ircToHtml(msg.text)));
     }
     case MessageType::Action:
         return QString("<span style='color:gray'>%1</span> "
                        "<i>* %2 %3</i>")
-            .arg(ts, msg.nick.toHtmlEscaped(), ircToHtml(msg.text));
+            .arg(ts, msg.nick.toHtmlEscaped(), linkifyHtml(ircToHtml(msg.text)));
 
     case MessageType::Notice:
         return QString("<span style='color:gray'>%1</span> "
                        "<span style='color:#cc8800'>-%2- %3</span>")
-            .arg(ts, msg.nick.toHtmlEscaped(), ircToHtml(msg.text));
+            .arg(ts, msg.nick.toHtmlEscaped(), linkifyHtml(ircToHtml(msg.text)));
 
     case MessageType::Join:
         return wrap("seagreen",  ts + " → " + msg.text);

@@ -14,7 +14,7 @@ class DocsDialog;
 class QTimer;
 class QTreeWidget;
 class QTreeWidgetItem;
-class QTextEdit;
+class QTextBrowser;
 class QLineEdit;
 class QLabel;
 class QPushButton;
@@ -95,7 +95,7 @@ private:
 
     // Widgets
     QTreeWidget  *m_sidebar;
-    QTextEdit    *m_chatView;
+    QTextBrowser *m_chatView;
     QLineEdit    *m_input;
     QLabel       *m_nickPrefix;
     QPushButton  *m_emojiBtn;
