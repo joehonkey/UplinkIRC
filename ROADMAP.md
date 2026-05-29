@@ -81,7 +81,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## In Progress
 
-- [ ] Release workflow — v0.3.0 re-tagged and all CI passing; confirm all three platform binaries are attached to the GitHub release
+- [ ] Link preview persistence — cards lost on channel switch; store in message history to survive re-render
 
 ---
 
@@ -95,20 +95,16 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Multiple servers — Manage Servers dialog: add, edit, remove with live connect/disconnect
 - [x] Reconnect logic — auto-reconnect with backoff on disconnect
 - [ ] Connection status indicator — visual connected/disconnected state per server
+- [ ] Desktop notifications — notify on mention/PM when window not focused
 
 ---
 
 ## Planned — Medium Term
 
-- [ ] Bouncer support — ZNC/soju via password field, PASS before registration
-- [ ] Server-time IRCv3 — display timestamps from bouncer history
-- [ ] Chathistory IRCv3 — replay from bouncer on join
 - [ ] Message search — search within current channel buffer
 - [ ] Logging — per-channel log files at `~/.config/LinuxDojo/UplinkIRC/logs/`
 - [x] URL detection + click to open — http/https links in chat open in browser (v0.3.0)
-- [ ] Link preview persistence — cards currently lost when switching channels; store in channel message history to survive re-render
-- [ ] Desktop notifications — notify on mention/PM when window not focused
-- [ ] Emoji picker — emoji button in input bar opens picker panel
+- [ ] Link preview persistence — cards currently lost when switching channels
 - [ ] DCC file transfer — send/receive files
 - [ ] Split view — view two channels side by side
 
@@ -119,6 +115,9 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [ ] Virtual scrolling — render only visible messages (performance on busy channels)
 - [x] Window state persistence — dock sizes and positions saved via QSettings on quit, restored on launch
 - [x] Config editor UI — Manage Servers dialog covers server-level editing
+- [x] Emoji picker — searchable popup grid with :shortcode: autocomplete and auto-substitution
+- [x] Bot nick indicators — 🤖/👾 shown for +B mode nicks
+- [x] Native Windows style — windows11 Qt style by default; no alien dark theme on fresh installs
 - [ ] FreeBSD port skeleton
 - [ ] AppImage packaging for Linux
 - [ ] Auto-update check
@@ -136,11 +135,11 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## Known Issues — UI
 
-- Hamburger menu briefly shrinks when a theme is applied — `QMenu` re-polish on `setStyleSheet()` computes a different sizeHint; explicit item padding added but root cause not fully resolved
+- Hamburger menu briefly shrinks when a theme is applied — `QMenu` re-polish on `setStyleSheet()` computes a different sizeHint; root cause not fully resolved
 - Dock separator lines visible at left/right edges of chat area — QMainWindow::separator extends into toolbar region
 
 ## Known Issues
 
-- Server errors (482 channel-op-needed etc.) appear in the (server) buffer, not the active channel — topic set failures are silent when in a channel
-- Emoji button toggle wired but picker not yet implemented
+- Server errors (482 channel-op-needed etc.) appear in the (server) buffer, not the active channel
+- Link preview cards lost when switching channels (not stored in message history)
 - DCC Send File in nick menu is disabled — not yet implemented

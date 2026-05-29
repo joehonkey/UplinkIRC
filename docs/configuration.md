@@ -22,15 +22,15 @@ This is a complete config file showing every available option.
 
 ```toml
 [ui]
-theme             = "catppuccin-mocha"
+theme             = "catppuccin-mocha"  # omit or set "default" for native look on Windows
 show_nick_prefix  = true
 show_topic        = true
-show_emoji_button = false
+show_emoji_button = true               # shows 😊 button next to input bar
 colored_nicks     = true
 typing_indicator  = true
 show_conn_status  = true
 app_icon          = "dark"
-font_family       = "IBM Plex Mono"
+font_family       = "IBM Plex Mono"   # Windows default is "Consolas"
 font_toolbar      = 10
 font_sidebar      = 10
 font_chat         = 10
@@ -70,10 +70,10 @@ Controls the look and feel of the interface. All keys are optional — missing k
 
 | Key | Type | Default | Description |
 |---|---|---|---|
-| `theme` | string | `"default"` | Theme name — must match a `.toml` file in `themes/` without the extension |
+| `theme` | string | `"default"` | Theme name — must match a `.toml` file in `themes/` without the extension. On Windows, `"default"` uses the native Windows style with no custom colors. |
 | `show_nick_prefix` | bool | `true` | Show your nickname label next to the message input box |
 | `show_topic` | bool | `true` | Show the channel topic bar below the info bar |
-| `show_emoji_button` | bool | `false` | Show the emoji button next to the input box |
+| `show_emoji_button` | bool | `false` | Show the 😊 emoji picker button next to the input box. Also works via `:shortcode:` typing. |
 | `colored_nicks` | bool | `true` | Give each nickname a unique color in chat and the nick list |
 | `typing_indicator` | bool | `true` | Show "nick is typing…" notifications (IRCv3 `draft/typing`) and send your own |
 | `show_conn_status` | bool | `true` | Show the connection status label in the bottom-left status bar |

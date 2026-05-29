@@ -3,6 +3,61 @@
 ---
 
 <!--
+Session summary — 2026-05-29  v0.6.0 — Emoji, bot icons, menu icons, Windows polish
+
+What was built:
+  - Emoji picker popup (EmojiPicker, Qt::Popup) — ~400 emoji in a 9-col scrollable grid
+    with search box; opens from the 😊 button in the input bar; inserts at cursor
+  - Inline :shortcode: autocomplete — type :smi and a no-focus overlay list appears above
+    the input bar; Up/Down/Enter/Tab/click to select; Escape dismisses
+  - Auto-substitute on closing colon — typing :trident: auto-replaces in the input field
+    as soon as the closing colon is typed
+  - Substitute on submit — any remaining :shortcode: patterns in the message are resolved
+    to emoji before sending, so typing :trident: and pressing Enter sends 🔱
+  - +B bot nick icons — nicks with +B user mode or channel user mode show 🤖 or 👾,
+    chosen deterministically per nick via hash; tracked in Channel::botNicks and
+    ServerSession::botNicks; parsed from both channel MODE and user MODE events
+  - QPainter-drawn menu icons in hamburger — 12 distinct line icons for every menu item
+    (info circle, server stack, open book, A-shape, half-circle, framed landscape,
+    bar layout, person, smiley, speech bubble, signal bars, three persons);
+    palette-aware (adapts to dark/light theme); replaces unicode text prefixes
+  - Windows native style by default — QApplication::setStyle("windows11") set on Windows;
+    ThemeLoader skips QSS when theme = "default" so fresh Windows install looks native;
+    custom themes still apply when user picks one
+  - Windows font default — Consolas on Windows, IBM Plex Mono on Linux/macOS
+  - Win32 console window suppressed — WIN32 added to qt_add_executable; conhost.exe
+    no longer spawned; closing nothing kills the GUI
+  - Typing indicator overlay — moved from a VBox layout row to a child overlay of
+    m_chatView; floats at bottom-left of chat area; transparent, no row or box;
+    repositions on chat view resize via event filter
+  - Typing indicator background removed — was using inputBg color; now transparent
+  - Emoji button crop fixed — setFixedSize(30,30) + font-size:16px; padding:0
+  - GitHub Actions Node.js 24 opt-in — FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true added
+    to both ci.yml and release.yml before June 2nd forced-upgrade deadline
+
+Bugs fixed:
+  - Windows: console window (conhost.exe) spawned as parent of GUI process — killed GUI on close
+  - Windows: monospace font falling back to random sans-serif — now defaults to Consolas
+  - Windows: whole UI looked alien (custom dark QSS on native Windows) — native style now default
+  - Typing indicator: gray background stripe between chat and input bar
+  - Typing indicator: separate layout row created a visible container even with transparent bg
+  - Emoji button: face emoji cropped because button had no height constraint and default padding
+  - :shortcode: completion: required popup interaction; couldn't type full :name: directly
+
+Known issues remaining:
+  - Hamburger menu briefly shrinks when a theme is applied (QMenu sizeHint re-polish)
+  - Link preview cards don't survive channel switch (not in message history)
+  - DCC Send File stub in nick menu not yet implemented
+  - Server errors (482 etc.) show in (server) buffer, not active channel
+
+Next priorities:
+  - Link preview persistence across channel switches
+  - Server error routing to active channel buffer
+  - AppImage packaging for Linux
+  - Desktop notifications on mention/PM
+-->
+
+<!--
 Session summary — 2026-05-29 macOS CI fix + link preview:
 
 What was built/fixed:
@@ -655,6 +710,25 @@ Next priorities:
   - Connection status indicator per server in sidebar
   - AppImage packaging for Linux
 -->
+
+## [0.6.0] — 2026-05-29
+
+**Emoji picker, :shortcode: autocomplete, bot icons, native Windows style, menu icons**
+
+- Emoji picker — click 😊 in the input bar to open a searchable popup grid of ~400 emoji; click any to insert at cursor
+- Inline `:shortcode:` autocomplete — type `:smi` to get a live match list above the input; navigate with Up/Down, confirm with Enter/Tab/click, dismiss with Escape
+- Auto-substitute on closing colon — typing `:trident:` replaces instantly in the input field when the closing `:` is typed
+- Substitute on submit — any `:shortcode:` patterns remaining in a message are resolved to emoji before sending; `:trident:` + Enter sends 🔱
+- Bot nick icons — nicks with `+B` mode display 🤖 or 👾 (chosen per-nick by hash, stable); tracked for both channel user mode and global user mode `+B`
+- QPainter-drawn menu icons — each hamburger menu item has a distinct monochrome line icon drawn via QPainter; palette-aware so icons adapt to dark/light themes
+- Windows: native style by default — `windows11` Qt style set on Windows; no QSS applied for the default theme; custom themes still apply when selected
+- Windows: Consolas default font — `IBM Plex Mono` on Linux/macOS, `Consolas` on Windows
+- Fix: Windows console window (`conhost.exe`) suppressed — `WIN32` subsystem flag set in CMakeLists.txt; closing nothing kills the GUI
+- Fix: typing indicator now overlays the chat background — removed from layout row, now a child overlay of chat view, transparent, no box or stripe
+- Fix: emoji button crop — `setFixedSize(30,30)` + `font-size:16px; padding:0`
+- CI: opt in to Node.js 24 before GitHub's June 2nd forced upgrade deadline
+
+---
 
 ## [Unreleased] — 2026-05-29
 

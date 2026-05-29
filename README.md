@@ -36,9 +36,12 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - Message buffer cap (2,000 per channel) for stable long sessions
 - Panel size persistence — sidebar and nick list sizes remembered across restarts
 - Flat sidebar — servers as section headers, no expand arrows
+- **Emoji picker** — click 😊 to open a searchable grid of ~400 emoji; type `:shortcode:` for inline autocomplete; full `:name:` patterns auto-substitute on send
+- **Bot nick indicators** — nicks with `+B` mode show 🤖 or 👾 in the nick list
 - Tab nick completion and input history (Up/Down)
 - mIRC color code rendering — bold, italic, underline, colors in chat
 - CTCP auto-replies for VERSION and PING
+- **Windows-native** — uses the `windows11` Qt style by default on Windows; custom themes available via Hamburger → Theme
 
 ---
 

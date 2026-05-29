@@ -135,6 +135,29 @@ Use these when you need to send a command that UplinkIRC does not have a built-i
 
 ---
 
+---
+
+## Emoji
+
+UplinkIRC has two ways to insert emoji:
+
+### Emoji picker button
+Enable **Hamburger → Show Emoji Button** (or set `show_emoji_button = true` in config). Click the 😊 button next to the input box to open a searchable grid of ~400 emoji.
+
+### :shortcode: typing
+Type a colon followed by a keyword and a completion list appears:
+
+| You type | Result |
+|---|---|
+| `:smi` | autocomplete list: 😄 smile, 😃 smiley, … |
+| `:trident:` | auto-replaces to 🔱 as soon as you type the closing `:` |
+| `:fire:` + Enter | sends 🔥 in the message |
+
+- Use **Up/Down** arrows to navigate the list, **Enter** or **Tab** to confirm, **Escape** to dismiss.
+- Any `:shortcode:` patterns still in the text when you press Enter are resolved before the message is sent.
+
+---
+
 ## Notes
 
 - Commands are case-insensitive: `/JOIN` works the same as `/join`.
