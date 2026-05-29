@@ -155,13 +155,13 @@ You can also right-click a nick in the user list and choose **Message** to open 
 
 ### How do I use a bouncer (ZNC or soju)?
 
-Set the `password` field in your server block. UplinkIRC sends it as `PASS` before registration, which is how bouncers authenticate.
+Set the `password` field for bouncer authentication, and set `bouncer = "znc"` or `bouncer = "soju"` to enable bouncer-specific IRCv3 capabilities such as chat history replay, self-message echo, and network enumeration.
 
-ZNC format — `username/network:password`:
+**ZNC** — password format is `username/network:password`:
 
 ```toml
 [[server]]
-name     = "ZNC"
+name     = "ZNC — Libera"
 host     = "znc.example.com"
 port     = 6697
 ssl      = true
@@ -169,21 +169,42 @@ nick     = "yournick"
 user     = "uplink"
 realname = "UplinkIRC User"
 password = "joe/libera:mysecretpassword"
+bouncer  = "znc"
+
+[[server.channels]]
+name = "#linux"
 ```
 
-soju format — `username:password`:
+With `bouncer = "znc"`, UplinkIRC negotiates `znc.in/playback` and replays missed messages on connect, and echoes messages you sent from other clients via `znc.in/self-message`.
+
+**soju** — password format is `username:password`. Use `bouncer_network` if your soju instance manages more than one IRC network:
 
 ```toml
 [[server]]
-name     = "soju"
-host     = "soju.example.com"
-port     = 6697
-ssl      = true
-nick     = "yournick"
-user     = "uplink"
-realname = "UplinkIRC User"
-password = "joe:mysecretpassword"
+name            = "soju — Libera"
+host            = "soju.example.com"
+port            = 6697
+ssl             = true
+nick            = "yournick"
+user            = "uplink"
+realname        = "UplinkIRC User"
+password        = "joe:mysecretpassword"
+bouncer         = "soju"
+bouncer_network = "libera"
+
+[[server.channels]]
+name = "#linux"
 ```
+
+With `bouncer = "soju"`, UplinkIRC negotiates `soju.im/bouncer-networks` (lists your networks in the server buffer), `soju.im/read` (syncs your read position across clients), and `soju.im/no-implicit-names`.
+
+Both bouncer types also negotiate the standard `chathistory` capability, which automatically requests the last 100 messages for each channel on join. See [IRCv3 support](ircv3.md) for full details.
+
+### What do the dimmed messages at the top of a channel mean?
+
+Those are history messages replayed by your bouncer or IRC server via the `chathistory` capability. They represent messages that were sent while you were offline or disconnected.
+
+History messages are intentionally displayed at reduced opacity and with their original timestamps so they are easy to distinguish from live messages. Previous-day messages show the date as well as the time (`MM/dd hh:mm`). They do not count as unread, so they will not badge the channel in the sidebar.
 
 ---
 

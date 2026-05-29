@@ -168,6 +168,19 @@ void SessionModel::attachClient(IrcClient *cl, const ServerConfig &cfg)
     connect(cl, &IrcClient::messageReceived, this, &SessionModel::onMessage);
     connect(cl, &IrcClient::noticeReceived,  this, &SessionModel::onNotice);
     connect(cl, &IrcClient::actionReceived,  this, &SessionModel::onAction);
+    connect(cl, &IrcClient::bouncerNetworkReceived, this,
+            [this](const QString &host, const QString &id,
+                   const QString &name, bool connected){
+        Q_UNUSED(id)
+        postMessage(host, "(server)",
+            Message::make(MessageType::Server, "",
+                QString("Bouncer network: %1 [%2]").arg(name, connected ? "connected" : "offline")));
+    });
+    connect(cl, &IrcClient::readMarkerReceived, this,
+            [this](const QString &host, const QString &target, const QDateTime &ts){
+        if (auto *ch = channel(host, target))
+            ch->lastRead = ts;
+    });
     connect(cl, &IrcClient::userJoined,      this, &SessionModel::onUserJoined);
     connect(cl, &IrcClient::userParted,      this, &SessionModel::onUserParted);
     connect(cl, &IrcClient::userQuit,        this, &SessionModel::onUserQuit);
@@ -205,11 +218,11 @@ void SessionModel::postMessage(const QString &host, const QString &target, const
     ch.addMessage(msg);
 
     const bool isActive = (host == m_activeHost && target.toLower() == m_activeChannel.toLower());
-    if (!isActive && msg.type == MessageType::Privmsg)
+    if (!isActive && !msg.isHistory && msg.type == MessageType::Privmsg)
         ++ch.unread;
 
     emit messageAdded(host, target, msg);
-    if (!isActive && msg.type == MessageType::Privmsg)
+    if (!isActive && !msg.isHistory && msg.type == MessageType::Privmsg)
         emit unreadChanged(host, target, ch.unread);
 }
 
@@ -256,26 +269,29 @@ void SessionModel::onSocketError(const QString &host, const QString &error)
 }
 
 void SessionModel::onMessage(const QString &host, const QString &target,
-                             const QString &nick, const QString &text)
+                             const QString &nick, const QString &text,
+                             const QDateTime &serverTime, bool isHistory)
 {
     const bool isPM = !target.startsWith('#') && !target.startsWith('&')
                       && !target.startsWith('!');
     const QString buf = isPM ? nick : target;
-    if (isPM) openPM(host, nick);
-    postMessage(host, buf, Message::make(MessageType::Privmsg, nick, text));
+    if (isPM && !isHistory) openPM(host, nick);
+    postMessage(host, buf, Message::make(MessageType::Privmsg, nick, text, serverTime, isHistory));
 }
 
 void SessionModel::onNotice(const QString &host, const QString &target,
-                            const QString &nick, const QString &text)
+                            const QString &nick, const QString &text,
+                            const QDateTime &serverTime, bool isHistory)
 {
     const QString dest = target.startsWith('#') ? target : "(server)";
-    postMessage(host, dest, Message::make(MessageType::Notice, nick, text));
+    postMessage(host, dest, Message::make(MessageType::Notice, nick, text, serverTime, isHistory));
 }
 
 void SessionModel::onAction(const QString &host, const QString &target,
-                            const QString &nick, const QString &text)
+                            const QString &nick, const QString &text,
+                            const QDateTime &serverTime, bool isHistory)
 {
-    postMessage(host, target, Message::make(MessageType::Action, nick, text));
+    postMessage(host, target, Message::make(MessageType::Action, nick, text, serverTime, isHistory));
 }
 
 void SessionModel::onUserJoined(const QString &host, const QString &channel, const QString &nick)

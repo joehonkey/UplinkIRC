@@ -2,6 +2,7 @@
 #include "config/config.h"
 #include <QDialog>
 
+class QComboBox;
 class QLineEdit;
 class QSpinBox;
 class QCheckBox;
@@ -26,4 +27,6 @@ private:
     QLineEdit *m_saslUser;
     QLineEdit *m_saslPassword;
     QLineEdit *m_nickservPassword;
+    QComboBox *m_bouncerType;
+    QLineEdit *m_bouncerNetwork;
 };

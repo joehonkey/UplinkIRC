@@ -1702,49 +1702,62 @@ static QString ircToHtml(const QString &raw)
 
 QString MainWindow::formatMessage(const Message &msg) const
 {
-    const QString ts = msg.timestamp.toString("hh:mm");
+    const QDateTime local = msg.timestamp.toLocalTime();
+    const bool sameDay = local.date() == QDate::currentDate();
+    const QString ts = sameDay
+        ? local.toString("hh:mm")
+        : local.toString("MM/dd hh:mm");
 
     auto wrap = [](const QString &color, const QString &text) {
         return QString("<span style='color:%1'>%2</span>").arg(color, text.toHtmlEscaped());
     };
 
+    QString html;
     switch (msg.type) {
     case MessageType::Privmsg: {
         const QString color = m_config.ui.coloredNicks
             ? nickColor(msg.nick).name()
             : QString("palette(text)");
-        return QString("<span style='color:gray'>%1</span> "
+        html = QString("<span style='color:gray'>%1</span> "
                        "<b style='color:%2'>&lt;%3&gt;</b> %4")
             .arg(ts, color,
                  msg.nick.toHtmlEscaped(),
                  linkifyHtml(ircToHtml(msg.text)));
+        break;
     }
     case MessageType::Action:
-        return QString("<span style='color:gray'>%1</span> "
+        html = QString("<span style='color:gray'>%1</span> "
                        "<i>* %2 %3</i>")
             .arg(ts, msg.nick.toHtmlEscaped(), linkifyHtml(ircToHtml(msg.text)));
+        break;
 
     case MessageType::Notice:
-        return QString("<span style='color:gray'>%1</span> "
+        html = QString("<span style='color:gray'>%1</span> "
                        "<span style='color:#cc8800'>-%2- %3</span>")
             .arg(ts, msg.nick.toHtmlEscaped(), linkifyHtml(ircToHtml(msg.text)));
+        break;
 
     case MessageType::Join:
-        return wrap("seagreen",  ts + " → " + msg.text);
+        html = wrap("seagreen",  ts + " → " + msg.text); break;
     case MessageType::Part:
-        return wrap("firebrick", ts + " ← " + msg.text);
+        html = wrap("firebrick", ts + " ← " + msg.text); break;
     case MessageType::Quit:
-        return wrap("firebrick", ts + " ✕ " + msg.text);
+        html = wrap("firebrick", ts + " ✕ " + msg.text); break;
     case MessageType::Nick:
-        return wrap("steelblue", ts + " ~ "  + msg.text);
+        html = wrap("steelblue", ts + " ~ "  + msg.text); break;
     case MessageType::Kick:
-        return wrap("firebrick", ts + " ✕ " + msg.text);
+        html = wrap("firebrick", ts + " ✕ " + msg.text); break;
     case MessageType::Topic:
-        return wrap("steelblue", ts + " ⦁ Topic: " + msg.text);
+        html = wrap("steelblue", ts + " ⦁ Topic: " + msg.text); break;
     case MessageType::Error:
-        return wrap("red",       ts + " !! " + msg.text);
+        html = wrap("red",       ts + " !! " + msg.text); break;
     case MessageType::Server:
     default:
-        return wrap("gray",      ts + " * "  + msg.text);
+        html = wrap("gray",      ts + " * "  + msg.text); break;
     }
+
+    if (msg.isHistory)
+        html = "<span style='opacity:0.55'>" + html + "</span>";
+
+    return html;
 }

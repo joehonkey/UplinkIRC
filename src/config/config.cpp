@@ -109,6 +109,11 @@ Config Config::load(const QString &path)
                 sc.saslUser         = QString::fromStdString((*s)["sasl_user"].value_or<std::string>(""));
                 sc.saslPassword     = QString::fromStdString((*s)["sasl_password"].value_or<std::string>(""));
                 sc.nickservPassword = QString::fromStdString((*s)["nickserv_password"].value_or<std::string>(""));
+                const std::string bt = (*s)["bouncer"].value_or<std::string>("none");
+                if      (bt == "znc")  sc.bouncerType = BouncerType::ZNC;
+                else if (bt == "soju") sc.bouncerType = BouncerType::Soju;
+                else                   sc.bouncerType = BouncerType::None;
+                sc.bouncerNetwork = QString::fromStdString((*s)["bouncer_network"].value_or<std::string>(""));
 
                 if (auto chans = (*s)["channels"].as_array()) {
                     for (auto &cn : *chans) {
@@ -183,6 +188,12 @@ void Config::save(const Config &cfg, const QString &path)
             out << "sasl_password     = \"" << s.saslPassword << "\"\n";
         if (!s.nickservPassword.isEmpty())
             out << "nickserv_password = \"" << s.nickservPassword << "\"\n";
+        if (s.bouncerType == BouncerType::ZNC)
+            out << "bouncer           = \"znc\"\n";
+        else if (s.bouncerType == BouncerType::Soju)
+            out << "bouncer           = \"soju\"\n";
+        if (!s.bouncerNetwork.isEmpty())
+            out << "bouncer_network   = \"" << s.bouncerNetwork << "\"\n";
         for (const auto &ch : s.channels) {
             out << "\n[[server.channels]]\n";
             out << "name = \"" << ch.name << "\"\n";

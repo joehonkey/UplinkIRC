@@ -2,6 +2,7 @@
 
 #include "serversession.h"
 #include "config/config.h"
+#include <QDateTime>
 #include <QObject>
 #include <QList>
 
@@ -71,11 +72,14 @@ private:
     void onDisconnected   (const QString &host);
     void onSocketError    (const QString &host, const QString &error);
     void onMessage        (const QString &host, const QString &target,
-                           const QString &nick, const QString &text);
+                           const QString &nick, const QString &text,
+                           const QDateTime &serverTime, bool isHistory);
     void onNotice         (const QString &host, const QString &target,
-                           const QString &nick, const QString &text);
+                           const QString &nick, const QString &text,
+                           const QDateTime &serverTime, bool isHistory);
     void onAction         (const QString &host, const QString &target,
-                           const QString &nick, const QString &text);
+                           const QString &nick, const QString &text,
+                           const QDateTime &serverTime, bool isHistory);
     void onUserJoined     (const QString &host, const QString &channel, const QString &nick);
     void onUserParted     (const QString &host, const QString &channel,
                            const QString &nick, const QString &reason);

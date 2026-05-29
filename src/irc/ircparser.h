@@ -1,17 +1,20 @@
 #pragma once
 
+#include <QDateTime>
+#include <QHash>
 #include <QString>
 #include <QStringList>
 
 struct IrcMessage {
-    QString     prefix;   // nick!user@host or server
-    QString     nick;     // parsed from prefix
-    QString     user;
-    QString     host;
-    QString     command;
-    QStringList params;
-    QString     trailing;
-    QString     tags;     // IRCv3 message tags (@key=value;...)
+    QString                prefix;
+    QString                nick;
+    QString                user;
+    QString                host;
+    QString                command;
+    QStringList            params;
+    QString                trailing;
+    QHash<QString,QString> tags;
+    QDateTime              serverTime; // parsed from tags["time"] if present
 
     bool isValid() const { return !command.isEmpty(); }
 };

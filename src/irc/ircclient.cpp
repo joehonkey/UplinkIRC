@@ -29,17 +29,19 @@ void IrcClient::connectToServer(const ServerConfig &cfg)
     m_intentionalDisconnect = false;
     m_reconnectDelay = 5;
 
-    m_host     = cfg.host;
-    m_port     = cfg.port;
-    m_ssl      = cfg.ssl;
-    m_nick     = cfg.nick;
-    m_user     = cfg.user;
-    m_realname = cfg.realname;
-    m_password     = cfg.password;
-    m_saslUser         = cfg.saslUser;
-    m_saslPassword     = cfg.saslPassword;
-    m_saslPending      = false;
+    m_host            = cfg.host;
+    m_port            = cfg.port;
+    m_ssl             = cfg.ssl;
+    m_nick            = cfg.nick;
+    m_user            = cfg.user;
+    m_realname        = cfg.realname;
+    m_password        = cfg.password;
+    m_saslUser        = cfg.saslUser;
+    m_saslPassword    = cfg.saslPassword;
+    m_saslPending     = false;
     m_nickservPassword = cfg.nickservPassword;
+    m_bouncerType     = cfg.bouncerType;
+    m_bouncerNetwork  = cfg.bouncerNetwork;
 
     if (m_ssl)
         m_socket->connectToHostEncrypted(m_host, m_port);
@@ -91,6 +93,18 @@ void IrcClient::sendTyping(const QString &channel, const QString &state)
     sendRaw("@+typing=" + state + " TAGMSG " + channel);
 }
 
+void IrcClient::requestHistory(const QString &target, int limit)
+{
+    if (!m_ackedCaps.contains("chathistory")) return;
+    sendRaw(QString("CHATHISTORY LATEST %1 * %2").arg(target).arg(limit));
+}
+
+void IrcClient::markRead(const QString &target, const QDateTime &ts)
+{
+    if (!m_ackedCaps.contains("soju.im/read")) return;
+    sendRaw("MARKREAD " + target + " timestamp=" + ts.toUTC().toString(Qt::ISODateWithMs));
+}
+
 void IrcClient::sendRaw(const QString &line)
 {
     if (m_socket->state() != QAbstractSocket::ConnectedState) return;
@@ -107,7 +121,6 @@ void IrcClient::onConnected()
     m_reconnectTimer->stop();
     m_reconnectDelay = 5;
 
-    // CAP negotiation before registration
     sendRaw("CAP LS 302");
 
     if (!m_password.isEmpty())
@@ -121,6 +134,8 @@ void IrcClient::onDisconnected()
 {
     m_namesBuffer.clear();
     m_requestedCaps.clear();
+    m_ackedCaps.clear();
+    m_batches.clear();
     m_saslPending = false;
     emit disconnected(m_host);
     scheduleReconnect();
@@ -142,7 +157,6 @@ void IrcClient::onReadyRead()
 
 void IrcClient::onSslErrors(const QList<QSslError> &errors)
 {
-    // For now ignore self-signed; will make configurable
     Q_UNUSED(errors)
     m_socket->ignoreSslErrors();
 }
@@ -183,19 +197,16 @@ void IrcClient::processLine(const QString &line)
 
     const QString &cmd = msg.command;
 
-    // PING
     if (cmd == "PING") {
         sendRaw("PONG :" + (msg.params.isEmpty() ? QString{} : msg.params.last()));
         return;
     }
 
-    // CAP
     if (cmd == "CAP") {
         handleCap(msg.params, msg.trailing);
         return;
     }
 
-    // SASL challenge
     if (cmd == "AUTHENTICATE") {
         if (!msg.params.isEmpty() && msg.params[0] == "+") {
             const QByteArray payload =
@@ -206,7 +217,26 @@ void IrcClient::processLine(const QString &line)
         return;
     }
 
-    // Numerics
+    if (cmd == "BATCH") {
+        handleBatch(msg.params);
+        return;
+    }
+
+    if (cmd == "BOUNCER") {
+        handleBouncer(msg.params, msg.trailing);
+        return;
+    }
+
+    if (cmd == "MARKREAD" && msg.params.size() >= 2) {
+        const QString target = msg.params[0];
+        const QString tsTag  = msg.params[1]; // "timestamp=<iso>"
+        if (tsTag.startsWith("timestamp=")) {
+            const QDateTime ts = QDateTime::fromString(tsTag.mid(10), Qt::ISODateWithMs);
+            emit readMarkerReceived(m_host, target, ts);
+        }
+        return;
+    }
+
     bool isNumeric = false;
     cmd.toInt(&isNumeric);
     if (isNumeric) {
@@ -214,15 +244,36 @@ void IrcClient::processLine(const QString &line)
         return;
     }
 
+    // If this message belongs to an active batch, buffer it
+    const QString batchRef = msg.tags.value("batch");
+    if (!batchRef.isEmpty() && m_batches.contains(batchRef)) {
+        BatchInfo::Msg bm;
+        bm.command    = cmd;
+        bm.nick       = msg.nick;
+        bm.params     = msg.params;
+        bm.trailing   = msg.trailing;
+        bm.serverTime = msg.serverTime;
+        m_batches[batchRef].msgs.append(bm);
+        return;
+    }
+
+    const QDateTime serverTime = msg.serverTime;
+
     // PRIVMSG / CTCP
     if (cmd == "PRIVMSG" && msg.params.size() >= 1) {
         const QString target = msg.params[0];
         const QString text   = msg.trailing;
+
+        // ZNC self-message echo
+        const bool isSelf = (msg.nick == m_nick) ||
+                            msg.tags.contains("znc.in/self-message");
+
         if (text.startsWith('\x01') && text.endsWith('\x01')) {
             const QString ctcp    = text.mid(1, text.size() - 2);
             const QString ctcpCmd = ctcp.section(' ', 0, 0).toUpper();
             if (ctcpCmd == "ACTION") {
-                emit actionReceived(m_host, target, msg.nick, ctcp.mid(7));
+                emit actionReceived(m_host, isSelf ? target : target,
+                                    msg.nick, ctcp.mid(7), serverTime, false);
             } else if (ctcpCmd == "VERSION") {
                 sendRaw("NOTICE " + msg.nick + " :\x01VERSION UplinkIRC " UPLINKIRC_VERSION "\x01");
                 emit serverMessage(m_host, "CTCP VERSION from " + msg.nick);
@@ -232,35 +283,29 @@ void IrcClient::processLine(const QString &line)
                 emit serverMessage(m_host, "CTCP " + ctcpCmd + " from " + msg.nick);
             }
         } else {
-            emit messageReceived(m_host, target, msg.nick, text);
+            emit messageReceived(m_host, target, msg.nick, text, serverTime, false);
         }
         return;
     }
 
-    // NOTICE / CTCP replies
     if (cmd == "NOTICE" && msg.params.size() >= 1) {
         const QString text = msg.trailing;
         if (text.startsWith('\x01') && text.endsWith('\x01')) {
             emit serverMessage(m_host, "CTCP reply from " + msg.nick + ": "
                                + text.mid(1, text.size() - 2));
         } else {
-            emit noticeReceived(m_host, msg.params[0], msg.nick, text);
+            emit noticeReceived(m_host, msg.params[0], msg.nick, text, serverTime, false);
         }
         return;
     }
 
-    // TAGMSG (typing notifications)
     if (cmd == "TAGMSG" && !msg.params.isEmpty()) {
-        for (const QString &tag : msg.tags.split(';', Qt::SkipEmptyParts)) {
-            if (tag.section('=', 0, 0) == "+typing") {
-                emit typingReceived(m_host, msg.params[0], msg.nick, tag.section('=', 1));
-                break;
-            }
-        }
+        const QString typing = msg.tags.value("+typing");
+        if (!typing.isEmpty())
+            emit typingReceived(m_host, msg.params[0], msg.nick, typing);
         return;
     }
 
-    // JOIN
     if (cmd == "JOIN") {
         const QString channel = msg.params.isEmpty() ? msg.trailing : msg.params[0];
         if (msg.nick == m_nick)
@@ -269,19 +314,16 @@ void IrcClient::processLine(const QString &line)
         return;
     }
 
-    // PART
     if (cmd == "PART" && !msg.params.isEmpty()) {
         emit userParted(m_host, msg.params[0], msg.nick, msg.trailing);
         return;
     }
 
-    // QUIT
     if (cmd == "QUIT") {
         emit userQuit(m_host, msg.nick, msg.trailing);
         return;
     }
 
-    // NICK
     if (cmd == "NICK") {
         const QString newNick = msg.params.isEmpty() ? msg.trailing : msg.params[0];
         if (msg.nick == m_nick) {
@@ -292,25 +334,96 @@ void IrcClient::processLine(const QString &line)
         return;
     }
 
-    // KICK
     if (cmd == "KICK" && msg.params.size() >= 2) {
         emit kicked(m_host, msg.params[0], msg.params[1], msg.nick, msg.trailing);
         return;
     }
 
-    // MODE
     if (cmd == "MODE" && !msg.params.isEmpty()) {
-        // Rebuild mode string from remaining params
         QStringList modeParts = msg.params.mid(1);
         if (!msg.trailing.isEmpty()) modeParts << msg.trailing;
         emit modesReceived(m_host, msg.params[0], modeParts.join(' '));
         return;
     }
 
-    // TOPIC (live change)
     if (cmd == "TOPIC" && !msg.params.isEmpty()) {
         emit topicReceived(m_host, msg.params[0], msg.trailing);
         return;
+    }
+}
+
+// ---------------------------------------------------------------------------
+// BATCH
+// ---------------------------------------------------------------------------
+
+void IrcClient::handleBatch(const QStringList &params)
+{
+    if (params.isEmpty()) return;
+    const QString refArg = params[0];
+
+    if (refArg.startsWith('+')) {
+        // Start batch
+        const QString ref  = refArg.mid(1);
+        const QString type = params.size() > 1 ? params[1] : QString();
+        const QString param = params.size() > 2 ? params[2] : QString();
+        BatchInfo bi;
+        bi.type  = type;
+        bi.param = param;
+        m_batches.insert(ref, bi);
+    } else if (refArg.startsWith('-')) {
+        deliverBatch(refArg.mid(1));
+    }
+}
+
+void IrcClient::deliverBatch(const QString &ref)
+{
+    if (!m_batches.contains(ref)) return;
+    const BatchInfo batch = m_batches.take(ref);
+
+    const bool isHistory = (batch.type == "chathistory" ||
+                            batch.type == "znc.in/batch/playback");
+
+    for (const BatchInfo::Msg &bm : batch.msgs) {
+        if (bm.command == "PRIVMSG" && bm.params.size() >= 1) {
+            const QString target = bm.params[0];
+            const QString text   = bm.trailing;
+            if (text.startsWith('\x01') && text.endsWith('\x01')) {
+                const QString ctcp = text.mid(1, text.size() - 2);
+                if (ctcp.startsWith("ACTION "))
+                    emit actionReceived(m_host, target, bm.nick,
+                                        ctcp.mid(7), bm.serverTime, isHistory);
+            } else {
+                emit messageReceived(m_host, target, bm.nick,
+                                     text, bm.serverTime, isHistory);
+            }
+        } else if (bm.command == "NOTICE" && bm.params.size() >= 1) {
+            emit noticeReceived(m_host, bm.params[0], bm.nick,
+                                bm.trailing, bm.serverTime, isHistory);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// BOUNCER (soju)
+// ---------------------------------------------------------------------------
+
+void IrcClient::handleBouncer(const QStringList &params, const QString &trailing)
+{
+    Q_UNUSED(trailing)
+    if (params.isEmpty()) return;
+    const QString sub = params[0].toUpper();
+
+    if (sub == "NETWORK" && params.size() >= 2) {
+        // Parse key=value pairs from params[1]
+        QHash<QString,QString> attrs;
+        for (const QString &part : params[1].split(';', Qt::SkipEmptyParts)) {
+            const int eq = part.indexOf('=');
+            if (eq != -1) attrs.insert(part.left(eq), part.mid(eq+1));
+        }
+        const QString id    = attrs.value("id");
+        const QString name  = attrs.value("name");
+        const bool connected = (attrs.value("state") == "connected");
+        emit bouncerNetworkReceived(m_host, id, name, connected);
     }
 }
 
@@ -324,15 +437,33 @@ void IrcClient::handleCap(const QStringList &params, const QString &trailing)
     const QString subCmd = params[1].toUpper();
 
     if (subCmd == "LS") {
-        // Request caps we care about
-        QStringList want;
         const QStringList available = trailing.split(' ', Qt::SkipEmptyParts);
+
         QStringList desired = {
             "multi-prefix", "away-notify", "server-time",
-            "message-tags", "batch", "labeled-response", "draft/typing"
+            "message-tags", "batch", "labeled-response", "draft/typing",
+            "chathistory",
         };
+
+        // ZNC-specific caps
+        if (m_bouncerType == BouncerType::ZNC) {
+            desired << "znc.in/playback"
+                    << "znc.in/self-message"
+                    << "znc.in/batch";
+        }
+
+        // Soju-specific caps
+        if (m_bouncerType == BouncerType::Soju) {
+            desired << "soju.im/bouncer-networks"
+                    << "soju.im/bouncer-networks-notify"
+                    << "soju.im/read"
+                    << "soju.im/no-implicit-names";
+        }
+
         if (!m_saslUser.isEmpty() && !m_saslPassword.isEmpty())
             desired << "sasl";
+
+        QStringList want;
         for (const QString &cap : desired)
             if (available.contains(cap))
                 want << cap;
@@ -348,11 +479,20 @@ void IrcClient::handleCap(const QStringList &params, const QString &trailing)
 
     if (subCmd == "ACK") {
         const QStringList acked = trailing.split(' ', Qt::SkipEmptyParts);
+        for (const QString &cap : acked)
+            m_ackedCaps.insert(cap.startsWith('-') ? cap.mid(1) : cap);
+
         if (acked.contains("sasl") && !m_saslUser.isEmpty() && !m_saslPassword.isEmpty()) {
             m_saslPending = true;
             sendRaw("AUTHENTICATE PLAIN");
         } else {
             sendRaw("CAP END");
+        }
+
+        // Request soju network list once caps are acked
+        if (m_bouncerType == BouncerType::Soju &&
+            m_ackedCaps.contains("soju.im/bouncer-networks")) {
+            sendRaw("BOUNCER LISTNETWORKS");
         }
         return;
     }
@@ -379,19 +519,19 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
             sendRaw("PRIVMSG NickServ :IDENTIFY " + m_nickservPassword);
             emit serverMessage(m_host, "Sent NickServ IDENTIFY");
         }
+        // ZNC: request playback of all buffers since last seen
+        if (m_bouncerType == BouncerType::ZNC &&
+            m_ackedCaps.contains("znc.in/playback")) {
+            sendRaw("PRIVMSG *playback :PLAY * 0");
+        }
         break;
 
     case 2:   // RPL_YOURHOST
     case 3:   // RPL_CREATED
     case 4:   // RPL_MYINFO
     case 5:   // RPL_ISUPPORT
-    case 251: // RPL_LUSERCLIENT
-    case 252: // RPL_LUSEROP
-    case 253: // RPL_LUSERUNKNOWN
-    case 254: // RPL_LUSERCHANNELS
-    case 255: // RPL_LUSERME
-    case 265: // RPL_LOCALUSERS
-    case 266: // RPL_GLOBALUSERS
+    case 251: case 252: case 253: case 254: case 255:
+    case 265: case 266:
     case 372: // RPL_MOTD
     case 375: // RPL_MOTDSTART
         emit serverMessage(m_host, trailing);
@@ -400,10 +540,9 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
     case 376: // RPL_ENDOFMOTD
     case 422: // ERR_NOMOTD
         emit serverMessage(m_host, trailing);
-        // Auto-join configured channels — handled by MainWindow on connected()
         break;
 
-    case 324: // RPL_CHANNELMODEIS — params: me #channel +modes [args...]
+    case 324: // RPL_CHANNELMODEIS
         if (params.size() >= 3) {
             QStringList modeParts = params.mid(2);
             emit modesReceived(m_host, params[1], modeParts.join(' '));
@@ -415,11 +554,9 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
             emit topicReceived(m_host, params[1], trailing);
         break;
 
-    case 333: // RPL_TOPICWHOTIME — ignore
-        break;
+    case 333: break; // RPL_TOPICWHOTIME
 
     case 353: { // RPL_NAMREPLY
-        // params: me '=' '#channel'  trailing: nick list
         if (params.size() >= 3) {
             const QString channel = params[2];
             const QStringList nicks = trailing.split(' ', Qt::SkipEmptyParts);
@@ -434,6 +571,9 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
             emit namesReceived(m_host, channel, m_namesBuffer.take(channel));
             emit namesDone(m_host, channel);
             sendRaw("MODE " + channel);
+            // Request chat history on join
+            if (m_ackedCaps.contains("chathistory"))
+                requestHistory(channel, 100);
         }
         break;
     }
@@ -448,9 +588,7 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
         sendRaw("CAP END");
         break;
 
-    case 904: // ERR_SASLFAIL
-    case 905: // ERR_SASLTOOLONG
-    case 906: // ERR_SASLABORTED
+    case 904: case 905: case 906:
         emit serverMessage(m_host, "SASL authentication failed: " + trailing);
         m_saslPending = false;
         sendRaw("CAP END");
@@ -460,8 +598,7 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
         setNick(m_nick + "_");
         break;
 
-    case 431: // ERR_NONICKNAMEGIVEN
-    case 432: // ERR_ERRONEUSNICKNAME
+    case 431: case 432:
         emit serverMessage(m_host, "Nick error: " + trailing);
         break;
 

@@ -4,6 +4,8 @@
 #include <QStringList>
 #include <QList>
 
+enum class BouncerType { None, ZNC, Soju };
+
 struct ChannelConfig {
     QString name;
     QString password;
@@ -20,7 +22,9 @@ struct ServerConfig {
     QString            password;         // PASS / bouncer
     QString            saslUser;
     QString            saslPassword;
-    QString            nickservPassword; // NickServ IDENTIFY on connect
+    QString            nickservPassword;
+    BouncerType        bouncerType{BouncerType::None};
+    QString            bouncerNetwork;   // soju network name, or empty
     QList<ChannelConfig> channels;
 
     bool operator==(const ServerConfig &o) const {

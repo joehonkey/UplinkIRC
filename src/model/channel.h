@@ -1,6 +1,7 @@
 #pragma once
 
 #include "message.h"
+#include <QDateTime>
 #include <QString>
 #include <QList>
 
@@ -44,6 +45,7 @@ struct Channel {
     QList<Message>   messages;
     int              unread{0};
     bool             joined{false};
+    QDateTime        lastRead;  // soju.im/read marker
 
     void addMessage(const Message &msg)
     {

@@ -1,6 +1,7 @@
 #include "serverdialog.h"
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDialogButtonBox>
 #include <QFormLayout>
 #include <QLabel>
@@ -61,6 +62,17 @@ ServerDialog::ServerDialog(QWidget *parent)
     form->addRow("SASL Password:",   m_saslPassword);
     form->addRow("NickServ:",        m_nickservPassword);
 
+    m_bouncerType = new QComboBox;
+    m_bouncerType->addItem("None",  static_cast<int>(BouncerType::None));
+    m_bouncerType->addItem("ZNC",   static_cast<int>(BouncerType::ZNC));
+    m_bouncerType->addItem("Soju",  static_cast<int>(BouncerType::Soju));
+    m_bouncerNetwork = new QLineEdit;
+    m_bouncerNetwork->setPlaceholderText("network name (soju only)");
+
+    form->addRow(makeHeader("Bouncer"));
+    form->addRow("Type:",    m_bouncerType);
+    form->addRow("Network:", m_bouncerNetwork);
+
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
     connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
@@ -85,6 +97,8 @@ ServerDialog::ServerDialog(const ServerConfig &existing, QWidget *parent)
     m_saslUser->setText(existing.saslUser);
     m_saslPassword->setText(existing.saslPassword);
     m_nickservPassword->setText(existing.nickservPassword);
+    m_bouncerType->setCurrentIndex(static_cast<int>(existing.bouncerType));
+    m_bouncerNetwork->setText(existing.bouncerNetwork);
 }
 
 ServerConfig ServerDialog::serverConfig() const
@@ -101,5 +115,7 @@ ServerConfig ServerDialog::serverConfig() const
     sc.saslUser         = m_saslUser->text().trimmed();
     sc.saslPassword     = m_saslPassword->text();
     sc.nickservPassword = m_nickservPassword->text();
+    sc.bouncerType      = static_cast<BouncerType>(m_bouncerType->currentData().toInt());
+    sc.bouncerNetwork   = m_bouncerNetwork->text().trimmed();
     return sc;
 }

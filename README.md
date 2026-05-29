@@ -9,29 +9,33 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## Features
 
-- TLS/SSL connections via QSslSocket — plaintext IRC not supported
-- SASL PLAIN authentication — set `sasl_user` and `sasl_password` in config for IRCv3 SASL login
-- NickServ auto-identify — set `nickserv_password` in config to identify on connect
-- IRCv3 CAP LS 302 negotiation: `multi-prefix`, `away-notify`, `server-time`, `message-tags`, `batch`, `labeled-response`, `draft/typing`, `sasl`
+- TLS/SSL connections via `QSslSocket` — plaintext IRC is not supported
+- SASL PLAIN authentication — set `sasl_user` and `sasl_password` in config to authenticate before appearing on the network
+- NickServ auto-identify — set `nickserv_password` to send `IDENTIFY` on connect
+- **Bouncer support** — first-class ZNC and soju integration with `chathistory` replay, `znc.in/playback`, `soju.im/bouncer-networks`, `soju.im/read`, and self-message echo; configure with `bouncer = "znc"` or `bouncer = "soju"` in the server block
+- IRCv3 CAP LS 302 negotiation: `multi-prefix`, `away-notify`, `server-time`, `message-tags`, `batch`, `chathistory`, `labeled-response`, `draft/typing`, `sasl`, and all ZNC/soju bouncer caps
+- **Chat history replay** — on channel join, requests the last 100 messages via `CHATHISTORY LATEST`; history messages are displayed dimmed with their original timestamps so you can tell them apart from live messages
 - Full IRC numerics and commands: JOIN, PART, QUIT, NICK, KICK, MODE, TOPIC, PRIVMSG, NOTICE, CTCP
 - Slash commands: `/help`, `/join`, `/part`, `/nick`, `/me`, `/msg`, `/away`, `/back`, `/motd`, `/whois`, `/topic`, `/kick`, `/notice`, `/version`, `/ctcp`, `/sysinfo`, `/raw`, `/quote`, `/quit`
-- Nick list sorted by prefix rank (~&@%+) with live updates
+- Nick list sorted by prefix rank (`~&@%+`) with live updates
 - Info bar — always shows `#channel (modes) * Network — N users`; topic drops below when enabled
 - PM tabs — `/msg <nick>` opens a private message buffer in the sidebar
 - Nick list right-click menu — Message, Whois, Give Op, Give Voice, Version
-- Typing indicator — IRCv3 `draft/typing`; shows "nick is typing..." in real time
-- Per-widget font sizes — independent size control for every UI zone including network name and typing indicator
-- **Manage Servers** dialog — add, edit, and remove server connections from within the app; changes take effect immediately without restart
-- Auto-reconnect with exponential backoff — reconnects automatically on unexpected disconnect (5s → 10s → 20s → 40s → 60s); deliberate `/quit` disables it
-- Sidebar right-click menus — right-click a server to Disconnect/Reconnect; right-click a channel to Leave/Rejoin
-- 55 built-in themes, switchable from the hamburger menu (bottom-right of the user list panel)
-- Clickable URLs in chat and topic bar — http/https links in messages and topic open in the browser
-- Link preview cards — URLs in live messages auto-fetch og:title and og:image; a small card with title, domain, and thumbnail appears inline below the message; hovering any URL shows the page title in a tooltip
+- Typing indicator — IRCv3 `draft/typing`; sends `active` immediately on first keypress, shows "nick is typing..." in real time
+- Per-widget font sizes — independent control for every UI zone via **Hamburger → Font Config...**
+- **Manage Servers** dialog — add, edit, and remove server connections without editing the config file; changes take effect immediately
+- Auto-reconnect with exponential backoff (5s → 10s → 20s → 40s → 60s); deliberate `/quit` disables it
+- Sidebar right-click menus — Disconnect/Reconnect on servers; Leave/Rejoin on channels
+- 55 built-in themes, switchable live from **Hamburger → Theme**
+- **App icon picker** — choose between Dark, Light (default), Light, and Avatar icon variants from the hamburger menu
+- Connection status bar — persistent label showing `Connecting to…` / `Connected to…` / `Disconnected from…`; can be hidden from the hamburger menu
+- Clickable URLs in chat and topic bar
+- Link preview cards — URLs auto-fetch `og:title` and `og:image`; a card with title, domain, and thumbnail appears inline below the message
 - System tray: left-click toggles window; minimizes to tray on close
 - Unread dot indicator in sidebar (`● #channel`) — clears when channel is focused
-- Message buffer cap (2000 per channel) for stable long sessions
+- Message buffer cap (2,000 per channel) for stable long sessions
 - Panel size persistence — sidebar and nick list sizes remembered across restarts
-- Flat sidebar — Halloy-style: servers as section headers, no expand arrows
+- Flat sidebar — servers as section headers, no expand arrows
 - Tab nick completion and input history (Up/Down)
 - mIRC color code rendering — bold, italic, underline, colors in chat
 - CTCP auto-replies for VERSION and PING
@@ -117,17 +121,35 @@ realname = "UplinkIRC User"
 name = "#uplink"
 ```
 
-See [docs/configuration.md](docs/configuration.md) for the full reference.
+See [docs/configuration.md](docs/configuration.md) for the full reference, including bouncer setup.
 
 ---
 
 ## Documentation
 
-- [Configuration](docs/configuration.md) — all config options with examples
+- [Configuration](docs/configuration.md) — all config options with examples, including ZNC and soju bouncer setup
 - [Commands](docs/commands.md) — available slash commands
 - [IRCv3 support](docs/ircv3.md) — capability status
 - [Keyboard shortcuts](docs/keyboard-shortcuts.md)
 - [FAQ & Troubleshooting](docs/faq.md)
+
+---
+
+## Brand assets
+
+The `assets/` directory contains all UplinkIRC brand files for free use:
+
+| File | Description |
+|---|---|
+| `banner.svg` | Wide banner (2200×900) — used in README and About dialog |
+| `logo.svg` | Full logo with wordmark (1200×500) |
+| `wordmark.svg` | Wordmark only (650×220) |
+| `icon-dark.svg` | App icon, dark variant (512×512) |
+| `icon-light.svg` | App icon, light variant (512×512) |
+| `icon-light-default.svg` | App icon, light default variant (512×512) |
+| `icon-avatar.svg` | GitHub avatar / circular icon (512×512) |
+| `icon-mark.svg` | Minimal mark (512×512) |
+| `icon-tray.svg` | System tray icon (512×512) |
 
 ---
 

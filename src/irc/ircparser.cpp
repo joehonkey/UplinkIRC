@@ -1,5 +1,33 @@
 #include "ircparser.h"
 
+static QHash<QString,QString> parseTags(const QString &raw)
+{
+    QHash<QString,QString> out;
+    for (const QString &part : raw.split(';', Qt::SkipEmptyParts)) {
+        const int eq = part.indexOf('=');
+        if (eq == -1) { out.insert(part, {}); continue; }
+        QString val = part.mid(eq + 1);
+        // IRCv3 tag value unescaping
+        QString unescaped;
+        unescaped.reserve(val.size());
+        for (int i = 0; i < val.size(); ++i) {
+            if (val[i] == '\\' && i + 1 < val.size()) {
+                const QChar next = val[++i];
+                if      (next == ':')  unescaped += ';';
+                else if (next == 's')  unescaped += ' ';
+                else if (next == '\\') unescaped += '\\';
+                else if (next == 'r')  unescaped += '\r';
+                else if (next == 'n')  unescaped += '\n';
+                else                   unescaped += next;
+            } else {
+                unescaped += val[i];
+            }
+        }
+        out.insert(part.left(eq), unescaped);
+    }
+    return out;
+}
+
 IrcMessage IrcParser::parse(const QString &raw)
 {
     IrcMessage msg;
@@ -12,8 +40,12 @@ IrcMessage IrcParser::parse(const QString &raw)
     if (line.startsWith('@')) {
         int space = line.indexOf(' ');
         if (space == -1) return msg;
-        msg.tags = line.mid(1, space - 1);
+        msg.tags = parseTags(line.mid(1, space - 1));
         pos = space + 1;
+
+        const QString t = msg.tags.value("time");
+        if (!t.isEmpty())
+            msg.serverTime = QDateTime::fromString(t, Qt::ISODateWithMs);
     }
 
     // prefix
