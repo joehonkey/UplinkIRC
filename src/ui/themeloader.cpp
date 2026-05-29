@@ -171,7 +171,8 @@ QTreeWidget {
     outline: none;
 }
 QTreeWidget::item {
-    padding: 2px 4px;
+    padding: 0px 4px;
+    height: 18px;
 }
 QTreeWidget::item:selected {
     background-color: {{accent}};
@@ -203,7 +204,8 @@ QListWidget {
     outline: none;
 }
 QListWidget::item {
-    padding: 1px 4px;
+    padding: 0px 4px;
+    height: 18px;
 }
 QListWidget::item:selected {
     background-color: {{accent}};

@@ -328,6 +328,7 @@ void MainWindow::setupNickDock()
 {
     m_nickList = new QListWidget;
     m_nickList->setMinimumWidth(120);
+    m_nickList->setSpacing(0);
     m_nickList->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_nickList, &QListWidget::customContextMenuRequested,
             this, &MainWindow::onNickListContextMenu);
