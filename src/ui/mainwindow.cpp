@@ -124,7 +124,6 @@ void MainWindow::setupToolbar()
 
     m_hamburger = new QToolButton;
     m_hamburger->setText("☰");
-    m_hamburger->setPopupMode(QToolButton::InstantPopup);
     m_hamburger->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_hamburger, &QWidget::customContextMenuRequested, this, [](const QPoint&){});
 
@@ -164,6 +163,8 @@ void MainWindow::setupToolbar()
 
     // Theme picker
     auto *themeMenu = menu->addMenu("Theme");
+    themeMenu->setMaximumHeight(300);
+    themeMenu->setStyleSheet("QMenu::item { padding: 2px 20px 2px 8px; }");
     for (const QString &name : ThemeLoader::availableThemes()) {
         themeMenu->addAction(name, this, [this, name]{
             m_config.ui.theme = name;
@@ -236,7 +237,11 @@ void MainWindow::setupToolbar()
             refreshNickList(m_model->activeHost(), m_model->activeChannel());
     });
 
-    m_hamburger->setMenu(menu);
+    connect(m_hamburger, &QToolButton::clicked, this, [this, menu]{
+        QSize sh = menu->sizeHint();
+        QPoint pos = m_hamburger->mapToGlobal(QPoint(0, -sh.height()));
+        menu->exec(pos);
+    });
     m_hamburger->setObjectName("hamburger");
     tb->hide();
 }
