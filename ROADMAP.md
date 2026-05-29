@@ -79,11 +79,17 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Link preview — hover tooltip shows domain + page title; inline card with og:image thumbnail auto-appears below live URL messages
 - [x] Link preview fixed for regular URLs — redirect following, proper UA, 32 KB buffer, multi-line title regex
 - [x] Dark banner — uplink-top-banner-dark.svg used in README and About dialog
+- [x] `/nick` label update — changing nick now immediately reflects in the input bar nick label
+- [x] Direct image URL preview — `.png/.jpg/.jpeg/.gif/.webp` links show a thumbnail card without HTML parsing
+- [x] Typing indicator layout — moved from chat-view overlay (covered text) to dedicated layout row; collapses when idle
+- [x] FreeBSD download badge in README — links to build-from-source instructions; signals FreeBSD support
+- [x] Cross-platform OS characters image on GitHub project page
 
 ---
 
 ## In Progress
 
+- [ ] Link preview for title-only pages — pages without og:title (plain `<title>` only) may not preview; needs verification and potential fix
 - [ ] Link preview persistence — cards lost on channel switch; store in message history to survive re-render
 
 ---

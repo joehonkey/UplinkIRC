@@ -3,6 +3,71 @@
 ---
 
 <!--
+Session summary — 2026-05-29  v0.7.1 — Bug fixes: /nick label, image preview, typing indicator layout
+
+What was built / fixed:
+  - /nick display bug: typing /nick newname sent the NICK command correctly but
+    the nick label next to the input bar never updated. Root cause: setNick()
+    pre-sets m_nick to the new nick before the server echoes it back, so the
+    NICK handler's check (msg.nick == m_nick) compared the old server-prefix
+    nick against the already-updated value — always false. Fix: compare newNick
+    (what the server confirmed) against m_nick using case-insensitive toLower()
+    so server nick normalisation is also handled correctly.
+
+  - Direct image URL preview: pasting a .png/.jpg/.jpeg/.gif/.webp URL in chat
+    now shows a thumbnail card directly. Previously the URL was fetched as HTML,
+    extractTitle found no <title> tag, and nothing was shown. Fix: isImageUrl()
+    helper checks the URL path extension; if it matches, fetch() calls
+    fetchImage() directly with the filename as the card title, bypassing HTML
+    parsing entirely.
+
+  - Typing indicator overlap: the indicator was a QLabel child of m_chatView,
+    positioned as a floating overlay via move() at the bottom-left of the chat
+    area. When the chat was full of messages it covered the bottom line of text.
+    Fix: moved the label into the main VBox layout as a dedicated row between
+    the chat view and the input bar. setVisible(false) collapses it to zero
+    height, so there is no wasted space when no one is typing.
+    repositionTypingLabel() reduced to a no-op; the resize-event call in the
+    event filter becomes harmless.
+
+  - README: added FreeBSD badge linking to the build-from-source dependency
+    section so FreeBSD users know the platform is supported.
+
+  - README: added cross-platform OS characters image (BSD devil / Tux / robot /
+    Windows logo) under the download badges. Image was RGB with baked-in
+    checkerboard pixels (not true RGBA transparency); flood-filled from corners
+    with 20-unit colour tolerance and re-saved as RGBA to remove the background.
+
+  - CI: Windows build flaky failure investigated. windows-latest runner mid-
+    transition to windows-2025-vs2026. Re-run of the failed job passed. No
+    workflow changes needed — failure was transient runner allocation, not code.
+
+  - v0.7.1 tagged and released; all three platform builds (Linux, Windows,
+    macOS) passed on the release workflow.
+
+Bugs fixed:
+  - /nick not updating the nick label (IrcClient NICK handler comparison)
+  - No preview for direct image URLs (.png/.jpg/.gif/.webp etc.)
+  - Typing indicator overlapping chat text when chat view was full
+
+Known issues remaining:
+  - Link preview for pages with only <title> (no og:title) — debug logging
+    confirmed extraction should work; not yet fully verified in-app
+  - Link preview cards lost on channel switch (not in message history)
+  - Hamburger menu briefly shrinks on theme switch (root cause unknown)
+  - Server errors (482 etc.) appear in (server) buffer, not active channel
+  - DCC Send File not implemented
+  - AppImage packaging not done
+
+Next priorities:
+  - Confirm / fix link preview for title-only pages (no og:title)
+  - Route server errors to active channel buffer
+  - Desktop notifications on mention/PM
+  - AppImage packaging for Linux
+  - DCC Send File
+-->
+
+<!--
 Session summary — 2026-05-29  v0.6.0 — Emoji, bot icons, menu icons, Windows polish
 
 What was built:
@@ -56,6 +121,19 @@ Next priorities:
   - AppImage packaging for Linux
   - Desktop notifications on mention/PM
 -->
+
+## v0.7.1 — 2026-05-29
+
+### Fixed
+- **`/nick` label not updating** — changing your nick with `/nick newname` sent the command correctly but the nick label next to the input bar kept showing the old nick. The server echoes back your nick change in a `NICK` message; the handler was comparing the wrong value and always missed the self-nick case.
+- **No preview for direct image URLs** — pasting a `.png`, `.jpg`, `.jpeg`, `.gif`, or `.webp` link in chat now shows a thumbnail card. Previously these URLs were fetched as HTML, no `<title>` was found, and nothing appeared.
+- **Typing indicator overlapping chat text** — the typing indicator floated as an overlay on top of the chat view and covered the last line of text when the window was full. It is now a proper layout row between the chat area and the input bar; it takes up no space when no one is typing.
+
+### Added
+- FreeBSD badge in README linking to build-from-source instructions
+- Cross-platform OS characters artwork (BSD daemon / Tux / robot / Windows logo) on the GitHub project page
+
+---
 
 <!--
 Session summary — 2026-05-29 macOS CI fix + link preview:

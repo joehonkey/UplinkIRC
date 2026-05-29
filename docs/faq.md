@@ -280,17 +280,28 @@ UplinkIRC will negotiate the `sasl` CAP and authenticate during the connection h
 
 ### How do link previews work?
 
-When a live message arrives containing an `http://` or `https://` URL, UplinkIRC fetches up to 16KB of the page in the background, extracts the `og:title` and `og:image` metadata, and appends a small preview card below the message. The card shows the page title, domain, and a thumbnail image (if `og:image` is available).
+When a live message arrives containing an `http://` or `https://` URL, UplinkIRC fetches the link in the background and appends a small card below the message.
 
-Hovering over any URL in the chat shows the domain immediately in the status bar, then updates to the full page title when the fetch completes.
+**Web pages** — UplinkIRC fetches up to 32 KB of HTML, extracts `og:title` and `og:image` metadata (or falls back to the `<title>` tag), and builds a card showing the page title, domain, and thumbnail (if an image was found).
 
-Cards are fetched automatically — no clicks required. Preview fetches are lightweight: HTML is capped at 16KB, images at 200KB, and results are cached in memory for the session.
+**Direct image links** — URLs ending in `.png`, `.jpg`, `.jpeg`, `.gif`, or `.webp` are detected automatically and shown as a thumbnail card directly, without any HTML parsing. The filename is used as the card label.
 
-**Note:** Preview cards appear only for messages received while that channel is active. If you switch away and back, the cards will not re-appear (this is a known limitation to be addressed in a future release).
+Hovering over any URL in chat shows the domain immediately in the status bar and tooltip, updating to the full page title once the fetch completes.
 
-### The emoji button doesn't do anything
+Preview fetches are lightweight and automatic — HTML is capped at 32 KB, images at 200 KB, and results are cached in memory for the session.
 
-The emoji picker UI is not built yet. Toggle the emoji button in the hamburger menu to show or hide the button — the picker will be wired up in a future release.
+**Note:** Preview cards appear only for messages received while that channel is active. Switching away and back clears the cards — this is a known limitation tracked for a future fix.
+
+### The emoji button doesn't show
+
+The emoji button is hidden by default. Enable it in **Hamburger → Show Emoji Button**, or set it in config:
+
+```toml
+[ui]
+show_emoji_button = true
+```
+
+Once visible, clicking `😊` opens a searchable grid of ~400 emoji. You can also type `:shortcode:` directly in the input box — a completion list appears as you type, and pressing Enter, Tab, or clicking an entry inserts the emoji. Typing the full `:trident:` with the closing colon substitutes it instantly without the completion list.
 
 ### How do I minimize to the system tray?
 
@@ -354,11 +365,12 @@ cmake -DCMAKE_PREFIX_PATH=/path/to/Qt6 ..
 
 UplinkIRC fetches the page title and thumbnail for URLs posted in chat. If a preview isn't appearing:
 
-- **The site redirects** (e.g. `http://` → `https://`, or bare domain → `www.`) — fixed in v0.7.0; redirects are now followed automatically.
-- **The site has a large `<head>` section** — fixed in v0.7.0; the HTML buffer was raised from 16 KB to 32 KB.
-- **The site blocks bots** — some sites check the User-Agent and return minimal content. UplinkIRC now uses a standard browser UA.
-- **SSL certificate errors** — self-signed or expired certs will block the fetch silently. There is no per-site cert bypass yet.
-- **The page has no `<title>` tag** — no preview will appear; there is nothing to show.
+- **Direct image link** — `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp` URLs are handled automatically as of v0.7.1 and show a thumbnail card.
+- **The site redirects** (e.g. `http://` → `https://`, or bare domain → `www.`) — redirects are followed automatically since v0.7.0.
+- **The site has a large `<head>` section** — the HTML buffer was raised to 32 KB in v0.7.0; pages with unusually large headers before the `<title>` tag may still miss.
+- **The site blocks bots** — some sites check the User-Agent and return empty or minimal content. UplinkIRC uses a standard Chrome/Linux UA.
+- **SSL certificate errors** — self-signed or expired certs block the fetch silently. There is no per-site cert bypass yet.
+- **The page has no `<title>` or `og:title`** — no preview will appear; there is nothing to display.
 
 ### Previews disappear when I switch channels
 
