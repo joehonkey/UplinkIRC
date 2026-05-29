@@ -11,6 +11,7 @@
 #include "ui/linkpreview.h"
 #include "ui/emojipicker.h"
 #include "ui/emojidata.h"
+#include "ui/menuicons.h"
 #include "config/config.h"
 
 #include <QApplication>
@@ -148,14 +149,14 @@ void MainWindow::setupToolbar()
     auto *menu = new QMenu(m_hamburger);
 
     // About
-    auto *aboutAct = menu->addAction("ℹ  About UplinkIRC");
+    auto *aboutAct = menu->addAction(MenuIcons::about(), "About UplinkIRC");
     connect(aboutAct, &QAction::triggered, this, [this]{
         AboutDialog dlg(this);
         dlg.exec();
     });
 
     // Manage servers
-    auto *manageAct = menu->addAction("⚙  Manage Servers...");
+    auto *manageAct = menu->addAction(MenuIcons::servers(), "Manage Servers...");
     connect(manageAct, &QAction::triggered, this, [this]{
         ManageServersDialog dlg(m_config.servers, this);
         if (dlg.exec() != QDialog::Accepted) return;
@@ -190,7 +191,7 @@ void MainWindow::setupToolbar()
     menu->addSeparator();
 
     // Documentation
-    auto *docsAct = menu->addAction("≡  Documentation");
+    auto *docsAct = menu->addAction(MenuIcons::documentation(), "Documentation");
     connect(docsAct, &QAction::triggered, this, [this]{
         if (!m_docsDialog)
             m_docsDialog = new DocsDialog(this);
@@ -200,7 +201,7 @@ void MainWindow::setupToolbar()
     });
 
     // Font config
-    auto *fontAct = menu->addAction("✒  Font Config...");
+    auto *fontAct = menu->addAction(MenuIcons::fontConfig(), "Font Config...");
     connect(fontAct, &QAction::triggered, this, [this]{
         FontDialog dlg(m_config.ui.fontFamily, m_config.ui.fontSizes, this);
         if (dlg.exec() == QDialog::Accepted) {
@@ -215,7 +216,8 @@ void MainWindow::setupToolbar()
     });
 
     // Theme picker — QListWidget inside a QWidgetAction for reliable scrolling
-    auto *themeMenu = menu->addMenu("◑  Theme");
+    auto *themeMenu = menu->addMenu("Theme");
+    themeMenu->setIcon(MenuIcons::theme());
     auto *themeList = new QListWidget;
     themeList->setFrameShape(QFrame::NoFrame);
     themeList->setFixedHeight(260);
@@ -240,7 +242,8 @@ void MainWindow::setupToolbar()
     themeMenu->addAction(themeAction);
 
     // App icon picker
-    auto *iconMenu = menu->addMenu("◈  App Icon");
+    auto *iconMenu = menu->addMenu("App Icon");
+    iconMenu->setIcon(MenuIcons::appIcon());
     const QList<QPair<QString,QString>> iconChoices = {
         { "dark",          "Dark" },
         { "light-default", "Light (default)" },
@@ -276,7 +279,7 @@ void MainWindow::setupToolbar()
     menu->addSeparator();
 
     // Topic toggle
-    auto *topicAct = menu->addAction("☰  Show Topic Bar");
+    auto *topicAct = menu->addAction(MenuIcons::topicBar(), "Show Topic Bar");
     topicAct->setCheckable(true);
     topicAct->setChecked(m_showTopic);
     m_toggleTopicAction = topicAct;
@@ -288,7 +291,7 @@ void MainWindow::setupToolbar()
     });
 
     // Nick prefix toggle
-    auto *nickPrefixAct = menu->addAction("@  Show Nick in Input");
+    auto *nickPrefixAct = menu->addAction(MenuIcons::nickInInput(), "Show Nick in Input");
     nickPrefixAct->setCheckable(true);
     nickPrefixAct->setChecked(m_showNickPrefix);
     connect(nickPrefixAct, &QAction::toggled, this, [this](bool on){
@@ -299,7 +302,7 @@ void MainWindow::setupToolbar()
     });
 
     // Emoji button toggle
-    auto *emojiAct = menu->addAction("☺  Show Emoji Button");
+    auto *emojiAct = menu->addAction(MenuIcons::emojiButton(), "Show Emoji Button");
     emojiAct->setCheckable(true);
     emojiAct->setChecked(m_showEmojiBtn);
     connect(emojiAct, &QAction::toggled, this, [this](bool on){
@@ -310,7 +313,7 @@ void MainWindow::setupToolbar()
     });
 
     // Typing indicator toggle
-    auto *typingAct = menu->addAction("✎  Typing Indicator");
+    auto *typingAct = menu->addAction(MenuIcons::typingIndicator(), "Typing Indicator");
     typingAct->setCheckable(true);
     typingAct->setChecked(m_config.ui.typingIndicator);
     connect(typingAct, &QAction::toggled, this, [this](bool on){
@@ -327,7 +330,7 @@ void MainWindow::setupToolbar()
     });
 
     // Connection status bar toggle
-    auto *connStatusAct = menu->addAction("◉  Connection Status Bar");
+    auto *connStatusAct = menu->addAction(MenuIcons::connStatus(), "Connection Status Bar");
     connStatusAct->setCheckable(true);
     connStatusAct->setChecked(m_config.ui.showConnStatus);
     connect(connStatusAct, &QAction::toggled, this, [this](bool on){
@@ -337,7 +340,7 @@ void MainWindow::setupToolbar()
     });
 
     // Colored nicks toggle
-    auto *colorNicksAct = menu->addAction("◐  Colored Nicks");
+    auto *colorNicksAct = menu->addAction(MenuIcons::coloredNicks(), "Colored Nicks");
     colorNicksAct->setCheckable(true);
     colorNicksAct->setChecked(m_config.ui.coloredNicks);
     connect(colorNicksAct, &QAction::toggled, this, [this](bool on){
