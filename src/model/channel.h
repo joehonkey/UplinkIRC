@@ -4,6 +4,7 @@
 #include <QDateTime>
 #include <QString>
 #include <QList>
+#include <QSet>
 
 static constexpr int kMessageBufferCap = 2000;
 
@@ -43,6 +44,7 @@ struct Channel {
     QString          modes;
     QList<NickEntry> nicks;
     QList<Message>   messages;
+    QSet<QString>    botNicks;  // lowercased nicks with +B channel user mode
     int              unread{0};
     bool             joined{false};
     QDateTime        lastRead;  // soju.im/read marker

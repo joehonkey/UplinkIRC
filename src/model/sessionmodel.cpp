@@ -387,14 +387,67 @@ void SessionModel::onTopicReceived(const QString &host, const QString &channel, 
     emit topicChanged(host, channel, topic);
 }
 
+static void parseBotModes(const QString &modeStr, QSet<QString> &botSet, bool isChannel)
+{
+    // Parse "+B nick" / "-B nick" / "+oB nick1 nick2" etc.
+    // For user modes the target is the nick itself (isChannel=false), no args needed.
+    const QStringList parts = modeStr.split(' ', Qt::SkipEmptyParts);
+    if (parts.isEmpty()) return;
+
+    // Mode chars that consume a nick argument in a channel context
+    static const QString argModes = QStringLiteral("ovhaqBe");
+
+    bool adding = true;
+    int  argIdx = 1;
+    for (QChar c : parts[0]) {
+        if (c == '+') { adding = true;  continue; }
+        if (c == '-') { adding = false; continue; }
+        if (c == 'B') {
+            if (!isChannel) {
+                // user-mode +B: the "channel" param IS the nick
+                // handled by caller
+            } else if (argIdx < parts.size()) {
+                const QString nick = parts[argIdx].toLower();
+                if (adding) botSet.insert(nick);
+                else        botSet.remove(nick);
+            }
+        }
+        if (isChannel && argModes.contains(c))
+            ++argIdx;
+    }
+}
+
 void SessionModel::onModesReceived(const QString &host, const QString &channel, const QString &modes)
 {
     auto *sess = session(host);
     if (!sess) return;
-    auto *ch = sess->get(channel);
-    if (ch) ch->modes = modes;
-    postMessage(host, channel, Message::make(MessageType::Server, "", "Mode " + channel + " " + modes));
-    emit modesChanged(host, channel);
+
+    const bool isChannel = channel.startsWith('#') || channel.startsWith('&');
+
+    if (isChannel) {
+        auto *ch = sess->get(channel);
+        if (ch) {
+            ch->modes = modes;
+            parseBotModes(modes, ch->botNicks, true);
+        }
+        postMessage(host, channel, Message::make(MessageType::Server, "", "Mode " + channel + " " + modes));
+        emit modesChanged(host, channel);
+    } else {
+        // User mode — check for +B/-B on this nick
+        const QString &modeStr = modes;
+        bool adding = true;
+        for (QChar c : modeStr.split(' ').value(0)) {
+            if (c == '+') { adding = true;  continue; }
+            if (c == '-') { adding = false; continue; }
+            if (c == 'B') {
+                if (adding) sess->botNicks.insert(channel.toLower());
+                else        sess->botNicks.remove(channel.toLower());
+            }
+        }
+        // Also update all channel nick lists so the display refreshes
+        for (auto &ch : sess->channels)
+            emit nickListChanged(host, ch.name);
+    }
 }
 
 void SessionModel::onNamesReceived(const QString &host, const QString &channel, const QStringList &nicks)

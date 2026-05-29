@@ -9,6 +9,8 @@
 #include "ui/appicons.h"
 #include "ui/themeloader.h"
 #include "ui/linkpreview.h"
+#include "ui/emojipicker.h"
+#include "ui/emojidata.h"
 #include "config/config.h"
 
 #include <QApplication>
@@ -146,14 +148,14 @@ void MainWindow::setupToolbar()
     auto *menu = new QMenu(m_hamburger);
 
     // About
-    auto *aboutAct = menu->addAction("About UplinkIRC");
+    auto *aboutAct = menu->addAction("ℹ  About UplinkIRC");
     connect(aboutAct, &QAction::triggered, this, [this]{
         AboutDialog dlg(this);
         dlg.exec();
     });
 
     // Manage servers
-    auto *manageAct = menu->addAction("Manage Servers...");
+    auto *manageAct = menu->addAction("⚙  Manage Servers...");
     connect(manageAct, &QAction::triggered, this, [this]{
         ManageServersDialog dlg(m_config.servers, this);
         if (dlg.exec() != QDialog::Accepted) return;
@@ -188,7 +190,7 @@ void MainWindow::setupToolbar()
     menu->addSeparator();
 
     // Documentation
-    auto *docsAct = menu->addAction("Documentation");
+    auto *docsAct = menu->addAction("≡  Documentation");
     connect(docsAct, &QAction::triggered, this, [this]{
         if (!m_docsDialog)
             m_docsDialog = new DocsDialog(this);
@@ -198,7 +200,7 @@ void MainWindow::setupToolbar()
     });
 
     // Font config
-    auto *fontAct = menu->addAction("Font Config...");
+    auto *fontAct = menu->addAction("✒  Font Config...");
     connect(fontAct, &QAction::triggered, this, [this]{
         FontDialog dlg(m_config.ui.fontFamily, m_config.ui.fontSizes, this);
         if (dlg.exec() == QDialog::Accepted) {
@@ -213,7 +215,7 @@ void MainWindow::setupToolbar()
     });
 
     // Theme picker — QListWidget inside a QWidgetAction for reliable scrolling
-    auto *themeMenu = menu->addMenu("Theme");
+    auto *themeMenu = menu->addMenu("◑  Theme");
     auto *themeList = new QListWidget;
     themeList->setFrameShape(QFrame::NoFrame);
     themeList->setFixedHeight(260);
@@ -238,7 +240,7 @@ void MainWindow::setupToolbar()
     themeMenu->addAction(themeAction);
 
     // App icon picker
-    auto *iconMenu = menu->addMenu("App Icon");
+    auto *iconMenu = menu->addMenu("◈  App Icon");
     const QList<QPair<QString,QString>> iconChoices = {
         { "dark",          "Dark" },
         { "light-default", "Light (default)" },
@@ -274,7 +276,7 @@ void MainWindow::setupToolbar()
     menu->addSeparator();
 
     // Topic toggle
-    auto *topicAct = menu->addAction("Show Topic Bar");
+    auto *topicAct = menu->addAction("☰  Show Topic Bar");
     topicAct->setCheckable(true);
     topicAct->setChecked(m_showTopic);
     m_toggleTopicAction = topicAct;
@@ -286,7 +288,7 @@ void MainWindow::setupToolbar()
     });
 
     // Nick prefix toggle
-    auto *nickPrefixAct = menu->addAction("Show Nick in Input");
+    auto *nickPrefixAct = menu->addAction("@  Show Nick in Input");
     nickPrefixAct->setCheckable(true);
     nickPrefixAct->setChecked(m_showNickPrefix);
     connect(nickPrefixAct, &QAction::toggled, this, [this](bool on){
@@ -297,7 +299,7 @@ void MainWindow::setupToolbar()
     });
 
     // Emoji button toggle
-    auto *emojiAct = menu->addAction("Show Emoji Button");
+    auto *emojiAct = menu->addAction("☺  Show Emoji Button");
     emojiAct->setCheckable(true);
     emojiAct->setChecked(m_showEmojiBtn);
     connect(emojiAct, &QAction::toggled, this, [this](bool on){
@@ -308,7 +310,7 @@ void MainWindow::setupToolbar()
     });
 
     // Typing indicator toggle
-    auto *typingAct = menu->addAction("Typing Indicator");
+    auto *typingAct = menu->addAction("✎  Typing Indicator");
     typingAct->setCheckable(true);
     typingAct->setChecked(m_config.ui.typingIndicator);
     connect(typingAct, &QAction::toggled, this, [this](bool on){
@@ -325,7 +327,7 @@ void MainWindow::setupToolbar()
     });
 
     // Connection status bar toggle
-    auto *connStatusAct = menu->addAction("Connection Status Bar");
+    auto *connStatusAct = menu->addAction("◉  Connection Status Bar");
     connStatusAct->setCheckable(true);
     connStatusAct->setChecked(m_config.ui.showConnStatus);
     connect(connStatusAct, &QAction::toggled, this, [this](bool on){
@@ -335,7 +337,7 @@ void MainWindow::setupToolbar()
     });
 
     // Colored nicks toggle
-    auto *colorNicksAct = menu->addAction("Colored Nicks");
+    auto *colorNicksAct = menu->addAction("◐  Colored Nicks");
     colorNicksAct->setCheckable(true);
     colorNicksAct->setChecked(m_config.ui.coloredNicks);
     connect(colorNicksAct, &QAction::toggled, this, [this](bool on){
@@ -644,6 +646,7 @@ void MainWindow::setupInputBar()
     m_emojiBtn = new QPushButton("😊");
     m_emojiBtn->setFixedWidth(32);
     m_emojiBtn->setVisible(m_showEmojiBtn);
+    m_emojiBtn->setToolTip("Emoji picker");
 
     hbox->addWidget(m_nickPrefix);
     hbox->addWidget(m_input, 1);
@@ -662,6 +665,32 @@ void MainWindow::setupInputBar()
 
     layout->addWidget(bar);
 
+    // Emoji picker popup
+    m_emojiPicker = new EmojiPicker(this);
+    connect(m_emojiPicker, &EmojiPicker::emojiSelected, this, [this](const QString &emoji){
+        const int pos = m_input->cursorPosition();
+        const QString text = m_input->text();
+        m_input->setText(text.left(pos) + emoji + text.mid(pos));
+        m_input->setCursorPosition(pos + emoji.length());
+        m_input->setFocus();
+    });
+    connect(m_emojiBtn, &QPushButton::clicked, this, [this]{
+        const QPoint anchor = m_emojiBtn->mapToGlobal(
+            QPoint(m_emojiBtn->width(), m_emojiBtn->height()));
+        m_emojiPicker->showAt(anchor);
+    });
+
+    // Emoji inline autocomplete list (child widget, no focus steal)
+    m_emojiCompleter = new QListWidget(this);
+    m_emojiCompleter->setObjectName("emojiCompleter");
+    m_emojiCompleter->setFocusPolicy(Qt::NoFocus);
+    m_emojiCompleter->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_emojiCompleter->setFrameShape(QFrame::StyledPanel);
+    m_emojiCompleter->hide();
+    connect(m_emojiCompleter, &QListWidget::itemClicked, this, [this](QListWidgetItem *item){
+        commitEmojiAutocomplete(m_emojiCompleter->row(item));
+    });
+
     // Inactivity timer: sends typing=paused after 5s with no keypresses
     m_typingOutTimer = new QTimer(this);
     m_typingOutTimer->setSingleShot(true);
@@ -673,6 +702,10 @@ void MainWindow::setupInputBar()
         if (ch.isEmpty() || ch == "(server)") return;
         m_typingActive = false;
         m_model->sendTyping(host, ch, "paused");
+    });
+
+    connect(m_input, &QLineEdit::textChanged, this, [this](const QString &text){
+        checkEmojiAutocomplete(text);
     });
 
     connect(m_input, &QLineEdit::textChanged, this, [this](const QString &text){
@@ -755,20 +788,47 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 
     auto *ke = static_cast<QKeyEvent *>(event);
 
+    // Emoji autocomplete navigation takes priority when popup is visible
+    if (m_emojiCompleter->isVisible()) {
+        if (ke->key() == Qt::Key_Escape) {
+            hideEmojiAutocomplete();
+            return true;
+        }
+        if (ke->key() == Qt::Key_Up) {
+            const int cur = m_emojiCompleter->currentRow();
+            m_emojiCompleter->setCurrentRow(qMax(0, cur - 1));
+            return true;
+        }
+        if (ke->key() == Qt::Key_Down) {
+            const int cur = m_emojiCompleter->currentRow();
+            m_emojiCompleter->setCurrentRow(
+                qMin(m_emojiCompleter->count() - 1, cur + 1));
+            return true;
+        }
+        if (ke->key() == Qt::Key_Return || ke->key() == Qt::Key_Enter ||
+            ke->key() == Qt::Key_Tab) {
+            const int row = m_emojiCompleter->currentRow();
+            if (row >= 0) {
+                commitEmojiAutocomplete(row);
+                return true;
+            }
+        }
+    }
+
     if (ke->key() == Qt::Key_Tab) {
         handleTabComplete();
         return true;
     }
 
-    // Any non-Tab key resets completion cycle
+    // Any non-Tab key resets nick completion cycle
     m_tabActive = false;
     m_tabCandidates.clear();
 
-    if (ke->key() == Qt::Key_Up) {
+    if (ke->key() == Qt::Key_Up && !m_emojiCompleter->isVisible()) {
         handleHistoryUp();
         return true;
     }
-    if (ke->key() == Qt::Key_Down) {
+    if (ke->key() == Qt::Key_Down && !m_emojiCompleter->isVisible()) {
         handleHistoryDown();
         return true;
     }
@@ -837,6 +897,90 @@ void MainWindow::handleHistoryDown()
         m_input->setText(m_inputHistory[m_historyIndex]);
     }
     m_input->end(false);
+}
+
+// ---------------------------------------------------------------------------
+// Emoji inline autocomplete
+// ---------------------------------------------------------------------------
+
+void MainWindow::checkEmojiAutocomplete(const QString &text)
+{
+    const int cursorPos = m_input->cursorPosition();
+    const QString before = text.left(cursorPos);
+
+    // Find a bare :word pattern ending at cursor — minimum 1 char after colon
+    const int colon = before.lastIndexOf(':');
+    if (colon < 0) { hideEmojiAutocomplete(); return; }
+
+    const QString word = before.mid(colon + 1);
+    // Only trigger if word is all word-chars and at least 1 char
+    static const QRegularExpression wordRe(R"(^\w+$)");
+    if (word.isEmpty() || !wordRe.match(word).hasMatch()) {
+        hideEmojiAutocomplete();
+        return;
+    }
+
+    const auto matches = emojiMatching(word);
+    if (matches.isEmpty()) { hideEmojiAutocomplete(); return; }
+
+    m_emojiTriggerPos = colon;
+
+    m_emojiCompleter->clear();
+    const int shown = qMin(matches.size(), 8);
+    for (int i = 0; i < shown; ++i) {
+        const auto &e = matches[i];
+        auto *item = new QListWidgetItem(e.ch + "  " + e.shortcode);
+        item->setData(Qt::UserRole, e.ch);
+        m_emojiCompleter->addItem(item);
+    }
+    m_emojiCompleter->setCurrentRow(0);
+
+    // Size to fit content
+    const int itemH  = m_emojiCompleter->sizeHintForRow(0) + 2;
+    const int popupH = itemH * shown + 4;
+    const int popupW = 220;
+
+    // Position above the input bar in main-window coords
+    const QPoint inputTL = m_input->mapTo(this, QPoint(0, 0));
+
+    // Align left edge with colon position approximation using font metrics
+    const int charW  = m_input->fontMetrics().averageCharWidth();
+    const int colonX = m_input->contentsMargins().left() + colon * charW;
+    const QPoint colonLocal = m_input->mapTo(this, QPoint(colonX, 0));
+
+    int px = qMax(inputTL.x(), colonLocal.x());
+    int py = inputTL.y() - popupH - 2;
+    if (py < 0) py = inputTL.y() + m_input->height() + 2;
+
+    // Clamp horizontally
+    if (px + popupW > width()) px = width() - popupW;
+
+    m_emojiCompleter->setGeometry(px, py, popupW, popupH);
+    m_emojiCompleter->show();
+    m_emojiCompleter->raise();
+}
+
+void MainWindow::commitEmojiAutocomplete(int row)
+{
+    if (row < 0 || row >= m_emojiCompleter->count()) return;
+
+    const QString emoji = m_emojiCompleter->item(row)->data(Qt::UserRole).toString();
+    hideEmojiAutocomplete();
+
+    // Replace :word (from trigger pos to cursor) with the emoji
+    QString text    = m_input->text();
+    const int start = m_emojiTriggerPos;          // position of ':'
+    const int end   = m_input->cursorPosition();  // current cursor
+    m_input->setText(text.left(start) + emoji + text.mid(end));
+    m_input->setCursorPosition(start + emoji.length());
+    m_input->setFocus();
+}
+
+void MainWindow::hideEmojiAutocomplete()
+{
+    m_emojiCompleter->hide();
+    m_emojiCompleter->clear();
+    m_emojiTriggerPos = -1;
 }
 
 // ---------------------------------------------------------------------------
@@ -1268,6 +1412,7 @@ void MainWindow::onInputSubmit()
     m_historyIndex = -1;
     m_tabActive = false;
     m_tabCandidates.clear();
+    hideEmojiAutocomplete();
 
     m_input->clear();
 
@@ -1504,14 +1649,25 @@ void MainWindow::refreshChatView(const QString &host, const QString &channel)
         appendMessage(msg);
 }
 
+static QString botIconForNick(const QString &nick)
+{
+    return (qHash(nick.toLower()) & 1) ? QStringLiteral("🤖") : QStringLiteral("👾");
+}
+
 void MainWindow::refreshNickList(const QString &host, const QString &channel)
 {
     m_nickList->clear();
-    auto *ch = m_model->channel(host, channel);
+    auto *ch   = m_model->channel(host, channel);
     if (!ch) return;
+    auto *sess = m_model->session(host);
 
     for (const auto &e : std::as_const(ch->nicks)) {
-        auto *item = new QListWidgetItem(e.display());
+        const bool isBot = (ch->botNicks.contains(e.nick.toLower()))
+                        || (sess && sess->botNicks.contains(e.nick.toLower()));
+        const QString label = isBot
+            ? botIconForNick(e.nick) + " " + e.display()
+            : e.display();
+        auto *item = new QListWidgetItem(label);
         item->setData(Qt::UserRole, e.nick);
         if (m_config.ui.coloredNicks)
             item->setForeground(nickColor(e.nick));

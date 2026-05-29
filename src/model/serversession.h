@@ -3,12 +3,15 @@
 #include "channel.h"
 #include <QString>
 #include <QHash>
+#include <QSet>
 
 struct ServerSession {
     QString  name;        // display name from config
     QString  host;
     QString  nick;
     bool     connected{false};
+
+    QSet<QString> botNicks;     // lowercased nicks with +B user mode (global)
 
     // key = channel name lowercased
     QHash<QString, Channel> channels;

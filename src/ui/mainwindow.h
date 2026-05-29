@@ -12,6 +12,7 @@
 class TrayIcon;
 class DocsDialog;
 class LinkPreview;
+class EmojiPicker;
 
 class QTimer;
 class QTreeWidget;
@@ -87,6 +88,13 @@ private:
     QString     m_tabPrefix;
     bool        m_tabActive{false};
 
+    // Emoji inline autocomplete
+    void checkEmojiAutocomplete(const QString &text);
+    void commitEmojiAutocomplete(int row);
+    void hideEmojiAutocomplete();
+    QListWidget *m_emojiCompleter{nullptr};
+    int          m_emojiTriggerPos{-1};
+
     // Input history
     void handleHistoryUp();
     void handleHistoryDown();
@@ -117,6 +125,7 @@ private:
     QLabel       *m_appLabel{nullptr};
     QLabel       *m_typingLabel{nullptr};
     DocsDialog   *m_docsDialog{nullptr};
+    EmojiPicker  *m_emojiPicker{nullptr};
 
     // Typing indicator state
     QTimer                      *m_typingOutTimer{nullptr};
