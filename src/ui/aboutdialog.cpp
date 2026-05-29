@@ -14,8 +14,9 @@ AboutDialog::AboutDialog(QWidget *parent)
     setFixedSize(460, 280);
 
     if (parent) {
-        const QPoint center = parent->frameGeometry().center();
-        move(center.x() - width() / 2, center.y() - height() / 2);
+        const QPoint parentCenter = parent->mapToGlobal(
+            QPoint(parent->width() / 2, parent->height() / 2));
+        move(parentCenter - QPoint(width() / 2, height() / 2));
     }
 
     auto *layout = new QVBoxLayout(this);
