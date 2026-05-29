@@ -78,7 +78,7 @@ Config Config::load(const QString &path)
             cfg.ui.typingIndicator       = (*ui)["typing_indicator"].value_or(true);
             cfg.ui.showConnStatus        = (*ui)["show_conn_status"].value_or(true);
             cfg.ui.appIcon               = QString::fromStdString((*ui)["app_icon"].value_or<std::string>("dark"));
-            cfg.ui.fontFamily            = QString::fromStdString((*ui)["font_family"].value_or<std::string>("IBM Plex Mono"));
+            cfg.ui.fontFamily            = QString::fromStdString((*ui)["font_family"].value_or<std::string>(kDefaultFontFamily));
             cfg.ui.fontSizes.toolbar      = (*ui)["font_toolbar"].value_or(10);
             cfg.ui.fontSizes.serverHeader = (*ui)["font_server_header"].value_or(9);
             cfg.ui.fontSizes.sidebar      = (*ui)["font_sidebar"].value_or(10);

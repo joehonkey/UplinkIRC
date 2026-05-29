@@ -4,6 +4,12 @@
 #include <QStringList>
 #include <QList>
 
+#if defined(Q_OS_WIN)
+inline const char *kDefaultFontFamily = "Consolas";
+#else
+inline const char *kDefaultFontFamily = "IBM Plex Mono";
+#endif
+
 enum class BouncerType { None, ZNC, Soju };
 
 struct ChannelConfig {
@@ -56,7 +62,7 @@ struct UiConfig {
     bool      showTopic{true};
     bool      showEmojiButton{false};
     bool      coloredNicks{true};
-    QString   fontFamily{"IBM Plex Mono"};
+    QString   fontFamily{kDefaultFontFamily};
     FontSizes fontSizes;
     bool      typingIndicator{true};
     bool      showConnStatus{true};
