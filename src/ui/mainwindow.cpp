@@ -647,7 +647,8 @@ void MainWindow::setupInputBar()
     m_input->installEventFilter(this);
 
     m_emojiBtn = new QPushButton("😊");
-    m_emojiBtn->setFixedWidth(32);
+    m_emojiBtn->setFixedSize(30, 30);
+    m_emojiBtn->setStyleSheet("QPushButton { padding: 0; font-size: 16px; }");
     m_emojiBtn->setVisible(m_showEmojiBtn);
     m_emojiBtn->setToolTip("Emoji picker");
 
@@ -910,6 +911,26 @@ void MainWindow::checkEmojiAutocomplete(const QString &text)
 {
     const int cursorPos = m_input->cursorPosition();
     const QString before = text.left(cursorPos);
+
+    // Auto-substitute a completed :shortcode: when the closing colon is just typed
+    if (cursorPos > 0 && text[cursorPos - 1] == ':') {
+        const QString beforeColon = before.chopped(1);  // drop the closing ':'
+        const int openColon = beforeColon.lastIndexOf(':');
+        if (openColon >= 0) {
+            const QString code = beforeColon.mid(openColon + 1);
+            static const QRegularExpression wordOnly(R"(^\w+$)");
+            if (wordOnly.match(code).hasMatch()) {
+                const QString emoji = emojiByCode().value(code);
+                if (!emoji.isEmpty()) {
+                    const QString newText = text.left(openColon) + emoji + text.mid(cursorPos);
+                    m_input->setText(newText);
+                    m_input->setCursorPosition(openColon + emoji.length());
+                    hideEmojiAutocomplete();
+                    return;
+                }
+            }
+        }
+    }
 
     // Find a bare :word pattern ending at cursor — minimum 1 char after colon
     const int colon = before.lastIndexOf(':');
@@ -1531,7 +1552,22 @@ void MainWindow::onInputSubmit()
     }
 
     if (channel == "(server)") return;
-    m_model->sendMessage(host, channel, text);
+
+    // Substitute any remaining :shortcode: patterns before sending
+    static const QRegularExpression shortcodeRe(R"(:(\w+):)");
+    QString outText = text;
+    int offset = 0;
+    auto it = shortcodeRe.globalMatch(text);
+    while (it.hasNext()) {
+        const auto m = it.next();
+        const QString emoji = emojiByCode().value(m.captured(1));
+        if (!emoji.isEmpty()) {
+            outText.replace(m.capturedStart() + offset, m.capturedLength(), emoji);
+            offset += emoji.length() - m.capturedLength();
+        }
+    }
+
+    m_model->sendMessage(host, channel, outText);
 }
 
 // ---------------------------------------------------------------------------

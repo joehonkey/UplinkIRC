@@ -1,5 +1,6 @@
 #pragma once
 #include <QVector>
+#include <QHash>
 #include <QString>
 
 struct EmojiEntry { QString shortcode; QString ch; };
@@ -661,4 +662,15 @@ inline QVector<EmojiEntry> emojiMatching(const QString &prefix)
         if (e.shortcode.startsWith(prefix, Qt::CaseInsensitive))
             result.append(e);
     return result;
+}
+
+inline const QHash<QString, QString> &emojiByCode()
+{
+    static const QHash<QString, QString> h = [] {
+        QHash<QString, QString> m;
+        for (const auto &e : emojiTable())
+            m.insert(e.shortcode, e.ch);
+        return m;
+    }();
+    return h;
 }
