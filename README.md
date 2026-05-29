@@ -108,7 +108,7 @@
 | **Link preview cards** | URLs in messages auto-fetch `og:title` + `og:image`. A card with title, domain, and thumbnail appears inline. |
 | **Typing indicator** | IRCv3 `draft/typing`. Shows `nick is typing…` as a transparent overlay on the chat background. Sends your own state debounced. |
 | **mIRC colors** | Full IRC color codes rendered in chat. |
-| **Tab completion** | Tab-completes nick names. Cycles through candidates. `: ` suffix at line start, ` ` suffix mid-line. |
+| **Tab completion** | Tab-completes nick names and slash commands. Cycles through candidates. |
 | **Input history** | Up/Down arrows cycle through sent messages. |
 
 ### 🖥️ Nick List & Sidebar
@@ -312,6 +312,7 @@ name = "#archlinux"
 | Command | Description |
 |---|---|
 | `/join #channel [key]` | Join a channel |
+| `/j #channel` | Alias for `/join` |
 | `/part [message]` | Leave the current channel |
 | `/nick <newnick>` | Change your nickname |
 | `/me <action>` | Send a CTCP ACTION (`* nick waves`) |
@@ -319,6 +320,15 @@ name = "#archlinux"
 | `/notice <target> <text>` | Send a NOTICE |
 | `/topic [text]` | Show or set the channel topic |
 | `/kick <nick> [reason]` | Kick a user (requires op) |
+| `/invite <nick> [#channel]` | Invite a user to a channel |
+| `/mode <target> <flags>` | Set channel or user modes |
+| `/op <nick>` | Give op (`+o`) |
+| `/deop <nick>` | Remove op (`-o`) |
+| `/voice <nick>` | Give voice (`+v`) |
+| `/devoice <nick>` | Remove voice (`-v`) |
+| `/ban <mask>` | Ban a mask (`+b`) |
+| `/unban <mask>` | Remove a ban (`-b`) |
+| `/ping <nick>` | CTCP PING — shows round-trip time in ms |
 | `/away [message]` | Set away status |
 | `/back` | Clear away status |
 | `/whois <nick>` | Request WHOIS info |
@@ -326,6 +336,7 @@ name = "#archlinux"
 | `/version [nick]` | Request VERSION (nick optional) |
 | `/ctcp <target> <cmd> [args]` | Send a CTCP request |
 | `/sysinfo` | Post OS / CPU / GPU / RAM / uptime to channel |
+| `/clear` | Clear the chat buffer |
 | `/quote <raw>` | Send a raw IRC line |
 | `/quit [message]` | Disconnect from the current server |
 | `/help` | List all commands in the chat buffer |

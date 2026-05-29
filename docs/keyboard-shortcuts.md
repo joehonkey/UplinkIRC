@@ -9,7 +9,7 @@
 | **Enter** | Send message |
 | **Up Arrow** | Cycle back through previously sent messages |
 | **Down Arrow** | Cycle forward through message history |
-| **Tab** | Nick completion at cursor — press repeatedly to cycle through matches |
+| **Tab** | Nick completion at cursor — press repeatedly to cycle through matches. Also completes slash commands (e.g. `/pi` → `/ping`). |
 
 ---
 

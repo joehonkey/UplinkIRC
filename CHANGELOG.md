@@ -27,11 +27,20 @@ Known issues remaining:
 
 ## [0.7.8] — 2026-05-29
 
+### Added
+- **New slash commands** — `/j` (join alias), `/invite`, `/mode`, `/op`, `/deop`,
+  `/voice`, `/devoice`, `/ban`, `/unban`, `/clear`, `/ping <nick>`
+- **Tab completion for commands** — type a partial command (e.g. `/pi`) and press Tab
+  to complete it. Cycles through matches the same as nick completion.
+- **`/ping` round-trip time** — reply shows latency in milliseconds (e.g.
+  `Ping reply from BeeMO: 4ms`) in the active channel alongside the sent confirmation.
+
 ### Changed
 - **Hamburger menu restored as dropdown** — ☰ now opens a small menu with:
   **About UplinkIRC**, **Documentation**, **Preferences** (opens the settings dialog),
   **Open Config** (opens `config.toml` in your system editor), and **Reload Config**
   (re-applies all settings from disk without restarting).
+- **About dialog** — now shows the app icon instead of the wide banner.
 
 ---
 
