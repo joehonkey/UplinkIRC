@@ -63,6 +63,13 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Panel detach/float — sidebar and nick list panels can be detached, re-docked, and survive close without disappearing
 - [x] Topic bar layout — network/user count next to channel label, not far right
 - [x] /topic channel-name parsing — `/topic #channel text` correctly separates channel from topic text
+- [x] Topic bar background matches input area — info bar visually joins the input row
+- [x] Mode string spacing — gap between `(modes)` and `* Network` fixed
+- [x] Clickable URLs in topic display — http/https links open in browser
+- [x] Toolbar removed — nothing above the info bar; all panels start flush at top
+- [x] Minimal dock title bars — sidebar and nick list have a 16px bar with only a ⧉ float button
+- [x] Hamburger menu relocated — bottom-right of nick list panel, level with input bar
+- [x] Status bar text shrunk — 7pt via QSS
 
 ---
 

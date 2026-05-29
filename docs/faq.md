@@ -185,6 +185,10 @@ password = "joe:mysecretpassword"
 
 ## Interface
 
+### Where is the hamburger menu?
+
+The `☰` button is in the **bottom-right corner of the user list panel** (right side of the window, below the nick list). Click it to access themes, font config, toggles, and more.
+
 ### How do I change the theme?
 
 Open **Hamburger menu → Theme** and pick from the list. The theme applies immediately. To make it the default, set `theme` in `config.toml`:

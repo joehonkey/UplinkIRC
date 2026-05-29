@@ -21,7 +21,8 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - Nick list right-click menu — Message, Whois, Give Op, Give Voice, Version
 - Typing indicator — IRCv3 `draft/typing`; shows "nick is typing..." in real time
 - Per-widget font sizes — independent size control for every UI zone including network name and typing indicator
-- 55 built-in themes, switchable from the hamburger menu
+- 55 built-in themes, switchable from the hamburger menu (bottom-right of the user list panel)
+- Clickable URLs in the topic bar — http/https links open in the browser
 - System tray: left-click toggles window; minimizes to tray on close
 - Unread dot indicator in sidebar (`● #channel`) — clears when channel is focused
 - Message buffer cap (2000 per channel) for stable long sessions

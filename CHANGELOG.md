@@ -3,6 +3,35 @@
 ---
 
 <!--
+Session summary — 2026-05-28 UI layout + hamburger relocation:
+
+What was built/fixed:
+  - Topic bar background changed to match input area (inputBg) so the info
+    bar blends with the input row rather than the sidebar.
+  - Mode string spacing fixed: (modes) and * NetworkName now have a 6px gap
+    between them instead of being flush against each other.
+  - Clickable URLs in topic display: linkifyTopic() wraps http/https URLs in
+    <a href> tags; QLabel configured with TextBrowserInteraction +
+    setOpenExternalLinks so clicking opens the browser.
+  - Toolbar hidden: nothing sits above #channel (+nt) * Network bar. Dock
+    widgets and central widget all align at the top of the content area.
+  - Dock title bars replaced with minimal custom bars: each dock (sidebar,
+    nick list) gets a 16px title bar containing only a ⧉ float/detach button.
+    Lists are flush with the topic bar; detach is still available.
+  - Hamburger menu relocated from toolbar to the bottom-right of the nick
+    list panel, sized to match the input bar height, so it sits in the
+    natural bottom-right corner of the chat layout.
+  - Status bar font shrunk to 7pt via QSS (Connected to irc.linuxdojo.org).
+
+Known issues left open:
+  - No reconnect on disconnect
+  - Server errors (482 etc.) go to (server) buffer, not active channel
+  - Emoji picker not built
+  - DCC Send File not implemented
+  - URL click-to-open only works in topic bar, not in chat messages
+-->
+
+<!--
 Session summary — 2026-05-28 panel/dock + topic fixes:
 
 What was fixed:
@@ -484,6 +513,17 @@ Known issues left open:
 -->
 
 ## [Unreleased]
+
+**UI layout — topic bar, dock titles, hamburger relocation**
+
+- Topic bar background now matches the input area (`inputBg`) — info bar blends with the input row
+- Mode string spacing fixed — `(+nt)` and `* Network` now have a proper gap between them
+- Clickable URLs in topic display — `http://` and `https://` URLs are live links; click to open in browser
+- Toolbar removed — nothing sits above the `#channel` info bar; all panels start flush at the top
+- Dock title bars replaced with minimal custom bars — each panel (server list, user list) has a 16px strip with only a `⧉` float/detach button; content is flush with the info bar
+- Hamburger menu relocated to bottom-right of the nick list panel — sits level with the input bar; status bar text shrunk to 7pt
+
+---
 
 **UI polish — right-click menu, size grip, item spacing**
 
