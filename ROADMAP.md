@@ -69,7 +69,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Clickable URLs in topic display — http/https links open in browser
 - [x] Toolbar removed — nothing above the info bar; all panels start flush at top
 - [x] Minimal dock title bars — sidebar and nick list have a 16px bar with only a ⧉ float button
-- [x] Hamburger menu relocated — bottom-right of nick list panel, level with input bar
+- [x] Hamburger menu relocated — now in topic bar, left of #channel label
 - [x] Status bar text shrunk — 7pt via QSS
 - [x] Clickable URLs in chat messages — http/https links in PRIVMSG, actions, and notices open in browser
 - [x] Reconnect with exponential backoff — auto-reconnect on unexpected disconnect; 5s→10s→20s→40s→60s; deliberate quit disables it
@@ -126,7 +126,9 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Config editor UI — Manage Servers dialog covers server-level editing
 - [x] Emoji picker — searchable popup grid with :shortcode: autocomplete and auto-substitution
 - [x] Bot nick indicators — 🤖/👾 shown for +B mode nicks; auto-detected on join via WHO reply; icon displayed to right of nick name
-- [x] Configurable nick brackets — `nick_brackets` in `[ui]`; `"<>"` `"[]"` `"::::"` `""` supported; split-at-midpoint parsing
+- [x] Configurable nick brackets — `nick_brackets` in `[ui]`; `"<>"` `"[]"` `"::::"` `""` supported; also configurable live from Hamburger → Nick Brackets
+- [x] Autojoin regression fix — editing a server in the GUI no longer wipes auto-join channels; Auto-join field added to Add/Edit Server dialog
+- [x] Channel focus on join — joining a channel now always switches focus to it
 - [x] Native Windows style — windows11 Qt style by default; no alien dark theme on fresh installs
 - [ ] FreeBSD port skeleton
 - [ ] AppImage packaging for Linux

@@ -62,12 +62,18 @@ ServerDialog::ServerDialog(QWidget *parent)
     form->addRow("SASL Password:",   m_saslPassword);
     form->addRow("NickServ:",        m_nickservPassword);
 
+    m_autoJoin = new QLineEdit;
+    m_autoJoin->setPlaceholderText("#channel1,#channel2");
+
     m_bouncerType = new QComboBox;
     m_bouncerType->addItem("None",  static_cast<int>(BouncerType::None));
     m_bouncerType->addItem("ZNC",   static_cast<int>(BouncerType::ZNC));
     m_bouncerType->addItem("Soju",  static_cast<int>(BouncerType::Soju));
     m_bouncerNetwork = new QLineEdit;
     m_bouncerNetwork->setPlaceholderText("network name (soju only)");
+
+    form->addRow(makeHeader("Channels"));
+    form->addRow("Auto-join:", m_autoJoin);
 
     form->addRow(makeHeader("Bouncer"));
     form->addRow("Type:",    m_bouncerType);
@@ -99,6 +105,11 @@ ServerDialog::ServerDialog(const ServerConfig &existing, QWidget *parent)
     m_nickservPassword->setText(existing.nickservPassword);
     m_bouncerType->setCurrentIndex(static_cast<int>(existing.bouncerType));
     m_bouncerNetwork->setText(existing.bouncerNetwork);
+
+    QStringList names;
+    for (const auto &ch : existing.channels)
+        names << ch.name;
+    m_autoJoin->setText(names.join(","));
 }
 
 ServerConfig ServerDialog::serverConfig() const
@@ -117,5 +128,10 @@ ServerConfig ServerDialog::serverConfig() const
     sc.nickservPassword = m_nickservPassword->text();
     sc.bouncerType      = static_cast<BouncerType>(m_bouncerType->currentData().toInt());
     sc.bouncerNetwork   = m_bouncerNetwork->text().trimmed();
+    for (const QString &ch : m_autoJoin->text().split(',', Qt::SkipEmptyParts)) {
+        const QString name = ch.trimmed();
+        if (!name.isEmpty())
+            sc.channels.append({name, {}});
+    }
     return sc;
 }

@@ -29,4 +29,5 @@ private:
     QLineEdit *m_nickservPassword;
     QComboBox *m_bouncerType;
     QLineEdit *m_bouncerNetwork;
+    QLineEdit *m_autoJoin;
 };

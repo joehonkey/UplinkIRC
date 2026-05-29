@@ -362,11 +362,41 @@ void MainWindow::setupToolbar()
             refreshNickList(m_model->activeHost(), m_model->activeChannel());
     });
 
+    // Nick brackets picker
+    auto *bracketsMenu = menu->addMenu("Nick Brackets");
+    const QList<QPair<QString,QString>> bracketChoices = {
+        { "<>",   "<nick>  (angle)"       },
+        { "[]",   "[nick]  (square)"      },
+        { "::::", "::nick::  (colon)"     },
+        { "",     "nick  (none)"          },
+    };
+    auto *bracketList = new QListWidget;
+    bracketList->setFrameShape(QFrame::NoFrame);
+    bracketList->setFixedHeight(static_cast<int>(bracketChoices.size()) * 24 + 8);
+    bracketList->setMinimumWidth(170);
+    for (const auto &[key, label] : bracketChoices)
+        bracketList->addItem(label);
+    connect(bracketList, &QListWidget::itemClicked, this, [this, bracketsMenu, bracketList, bracketChoices](QListWidgetItem *item){
+        const int idx = bracketList->row(item);
+        if (idx < 0 || idx >= bracketChoices.size()) return;
+        m_config.ui.nickBrackets = bracketChoices[idx].first;
+        Config::save(m_config, Config::defaultPath());
+        bracketsMenu->close();
+    });
+    connect(bracketsMenu, &QMenu::aboutToShow, this, [this, bracketList, bracketChoices]{
+        for (int i = 0; i < bracketChoices.size(); ++i) {
+            if (bracketChoices[i].first == m_config.ui.nickBrackets) {
+                bracketList->setCurrentRow(i);
+                break;
+            }
+        }
+    });
+    auto *bracketsAction = new QWidgetAction(bracketsMenu);
+    bracketsAction->setDefaultWidget(bracketList);
+    bracketsMenu->addAction(bracketsAction);
+
     connect(m_hamburger, &QToolButton::clicked, this, [this, menu]{
-        const QSize sh = menu->sizeHint();
-        QPoint pos = m_hamburger->mapToGlobal(QPoint(m_hamburger->width(), 0));
-        pos.rx() -= sh.width();
-        pos.ry() -= sh.height();
+        QPoint pos = m_hamburger->mapToGlobal(QPoint(0, m_hamburger->height()));
         menu->popup(pos);
     });
     m_hamburger->setObjectName("hamburger");
@@ -395,7 +425,6 @@ void MainWindow::applyFontSizes()
         QFont f = makeFont(fs.toolbar * 2);
         f.setBold(false);
         m_hamburger->setFont(f);
-        m_hamburger->setFixedHeight(m_input ? m_input->sizeHint().height() : 28);
     }
     if (m_appLabel) {
         QFont f = makeFont(fs.toolbar);
@@ -495,7 +524,6 @@ void MainWindow::setupNickDock()
     auto *nickVbox = new QVBoxLayout(nickContainer);
     nickVbox->setContentsMargins(0, 0, 0, 0); nickVbox->setSpacing(0);
     nickVbox->addWidget(m_nickList);
-    nickVbox->addWidget(m_hamburger, 0, Qt::AlignRight);
 
     m_nickDock = new QDockWidget(this);
     m_nickDock->setWidget(nickContainer);
@@ -542,6 +570,7 @@ void MainWindow::setupChatArea()
 
     m_userInfoLabel = new QLabel;
     m_userInfoLabel->setObjectName("userInfoLabel");
+    tHbox->addWidget(m_hamburger);
     tHbox->addWidget(m_topicLabel);
     tHbox->addWidget(m_userInfoLabel);
     tHbox->addWidget(m_modesLabel, 1);
@@ -1108,10 +1137,8 @@ void MainWindow::onChannelAdded(const QString &host, const QString &channel)
     item->setData(0, Qt::UserRole,     host);
     item->setData(0, Qt::UserRole + 1, channel);
 
-    if (m_model->activeChannel().isEmpty()) {
-        m_sidebar->setCurrentItem(item);
-        switchToChannel(host, channel);
-    }
+    m_sidebar->setCurrentItem(item);
+    switchToChannel(host, channel);
 }
 
 void MainWindow::onChannelRemoved(const QString &host, const QString &channel)

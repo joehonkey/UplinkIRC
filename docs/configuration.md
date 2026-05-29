@@ -77,7 +77,7 @@ Controls the look and feel of the interface. All keys are optional — missing k
 | `show_emoji_button` | bool | `false` | Show the 😊 emoji picker button next to the input box. Also works via `:shortcode:` typing. |
 | `colored_nicks` | bool | `true` | Give each nickname a unique color in chat and the nick list |
 | `typing_indicator` | bool | `true` | Show "nick is typing…" notifications (IRCv3 `draft/typing`) and send your own |
-| `nick_brackets` | string | `"<>"` | Characters that wrap nick names in chat messages. See [Nick bracket style](#nick-bracket-style) below. |
+| `nick_brackets` | string | `"<>"` | Characters that wrap nick names in chat messages. Can also be changed live from **Hamburger → Nick Brackets**. See [Nick bracket style](#nick-bracket-style) below. |
 | `show_conn_status` | bool | `true` | Show the connection status label in the bottom-left status bar |
 | `app_icon` | string | `"dark"` | Which app icon variant to use. Choices: `"dark"`, `"light"`, `"light-default"`, `"avatar"` |
 | `font_family` | string | `"IBM Plex Mono"` | Font family applied to all UI zones |
@@ -344,7 +344,7 @@ No configuration is required — history replay happens automatically whenever t
 
 ## The `[[server.channels]]` block
 
-Channels to auto-join on connect are listed inside the server block as `[[server.channels]]` entries.
+Channels to auto-join on connect. You can set these directly in the config file, or from **Hamburger → Manage Servers → Edit** using the **Auto-join** field (comma-separated channel names, e.g. `#uplink,#linux`). Changes made through the dialog are saved automatically.
 
 | Key | Type | Required | Description |
 |---|---|---|---|

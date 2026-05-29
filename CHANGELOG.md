@@ -2,6 +2,61 @@
 
 ---
 
+<!--
+Session summary — 2026-05-29  v0.7.6
+
+What was built / fixed:
+  - Hamburger menu relocated from bottom of nick list to left end of topic bar (left
+    of #channel label). Menu popup now drops down-right from the button. Fixed height
+    constraint removed so topic bar sets the size naturally.
+
+  - Autojoin regression (root cause): ServerDialog::serverConfig() returned a
+    ServerConfig with an empty channels list, so editing any server in the GUI silently
+    wiped all [[server.channels]] entries. Fixed by adding an "Auto-join" field
+    (comma-separated) to ServerDialog. Field round-trips correctly through edit and save.
+
+  - Channel focus on join: onChannelAdded() only switched focus when activeChannel()
+    was empty. Removed the guard; joining now always switches to the new channel.
+
+  - Nick brackets GUI: "Nick Brackets" submenu added to hamburger menu using the same
+    QWidgetAction/QListWidget pattern as App Icon.
+
+  - CI: windows-latest pinned to windows-2025 in both ci.yml and release.yml ahead of
+    the June 15, 2026 GitHub Actions cutover.
+
+Known issues remaining:
+  - Link preview cards lost on channel switch
+  - Link preview for title-only pages not verified
+  - Server errors (482 etc.) in (server) buffer, not active channel
+  - Hamburger menu briefly shrinks on theme switch
+  - DCC Send File not implemented
+  - AppImage packaging not done
+  - MODE prefix removal loses lower-ranked prefixes until next NAMES
+-->
+
+## v0.7.6 — 2026-05-29
+
+### Fixed
+- **Autojoin regression** — editing a server in Manage Servers was silently wiping all
+  auto-join channels from the config. Root cause: `ServerDialog::serverConfig()` returned
+  an empty `channels` list. Fixed by adding an **Auto-join** field (comma-separated
+  channel names) to the Add/Edit Server dialog — channels now survive a dialog round-trip.
+- **Channel focus on join** — manually joining a channel when another was already active
+  did not switch focus. Joining now always switches to the new channel.
+
+### Added
+- **Nick Brackets in hamburger menu** — `nick_brackets` can now be changed from
+  **Hamburger → Nick Brackets** without editing `config.toml`. Four choices shown with
+  previews: `<nick>`, `[nick]`, `::nick::`, `nick`.
+- **Hamburger moved to topic bar** — the ☰ button now sits at the left end of the
+  `#channel (modes) * Network` info bar instead of the bottom of the nick list panel.
+
+### CI
+- Pinned `windows-latest` → `windows-2025` in both `ci.yml` and `release.yml` ahead of
+  the June 15, 2026 GitHub Actions cutover.
+
+---
+
 ## v0.7.5 — 2026-05-29
 
 ### Added
