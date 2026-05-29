@@ -35,7 +35,6 @@ struct FontSizes {
     int inputNick{10};    // your nick label
     int input{10};        // message typing area
     int typing{9};        // "nick is typing..." indicator
-    int statusBar{8};     // status bar at bottom
 };
 
 struct UiConfig {

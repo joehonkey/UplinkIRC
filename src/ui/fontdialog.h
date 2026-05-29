@@ -26,7 +26,6 @@ private:
     QSpinBox      *m_spInputNick;
     QSpinBox      *m_spInput;
     QSpinBox      *m_spTyping;
-    QSpinBox      *m_spStatusBar;
     QLabel        *m_preview;
 
     QSpinBox *makeSpinBox(int value);
