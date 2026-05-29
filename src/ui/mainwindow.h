@@ -101,10 +101,12 @@ private:
     QPushButton  *m_emojiBtn;
     QDockWidget  *m_nickDock;
     QListWidget  *m_nickList;
-    QWidget      *m_topicBar;
-    QLabel       *m_topicLabel{nullptr};   // channel name
-    QLabel       *m_modesLabel{nullptr};   // channel modes
-    QLabel       *m_userInfoLabel{nullptr}; // server — N users
+    QWidget      *m_topicBar;               // info bar — always visible
+    QLabel       *m_topicLabel{nullptr};    // #channel (modes)
+    QLabel       *m_modesLabel{nullptr};    // stretch spacer
+    QLabel       *m_userInfoLabel{nullptr}; // * network — N users
+    QWidget      *m_topicDisplay{nullptr};  // topic text — shown when showTopic
+    QLabel       *m_topicText{nullptr};
     QAction      *m_toggleTopicAction;
     QToolButton  *m_hamburger;
     QLabel       *m_appLabel{nullptr};

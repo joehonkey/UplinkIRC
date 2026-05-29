@@ -177,7 +177,7 @@ void MainWindow::setupToolbar()
     connect(topicAct, &QAction::toggled, this, [this](bool on){
         m_showTopic = on;
         m_config.ui.showTopic = on;
-        m_topicBar->setVisible(on);
+        m_topicDisplay->setVisible(on);
         Config::save(m_config, Config::defaultPath());
     });
 
@@ -303,8 +303,9 @@ void MainWindow::setupSidebar()
     m_sidebar->setMinimumWidth(140);
     m_sidebar->setObjectName("sidebar");
 
-    auto *dock = new QDockWidget("Servers", this);
+    auto *dock = new QDockWidget(this);
     dock->setWidget(m_sidebar);
+    dock->setTitleBarWidget(new QWidget(dock));
     dock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
     addDockWidget(Qt::LeftDockWidgetArea, dock);
 
@@ -320,8 +321,9 @@ void MainWindow::setupNickDock()
     connect(m_nickList, &QListWidget::customContextMenuRequested,
             this, &MainWindow::onNickListContextMenu);
 
-    m_nickDock = new QDockWidget("Users", this);
+    m_nickDock = new QDockWidget(this);
     m_nickDock->setWidget(m_nickList);
+    m_nickDock->setTitleBarWidget(new QWidget(m_nickDock));
     m_nickDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
     addDockWidget(Qt::RightDockWidgetArea, m_nickDock);
 }
@@ -333,11 +335,11 @@ void MainWindow::setupChatArea()
     vbox->setContentsMargins(0, 0, 0, 0);
     vbox->setSpacing(0);
 
-    // Topic bar — shows: #channel (modes)  ·  Server — N users
+    // Info bar — always visible: #channel (modes)  *  NetworkName — N users
     m_topicBar  = new QWidget;
     auto *tHbox = new QHBoxLayout(m_topicBar);
-    tHbox->setContentsMargins(6, 3, 6, 3);
-    tHbox->setSpacing(6);
+    tHbox->setContentsMargins(8, 4, 8, 4);
+    tHbox->setSpacing(0);
 
     m_topicLabel = new QLabel;
     m_topicLabel->setObjectName("channelLabel");
@@ -351,8 +353,19 @@ void MainWindow::setupChatArea()
     tHbox->addWidget(m_modesLabel, 1);
     tHbox->addWidget(m_userInfoLabel);
     m_topicBar->setObjectName("topicBar");
-    m_topicBar->setVisible(m_showTopic);
     vbox->addWidget(m_topicBar);
+
+    // Topic display — shown below info bar only when Show Topic is on
+    m_topicDisplay = new QWidget;
+    auto *tdHbox   = new QHBoxLayout(m_topicDisplay);
+    tdHbox->setContentsMargins(8, 3, 8, 3);
+    m_topicText = new QLabel;
+    m_topicText->setObjectName("topicText");
+    m_topicText->setWordWrap(true);
+    tdHbox->addWidget(m_topicText);
+    m_topicDisplay->setObjectName("topicDisplay");
+    m_topicDisplay->setVisible(m_showTopic);
+    vbox->addWidget(m_topicDisplay);
 
     // Chat view
     m_chatView = new QTextEdit;
@@ -653,6 +666,7 @@ void MainWindow::onNickListChanged(const QString &host, const QString &channel)
     if (host != m_model->activeHost() ||
         channel.toLower() != m_model->activeChannel().toLower()) return;
     refreshNickList(host, channel);
+    refreshTopicBar(host, channel);
 }
 
 void MainWindow::onUnreadChanged(const QString &host, const QString &channel, int count)
@@ -1171,21 +1185,28 @@ void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
 {
     auto *ch = m_model->channel(host, channel);
 
-    if (channel == "(server)") {
-        m_topicLabel->setText(host);
-        m_modesLabel->clear();
-    } else {
-        const QString modes = ch ? ch->modes : QString();
-        const QString modeStr = modes.isEmpty() ? QString() : " (" + modes + ")";
-        m_topicLabel->setText(channel + modeStr);
-        m_modesLabel->setText(ch ? ch->topic : QString());
-    }
-
     QString serverName = host;
     for (const auto &sc : std::as_const(m_config.servers))
         if (sc.host == host && !sc.name.isEmpty()) { serverName = sc.name; break; }
 
-    m_userInfoLabel->setText(serverName);
+    m_modesLabel->clear();
+
+    if (channel == "(server)") {
+        m_topicLabel->setText(serverName);
+        m_userInfoLabel->clear();
+        if (m_topicText) m_topicText->clear();
+    } else {
+        const QString modes   = ch ? ch->modes : QString();
+        const QString modeStr = modes.isEmpty() ? QString() : " (" + modes + ")";
+        m_topicLabel->setText(channel + modeStr);
+
+        const int    userCount = ch ? ch->nicks.size() : 0;
+        m_userInfoLabel->setText(
+            QString("* %1 — %2 user%3").arg(serverName).arg(userCount).arg(userCount != 1 ? "s" : ""));
+
+        if (m_topicText)
+            m_topicText->setText(ch ? ch->topic : QString());
+    }
 }
 
 void MainWindow::appendMessage(const Message &msg)

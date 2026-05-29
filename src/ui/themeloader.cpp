@@ -172,8 +172,8 @@ QTreeWidget::item:selected {
     background-color: {{accent}};
     color: {{sidebarActive}};
 }
-QTreeWidget::item:hover {
-    background-color: {{border}};
+QTreeWidget::item:hover:selected {
+    background-color: {{accent}};
 }
 QTreeWidget::branch {
     background-color: {{sidebarBg}};
@@ -305,6 +305,15 @@ QLabel#modesLabel {
 }
 QLabel#userInfoLabel {
     color: {{placeholder}};
+}
+QWidget#topicDisplay {
+    background-color: {{bufferBg}};
+    border-bottom: 1px solid {{border}};
+}
+QLabel#topicText {
+    color: {{placeholder}};
+    background: transparent;
+    padding: 0px;
 }
 
 /* ── Typing indicator ── */
