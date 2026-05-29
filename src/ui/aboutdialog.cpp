@@ -22,9 +22,8 @@ AboutDialog::AboutDialog(QWidget *parent)
     layout->setSpacing(10);
     layout->setContentsMargins(24, 20, 24, 16);
 
-    // Brand image — About.png is a wide horizontal logo
     auto *logo = new QLabel;
-    logo->setPixmap(AppIcons::aboutBanner().pixmap(420, 115));
+    logo->setPixmap(AppIcons::appIcon("dark").pixmap(96, 96));
     logo->setAlignment(Qt::AlignCenter);
     layout->addWidget(logo);
 

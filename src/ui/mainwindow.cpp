@@ -1545,10 +1545,54 @@ void MainWindow::onInputSubmit()
             const QString info = QString("OS: %1 CPU: %2 MEM: %3 GPU: %4 UP: %5")
                 .arg(sysinfoOS(), sysinfoCPU(), sysinfoMEM(), sysinfoGPU(), sysinfoUptime());
             m_model->sendMessage(host, channel, info);
+        } else if (cmd == "/j") {
+            m_model->sendJoin(host, args.section(' ', 0, 0), args.section(' ', 1, 1));
+        } else if (cmd == "/ping") {
+            const QString nick = args.trimmed().section(' ', 0, 0);
+            if (!nick.isEmpty()) {
+                const QString ts = QString::number(QDateTime::currentMSecsSinceEpoch());
+                m_model->sendRaw(host, "PRIVMSG " + nick + " :\x01PING " + ts + "\x01");
+                appendMessage(Message::make(MessageType::Server, "", "Pinged " + nick));
+            }
+        } else if (cmd == "/invite") {
+            const QString nick = args.section(' ', 0, 0);
+            const QString chan = args.section(' ', 1, 1);
+            if (!nick.isEmpty())
+                m_model->sendRaw(host, "INVITE " + nick + " " + (chan.isEmpty() ? channel : chan));
+        } else if (cmd == "/mode") {
+            if (!args.isEmpty())
+                m_model->sendRaw(host, "MODE " + args);
+        } else if (cmd == "/op") {
+            const QString nick = args.trimmed().section(' ', 0, 0);
+            if (!nick.isEmpty())
+                m_model->sendRaw(host, "MODE " + channel + " +o " + nick);
+        } else if (cmd == "/deop") {
+            const QString nick = args.trimmed().section(' ', 0, 0);
+            if (!nick.isEmpty())
+                m_model->sendRaw(host, "MODE " + channel + " -o " + nick);
+        } else if (cmd == "/voice") {
+            const QString nick = args.trimmed().section(' ', 0, 0);
+            if (!nick.isEmpty())
+                m_model->sendRaw(host, "MODE " + channel + " +v " + nick);
+        } else if (cmd == "/devoice") {
+            const QString nick = args.trimmed().section(' ', 0, 0);
+            if (!nick.isEmpty())
+                m_model->sendRaw(host, "MODE " + channel + " -v " + nick);
+        } else if (cmd == "/ban") {
+            const QString mask = args.trimmed().section(' ', 0, 0);
+            if (!mask.isEmpty())
+                m_model->sendRaw(host, "MODE " + channel + " +b " + mask);
+        } else if (cmd == "/unban") {
+            const QString mask = args.trimmed().section(' ', 0, 0);
+            if (!mask.isEmpty())
+                m_model->sendRaw(host, "MODE " + channel + " -b " + mask);
+        } else if (cmd == "/clear") {
+            if (m_chatView) m_chatView->clear();
         } else if (cmd == "/help") {
             const QStringList lines = {
                 "Available commands:",
                 "  /join <channel> [key]       — join a channel",
+                "  /j <channel> [key]          — alias for /join",
                 "  /part [message]             — leave the current channel",
                 "  /nick <newnick>             — change your nick",
                 "  /me <action>                — send an action (/me waves)",
@@ -1556,6 +1600,15 @@ void MainWindow::onInputSubmit()
                 "  /notice <target> <message>  — send a NOTICE",
                 "  /topic [text]               — show or set the channel topic",
                 "  /kick <nick> [reason]       — kick a user",
+                "  /invite <nick> [#channel]   — invite a user to a channel",
+                "  /mode <target> <flags>      — set channel or user modes",
+                "  /op <nick>                  — give op (+o)",
+                "  /deop <nick>                — remove op (-o)",
+                "  /voice <nick>               — give voice (+v)",
+                "  /devoice <nick>             — remove voice (-v)",
+                "  /ban <mask>                 — ban a mask (+b)",
+                "  /unban <mask>               — remove a ban (-b)",
+                "  /ping <nick>                — CTCP PING a user",
                 "  /away [message]             — set away status",
                 "  /back                       — clear away status",
                 "  /whois <nick>               — request WHOIS info",
@@ -1563,6 +1616,7 @@ void MainWindow::onInputSubmit()
                 "  /version [nick]             — request VERSION (nick optional)",
                 "  /ctcp <target> <cmd> [args] — send a CTCP request",
                 "  /sysinfo                    — post client/system info to channel",
+                "  /clear                      — clear the chat buffer",
                 "  /quote <raw>  /raw <raw>    — send a raw IRC line",
                 "  /quit [message]             — disconnect from server",
             };

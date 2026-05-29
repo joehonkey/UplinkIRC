@@ -16,6 +16,16 @@ Type any of these commands in the message input box and press Enter.
 | `/topic <text>` | Set the current channel topic |
 | `/topic #channel <text>` | Set the topic on a specific channel |
 | `/kick <nick> [reason]` | Kick a user from the current channel (requires op) |
+| `/invite <nick>` | Invite a user to the current channel |
+| `/invite <nick> #channel` | Invite a user to a specific channel |
+| `/mode <target> <flags> [args]` | Set channel or user modes |
+| `/op <nick>` | Give op (`+o`) in the current channel |
+| `/deop <nick>` | Remove op (`-o`) in the current channel |
+| `/voice <nick>` | Give voice (`+v`) in the current channel |
+| `/devoice <nick>` | Remove voice (`-v`) in the current channel |
+| `/ban <mask>` | Ban a mask (`+b`) in the current channel |
+| `/unban <mask>` | Remove a ban (`-b`) in the current channel |
+| `/clear` | Clear the chat buffer |
 
 ### Examples
 
@@ -27,6 +37,15 @@ Type any of these commands in the message input box and press Enter.
 /topic new topic here
 /topic #uplink Welcome to the server
 /kick baduser spamming
+/invite alice
+/invite alice #linux
+/mode #uplink +m
+/op alice
+/deop bob
+/voice alice
+/ban *!*@spammer.host
+/unban *!*@spammer.host
+/clear
 ```
 
 ---
@@ -90,6 +109,7 @@ Type any of these commands in the message input box and press Enter.
 
 | Command | Description |
 |---|---|
+| `/ping <nick>` | Send a CTCP PING to a user |
 | `/version [nick]` | Request server version, or CTCP VERSION from a nick |
 | `/ctcp <nick> <command> [args]` | Send a CTCP request to a user |
 | `/sysinfo` | Post OS, CPU, RAM, GPU, and uptime info to the current channel |
@@ -99,9 +119,9 @@ Incoming CTCP VERSION and PING requests are answered automatically.
 ### Examples
 
 ```
+/ping alice
 /version
 /version alice
-/ctcp alice PING
 /ctcp alice TIME
 /sysinfo
 ```
