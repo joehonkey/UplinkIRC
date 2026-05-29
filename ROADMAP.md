@@ -22,6 +22,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] QDockWidget nick list — movable left or right
 - [x] Topic bar — shows topic text + channel modes, toggleable from hamburger
 - [x] Hamburger menu — About, Documentation (stub), App Icon picker, Theme picker, topic/nick/emoji toggles
+- [x] Persistent Preferences dialog — hamburger now opens a non-modal QDialog; stays open while browsing themes/toggles; replaces dismiss-on-click QMenu
 - [x] Input commands — /join, /part, /nick, /me, /msg, /quote, /raw, /quit
 - [x] System tray — minimize to tray on close, left-click shows window, right-click menu (Show/Quit)
 - [x] Unread badge — tray icon gets red dot on unread messages, balloon notification when hidden
@@ -147,7 +148,6 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## Known Issues — UI
 
-- Hamburger menu briefly shrinks when a theme is applied — `QMenu` re-polish on `setStyleSheet()` computes a different sizeHint; root cause not fully resolved
 - Dock separator lines visible at left/right edges of chat area — QMainWindow::separator extends into toolbar region
 
 ## Known Issues

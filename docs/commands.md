@@ -142,7 +142,7 @@ Use these when you need to send a command that UplinkIRC does not have a built-i
 UplinkIRC has two ways to insert emoji:
 
 ### Emoji picker button
-Enable **Hamburger → Show Emoji Button** (or set `show_emoji_button = true` in config). Click the 😊 button next to the input box to open a searchable grid of ~400 emoji.
+Click ☰ to open **Preferences** and check **Show Emoji Button** (or set `show_emoji_button = true` in config). Click the 😊 button next to the input box to open a searchable grid of ~400 emoji.
 
 ### :shortcode: typing
 Type a colon followed by a keyword and a completion list appears:

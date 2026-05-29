@@ -210,13 +210,13 @@ History messages are intentionally displayed at reduced opacity and with their o
 
 ## Interface
 
-### Where is the hamburger menu?
+### Where is the Preferences button?
 
-The `☰` button is in the **bottom-right corner of the user list panel** (right side of the window, below the nick list). Click it to access themes, font config, toggles, and more.
+The `☰` button is at the **left end of the info bar** (top of the chat area, left of the #channel label). Click it to open the **Preferences** dialog — it stays open while you browse themes, toggle options, and try settings.
 
 ### How do I change the theme?
 
-Open **Hamburger menu → Theme** and pick from the list. The theme applies immediately. To make it the default, set `theme` in `config.toml`:
+Click ☰ to open Preferences, then pick a theme from the list. The theme applies immediately and stays open so you can try others. To make it the default, set `theme` in `config.toml`:
 
 ```toml
 [ui]
@@ -229,7 +229,7 @@ The nick list panel is a floating dock — drag its title bar to the left or rig
 
 ### How do I show the channel topic?
 
-The info bar at the top of the chat area always shows `#channel (modes) * NetworkName — N users`. To see the actual channel topic text, open **Hamburger menu** and toggle **Show Topic Bar** — a topic line will drop down below the info bar. You can also set it in config:
+The info bar at the top of the chat area always shows `#channel (modes) * NetworkName — N users`. To see the actual channel topic text, click ☰ to open **Preferences** and check **Show Topic Bar** — a topic line will drop down below the info bar. You can also set it in config:
 
 ```toml
 [ui]
@@ -238,7 +238,7 @@ show_topic = true
 
 ### How do I hide my nick next to the input box?
 
-Open **Hamburger menu** and toggle the **Nick** option. Or set it in config:
+Click ☰ to open **Preferences** and check **Show Nick in Input**. Or set it in config:
 
 ```toml
 [ui]
@@ -294,7 +294,7 @@ Preview fetches are lightweight and automatic — HTML is capped at 32 KB, image
 
 ### The emoji button doesn't show
 
-The emoji button is hidden by default. Enable it in **Hamburger → Show Emoji Button**, or set it in config:
+The emoji button is hidden by default. Click ☰ to open **Preferences** and check **Show Emoji Button**, or set it in config:
 
 ```toml
 [ui]

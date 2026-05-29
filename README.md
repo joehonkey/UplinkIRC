@@ -92,10 +92,10 @@
 
 | Feature | Details |
 |---|---|
-| **55 built-in themes** | Catppuccin, Dracula, Nord, Gruvbox, Tokyo Night, Solarized, One Dark, and many more. Switch live from **Hamburger → Theme**. |
+| **55 built-in themes** | Catppuccin, Dracula, Nord, Gruvbox, Tokyo Night, Solarized, One Dark, and many more. Switch live from the Preferences dialog — it stays open while you browse. |
+| **Persistent Preferences dialog** | Click ☰ to open a dialog that stays open. Change themes, toggle options, pick an icon — no more dismiss-on-click. |
 | **Native Windows style** | On Windows, the `windows11` Qt style is used by default. No alien dark theme on fresh installs. Custom themes still available. |
-| **Per-widget font sizes** | Independent size control for chat, sidebar, nick list, topic bar, input, and typing indicator. **Hamburger → Font Config...** |
-| **QPainter menu icons** | Every hamburger menu item has its own monochrome line icon that adapts to light/dark themes. |
+| **Per-widget font sizes** | Independent size control for chat, sidebar, nick list, topic bar, input, and typing indicator. **Preferences → Font Config...** |
 | **Panel persistence** | Dock sizes and positions saved on quit, restored on relaunch. |
 
 ### 💬 Chat Features

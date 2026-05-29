@@ -3,30 +3,41 @@
 ---
 
 <!--
-Session summary — 2026-05-29  post-v0.7.6
+Session summary — 2026-05-29  v0.7.7
 
 What was built / fixed:
-  - Bot icon randomization: +B nicks now get a truly random icon (🤖 or 👾) assigned
-    on first appearance. Icon is cached per nick for the session so it stays stable
-    across nick list refreshes. Previously used qHash(nick) & 1 which was deterministic
-    — BeeMO always got the same one. Now rolls fresh each session.
+  - Persistent Preferences dialog: hamburger (☰) now opens a non-modal QDialog that
+    stays open while the user browses themes, toggles options, etc. Replaces the old
+    QMenu that dismissed after every click. All settings (theme list, app icon, font
+    config, 6 UI toggles, nick brackets, Manage Servers, About, Docs) live in one place.
+    PreferencesDialog emits signals; MainWindow connects them — logic unchanged, UX fixed.
+  - Bot icon randomization (carried from post-0.7.6): +B nicks now get a truly random
+    icon (🤖 or 👾) assigned on first appearance instead of a deterministic hash value.
+    Cached per nick for session stability.
 
-Known issues remaining (unchanged from v0.7.6):
+Known issues remaining:
   - Link preview cards lost on channel switch
   - Link preview for title-only pages not verified
   - Server errors (482 etc.) in (server) buffer, not active channel
-  - Hamburger menu briefly shrinks on theme switch
   - DCC Send File not implemented
   - AppImage packaging not done
   - MODE prefix removal loses lower-ranked prefixes until next NAMES
+  - Hamburger menu briefly shrinks on theme switch (now less relevant — dialog stays open)
 -->
 
-## [Unreleased]
+## [0.7.7] — 2026-05-29
+
+### Added
+- **Persistent Preferences dialog** — clicking ☰ now opens a non-modal dialog that stays
+  open while you browse. Theme list, app icon picker, font config, UI toggles (topic bar,
+  nick prefix, emoji button, typing indicator, connection status, colored nicks), nick
+  brackets selector, and quick buttons for Manage Servers, Documentation, and About — all
+  in one place, no more dismiss-on-click.
 
 ### Changed
 - **Bot icon randomization** — `+B` nicks now receive a randomly assigned icon (🤖 or 👾)
-  on first appearance instead of a hash-derived one. The choice is cached per nick for
-  the session so it stays stable across nick list refreshes.
+  on first appearance instead of a deterministic hash value. Cached per nick for session
+  stability.
 
 ---
 

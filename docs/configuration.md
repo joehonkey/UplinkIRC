@@ -12,7 +12,7 @@ UplinkIRC is configured with a single TOML file. On first launch it is created a
 | macOS | `~/Library/Application Support/LinuxDojo/UplinkIRC/config.toml` |
 | Windows | `%APPDATA%\LinuxDojo\UplinkIRC\config.toml` |
 
-Open the file in any text editor, or use **Hamburger → Manage Servers...** to add, edit, and remove server connections from within the app. Changes made through the dialog take effect immediately and are saved automatically.
+Open the file in any text editor, or click ☰ to open the **Preferences** dialog and use **Manage Servers...** to add, edit, and remove server connections from within the app. Changes take effect immediately and are saved automatically.
 
 ---
 
@@ -77,11 +77,11 @@ Controls the look and feel of the interface. All keys are optional — missing k
 | `show_emoji_button` | bool | `false` | Show the 😊 emoji picker button next to the input box. Also works via `:shortcode:` typing. |
 | `colored_nicks` | bool | `true` | Give each nickname a unique color in chat and the nick list |
 | `typing_indicator` | bool | `true` | Show "nick is typing…" notifications (IRCv3 `draft/typing`) and send your own |
-| `nick_brackets` | string | `"<>"` | Characters that wrap nick names in chat messages. Can also be changed live from **Hamburger → Nick Brackets**. See [Nick bracket style](#nick-bracket-style) below. |
+| `nick_brackets` | string | `"<>"` | Characters that wrap nick names in chat messages. Can also be changed live from **Preferences → Nick Brackets**. See [Nick bracket style](#nick-bracket-style) below. |
 | `show_conn_status` | bool | `true` | Show the connection status label in the bottom-left status bar |
 | `app_icon` | string | `"dark"` | Which app icon variant to use. Choices: `"dark"`, `"light"`, `"light-default"`, `"avatar"` |
 | `font_family` | string | `"IBM Plex Mono"` | Font family applied to all UI zones |
-| `font_toolbar` | integer | `10` | Font size (pt) for the hamburger button |
+| `font_toolbar` | integer | `10` | Font size (pt) for the ☰ button |
 | `font_sidebar` | integer | `10` | Font size (pt) for the server/channel tree |
 | `font_chat` | integer | `10` | Font size (pt) for the message area |
 | `font_nick_list` | integer | `10` | Font size (pt) for the user list |
@@ -91,7 +91,7 @@ Controls the look and feel of the interface. All keys are optional — missing k
 | `font_input` | integer | `10` | Font size (pt) for the message input box |
 | `font_typing` | integer | `9` | Font size (pt) for the "nick is typing…" indicator |
 
-All font sizes and the theme can be changed live from **Hamburger → Font Config...** and **Hamburger → Theme** without editing the file.
+All font sizes and the theme can be changed live from **Preferences → Font Config...** and the theme list in **Preferences** without editing the file.
 
 ---
 
@@ -344,7 +344,7 @@ No configuration is required — history replay happens automatically whenever t
 
 ## The `[[server.channels]]` block
 
-Channels to auto-join on connect. You can set these directly in the config file, or from **Hamburger → Manage Servers → Edit** using the **Auto-join** field (comma-separated channel names, e.g. `#uplink,#linux`). Changes made through the dialog are saved automatically.
+Channels to auto-join on connect. You can set these directly in the config file, or click ☰ → **Manage Servers... → Edit** and use the **Auto-join** field (comma-separated channel names, e.g. `#uplink,#linux`). Changes made through the dialog are saved automatically.
 
 | Key | Type | Required | Description |
 |---|---|---|---|
@@ -435,7 +435,7 @@ UplinkIRC ships with 55 built-in themes:
 | `one-dark` | Atom One Dark |
 | `default` | Built-in fallback theme |
 
-Themes can be switched live from **Hamburger → Theme** without restarting.
+Themes can be switched live from the **Preferences** dialog (click ☰) without restarting.
 
 ### Theme search path
 
@@ -443,7 +443,7 @@ Themes can be switched live from **Hamburger → Theme** without restarting.
 2. `<exe directory>/themes/<name>.toml` — shipped themes next to the binary
 3. `themes/<name>.toml` — relative to the current working directory
 
-To add a custom theme, drop a `.toml` file into `~/.config/LinuxDojo/UplinkIRC/themes/`. It appears in the hamburger menu on the next launch.
+To add a custom theme, drop a `.toml` file into `~/.config/LinuxDojo/UplinkIRC/themes/`. It appears in the Preferences theme list on the next launch.
 
 ---
 

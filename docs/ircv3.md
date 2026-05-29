@@ -56,7 +56,7 @@ Authenticates your account during the CAP handshake — before you appear on the
 
 When you start typing in the input box, UplinkIRC immediately sends `TAGMSG` with `+typing=active`. It restarts a 5-second inactivity timer on each keypress — if you stop typing for 5 seconds, it sends `+typing=paused`. When you send or clear the input, it sends `+typing=done`.
 
-Incoming typing notifications from other users appear as "nick is typing…" above the input bar and time out automatically. The feature can be toggled from the hamburger menu.
+Incoming typing notifications from other users appear as "nick is typing…" above the input bar and time out automatically. The feature can be toggled from the **Preferences** dialog (☰).
 
 ### `labeled-response`
 
