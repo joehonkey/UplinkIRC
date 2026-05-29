@@ -121,11 +121,14 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
     QSettings settings("LinuxDojo", "UplinkIRC");
     restoreGeometry(settings.value("geometry").toByteArray());
     restoreState(settings.value("windowState").toByteArray());
+    if (settings.contains("nickSplitter"))
+        m_chatSplitter->restoreState(settings.value("nickSplitter").toByteArray());
 
     connect(qApp, &QApplication::aboutToQuit, this, [this]{
         QSettings s("LinuxDojo", "UplinkIRC");
         s.setValue("geometry", saveGeometry());
         s.setValue("windowState", saveState());
+        s.setValue("nickSplitter", m_chatSplitter->saveState());
     });
 }
 
@@ -525,7 +528,8 @@ void MainWindow::setupNickPanel()
     vbox->setContentsMargins(0, 0, 0, 0);
     vbox->setSpacing(0);
     vbox->addWidget(header);
-    vbox->addWidget(m_nickList, 1);
+    vbox->addWidget(m_nickList, 100);
+    vbox->addStretch(1);
 }
 
 void MainWindow::setupChatArea()
