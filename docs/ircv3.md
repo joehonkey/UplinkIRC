@@ -32,6 +32,18 @@ When the server attaches a `time` tag to messages, UplinkIRC uses that timestamp
 
 The full IRCv3 message tag extension is negotiated and parsed. Tags appear on inbound messages and are stored with each message object. This is the foundation that `typing`, `msgid`, `server-time`, and other tag-based features build on.
 
+### `sasl`
+
+**Status: Active (PLAIN)**
+
+Authenticates your account during the CAP handshake — before you appear on the network. Add `sasl_user` and `sasl_password` to any `[[server]]` block in your config. UplinkIRC sends `AUTHENTICATE PLAIN` and holds `CAP END` until the server confirms success (903) or failure (904/906). EXTERNAL (certificate-based) auth is planned.
+
+### `draft/typing`
+
+**Status: Active**
+
+When you start typing in the input box, UplinkIRC sends a `TAGMSG` with `+typing=active` to the channel. When you stop or send, it sends `done`. Incoming typing notifications from other users appear as "nick is typing…" above the input bar. Can be toggled from the hamburger menu.
+
 ### `batch`
 
 **Status: Negotiated (processing planned)**
@@ -47,10 +59,6 @@ CAP is negotiated. Label matching (tying server responses back to specific outgo
 ---
 
 ## Planned capabilities
-
-### `sasl` (PLAIN + EXTERNAL)
-
-Authenticates your account during the CAP handshake — before you join any channels. Your nick is identified from the moment you appear on the server. Planned for near-term. For now, use a bouncer `password` field for servers that require it.
 
 ### `chathistory`
 

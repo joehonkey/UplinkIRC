@@ -415,7 +415,7 @@
 
 <!-- NAV -->
 <nav>
-  <div class="nav-brand">UplinkIRC <span>v0.1.0</span></div>
+  <div class="nav-brand">UplinkIRC <span>v0.2.0</span></div>
   <ul>
     <li><a href="#features">Features</a></li>
     <li><a href="#platforms-detail">Platforms</a></li>
@@ -492,6 +492,18 @@
         <span class="feature-icon">🔌</span>
         <h3>Bouncer-ready</h3>
         <p>Connect through ZNC or soju using the <code>password</code> field. PASS is sent before registration — just how bouncers expect it.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">🔑</span>
+        <h3>SASL &amp; NickServ</h3>
+        <p>SASL PLAIN authenticates your nick before you appear on the network. For older servers, <code>nickserv_password</code> sends IDENTIFY automatically on connect.</p>
+      </div>
+
+      <div class="feature-card">
+        <span class="feature-icon">📐</span>
+        <h3>Persistent layout</h3>
+        <p>Sidebar and nick list panel sizes are saved when you quit and restored on next launch. Drag them to exactly where you want — they stay there.</p>
       </div>
 
       <div class="feature-card">
@@ -609,10 +621,17 @@
         </div>
       </div>
       <div class="cap-item">
-        <span class="cap-status planned"></span>
+        <span class="cap-status active"></span>
         <div>
           <div class="cap-name">sasl</div>
-          <div class="cap-desc">PLAIN + EXTERNAL authentication</div>
+          <div class="cap-desc">PLAIN authentication — set sasl_user + sasl_password in config</div>
+        </div>
+      </div>
+      <div class="cap-item">
+        <span class="cap-status active"></span>
+        <div>
+          <div class="cap-name">draft/typing</div>
+          <div class="cap-desc">Live "nick is typing…" notifications via TAGMSG</div>
         </div>
       </div>
       <div class="cap-item">
@@ -697,7 +716,7 @@
       <a href="https://github.com/joehonkey/UplinkIRC/blob/main/CHANGELOG.md">Changelog</a>
       <a href="https://github.com/joehonkey/UplinkIRC/blob/main/SECURITY.md">Security</a>
     </div>
-    <div class="version-tag">v0.1.0</div>
+    <div class="version-tag">v0.2.0</div>
     <p>UplinkIRC &mdash; irc.linuxdojo.org &middot; #uplink</p>
   </div>
 </footer>

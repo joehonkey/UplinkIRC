@@ -190,7 +190,7 @@ theme = "nord"
 
 ### How do I move the nick list?
 
-The nick list panel is a floating dock — drag its title bar to the left or right to reposition it. The position is not persisted yet (window state persistence is planned).
+The nick list panel is a floating dock — drag its title bar to the left or right to reposition it. You can also drag the edge of the panel to resize it. Both position and size are saved automatically when you quit and restored on the next launch.
 
 ### How do I hide the topic bar?
 
@@ -210,9 +210,38 @@ Open **Hamburger menu** and toggle the **Nick** option. Or set it in config:
 show_nick_prefix = false
 ```
 
-### How do I change the app icon?
+### How do I authenticate with NickServ automatically?
 
-Open **Hamburger menu → App Icon** and choose **Default** (flat satellite dish) or **Alternative** (3D satellite). The choice is saved and persists across restarts.
+Add `nickserv_password` to your server block in `config.toml`. UplinkIRC will send `PRIVMSG NickServ :IDENTIFY <password>` immediately after connecting:
+
+```toml
+[[server]]
+name              = "LinuxDojo"
+host              = "irc.linuxdojo.org"
+port              = 6697
+ssl               = true
+nick              = "yournick"
+nickserv_password = "yourpassword"
+```
+
+For servers that support it, SASL PLAIN is a better choice — it identifies you before you appear on the network. See [SASL setup](configuration.md#sasl-plain-authentication) in the config docs.
+
+### How do I use SASL to log in?
+
+Add `sasl_user` and `sasl_password` to your server block:
+
+```toml
+[[server]]
+name          = "Libera"
+host          = "irc.libera.chat"
+port          = 6697
+ssl           = true
+nick          = "yournick"
+sasl_user     = "yournick"
+sasl_password = "yourpassword"
+```
+
+UplinkIRC will negotiate the `sasl` CAP and authenticate during the connection handshake. The server buffer shows `SASL authentication successful` when it works. Use this instead of `nickserv_password` on networks that support it (Libera.Chat, OFTC, etc.).
 
 ### The emoji button doesn't do anything
 
