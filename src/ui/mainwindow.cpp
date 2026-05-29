@@ -41,6 +41,7 @@
 #include <QPainter>
 #include <QPixmap>
 #include "version.h"
+#include <QRegularExpression>
 
 // ---------------------------------------------------------------------------
 // Nick color — consistent hash-based color per nick
@@ -357,7 +358,7 @@ void MainWindow::setupChatArea()
     m_topicBar  = new QWidget;
     auto *tHbox = new QHBoxLayout(m_topicBar);
     tHbox->setContentsMargins(8, 4, 8, 4);
-    tHbox->setSpacing(0);
+    tHbox->setSpacing(6);
 
     m_topicLabel = new QLabel;
     m_topicLabel->setObjectName("channelLabel");
@@ -380,6 +381,9 @@ void MainWindow::setupChatArea()
     m_topicText = new QLabel;
     m_topicText->setObjectName("topicText");
     m_topicText->setWordWrap(true);
+    m_topicText->setTextFormat(Qt::RichText);
+    m_topicText->setTextInteractionFlags(Qt::TextBrowserInteraction);
+    m_topicText->setOpenExternalLinks(true);
     tdHbox->addWidget(m_topicText);
     m_topicDisplay->setObjectName("topicDisplay");
     m_topicDisplay->setVisible(m_showTopic);
@@ -1205,6 +1209,16 @@ void MainWindow::refreshNickList(const QString &host, const QString &channel)
     m_nickDock->setWindowTitle("");
 }
 
+static QString linkifyTopic(const QString &text)
+{
+    static const QRegularExpression urlRe(
+        R"((https?://[^\s<>"]+))",
+        QRegularExpression::CaseInsensitiveOption);
+    QString result = text.toHtmlEscaped();
+    result.replace(urlRe, R"(<a href="\1">\1</a>)");
+    return result;
+}
+
 void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
 {
     auto *ch = m_model->channel(host, channel);
@@ -1229,7 +1243,7 @@ void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
             QString("* %1 — %2 user%3").arg(serverName).arg(userCount).arg(userCount != 1 ? "s" : ""));
 
         if (m_topicText)
-            m_topicText->setText(ch ? ch->topic : QString());
+            m_topicText->setText(linkifyTopic(ch ? ch->topic : QString()));
     }
 }
 
