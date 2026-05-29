@@ -239,8 +239,8 @@ void MainWindow::setupToolbar()
 
     connect(m_hamburger, &QToolButton::clicked, this, [this, menu]{
         QSize sh = menu->sizeHint();
-        QPoint pos = m_hamburger->mapToGlobal(QPoint(0, -sh.height()));
-        menu->exec(pos);
+        QPoint tr = m_hamburger->mapToGlobal(QPoint(m_hamburger->width(), 0));
+        menu->exec(QPoint(tr.x() - sh.width(), tr.y() - sh.height()));
     });
     m_hamburger->setObjectName("hamburger");
     tb->hide();
