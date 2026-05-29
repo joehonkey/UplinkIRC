@@ -1133,7 +1133,18 @@ void MainWindow::onUnreadChanged(const QString &host, const QString &channel, in
         for (const auto &sc : std::as_const(m_config.servers))
             if (sc.host == host && !sc.name.isEmpty()) { label = sc.name; break; }
     }
-    item->setText(0, count > 0 ? "● " + label : label);
+    if (channel != "(server)") {
+        if (count > 0 && m_model->hasMention(host, channel)) {
+            item->setText(0, "💡 " + label);
+            item->setForeground(0, QColor("red"));
+        } else if (count > 0) {
+            item->setText(0, "🔥 " + label);
+            item->setData(0, Qt::ForegroundRole, QVariant());
+        } else {
+            item->setText(0, label);
+            item->setData(0, Qt::ForegroundRole, QVariant());
+        }
+    }
 }
 
 void MainWindow::onSelfNickChanged(const QString &host, const QString &nick)
@@ -2022,9 +2033,16 @@ QString MainWindow::formatMessage(const Message &msg) const
             }
         }
         const QString nickDisplay = nickOpen + msg.nick.toHtmlEscaped() + nickClose;
+        QString textHtml = linkifyHtml(ircToHtml(msg.text));
+        const QString sn = m_model->selfNick(m_model->activeHost());
+        if (!sn.isEmpty()) {
+            QRegularExpression snRe("(\\b" + QRegularExpression::escape(sn) + "\\b)",
+                                    QRegularExpression::CaseInsensitiveOption);
+            textHtml.replace(snRe, "<span style='color:red;font-weight:bold'>\\1</span>");
+        }
         html = QString("<span style='color:gray'>%1</span> "
                        "<b style='color:%2'>%3</b> %4")
-            .arg(ts, color, nickDisplay, linkifyHtml(ircToHtml(msg.text)));
+            .arg(ts, color, nickDisplay, textHtml);
         break;
     }
     case MessageType::Action:

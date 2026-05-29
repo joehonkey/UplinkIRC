@@ -55,6 +55,7 @@ struct Channel {
     QList<Message>   messages;
     QSet<QString>    botNicks;  // lowercased nicks with +B channel user mode
     int              unread{0};
+    int              mentions{0};
     bool             joined{false};
     QDateTime        lastRead;  // soju.im/read marker
 

@@ -3,6 +3,48 @@
 ---
 
 <!--
+Session summary — 2026-05-29  v0.7.9
+
+What was built / fixed:
+  - Server error routing: IRC numerics ≥ 400 (e.g. 482 chanoprivsneeded, 401
+    nosuchnick, 404 cannotsendtochan, 421 unknowncommand, etc.) now appear in
+    the active channel buffer as red "!!" messages instead of being silently
+    swallowed into the (server) buffer. A new errorMessage signal in IrcClient
+    routes them through SessionModel::onErrorMessage, which posts to
+    m_activeChannel when on that server, falling back to (server) if no
+    channel is active.
+  - Multi-prefix removal fix: NickEntry now tracks all active mode prefixes in
+    a QSet<QChar>. recomputePrefix() picks the highest-ranked one. Previously,
+    -o on a @+ nick cleared the prefix entirely instead of demoting to +.
+  - /time <nick>: sends CTCP TIME to a user; their local time appears in the
+    active channel. Works the same way as /ping. If the target client does not
+    support CTCP TIME, no reply appears (this is normal — many bots don't
+    implement it). Added to tab completion and /help.
+  - /ping and /time confirmation messages now stored in channel history: the
+    "Pinged nick" and "Querying time for nick" local lines previously used
+    appendMessage() which bypassed the model buffer, causing them to vanish on
+    channel switch. Both now go through SessionModel::localMessage() and
+    persist like any other message.
+  - Mention notifications: when your nick is mentioned in an inactive channel,
+    that channel shows 💡 in red in the sidebar. Regular unread activity shows
+    🔥. Both clear when you open the channel.
+  - Self-nick highlight in chat: any message containing your nick (word
+    boundary, case-insensitive) renders your nick in red bold inline in the
+    message text.
+
+Known issues remaining:
+  - Link preview cards lost on channel switch (not stored in message history)
+  - Link preview for title-only pages not verified
+  - DCC Send File not implemented
+  - AppImage packaging not done
+
+Next priorities:
+  - Desktop notifications (system notification on mention/PM)
+  - Link preview persistence across channel switches
+  - AppImage packaging
+-->
+
+<!--
 Session summary — 2026-05-29  v0.7.7
 
 What was built / fixed:
@@ -58,6 +100,20 @@ Next priorities:
   - Link preview persistence across channel switches
   - Desktop notifications on mention/PM
 -->
+
+## [0.7.9] — 2026-05-29
+
+### Added
+- **`/time <nick>`** — sends a CTCP TIME request to a user; their local time appears in the active channel buffer (e.g. `* Time reply from sig: 2026-05-29T19:21:22.579Z`). If the target client does not support CTCP TIME, no reply is shown — this is normal for many bots.
+- **Mention notifications** — when your nick is mentioned in a channel you are not viewing, that channel shows **💡** in red in the sidebar. Regular unread activity shows **🔥**. Both indicators clear as soon as you open the channel.
+- **Self-nick highlight** — any message containing your nick is rendered with your nick in **red bold** inline in the chat. Word-boundary match, case-insensitive.
+
+### Fixed
+- **Server errors now appear in the active channel** — IRC error replies (numeric ≥ 400: 482 chanoprivsneeded, 401 nosuchnick, 404 cannotsendtochan, 421 unknowncommand, etc.) now show as red `!!` messages in your current channel instead of silently going to the `(server)` buffer.
+- **Multi-prefix removal** — `-o` on an `@+` nick (op + voice) now correctly demotes to `+` voice instead of clearing the prefix entirely. `NickEntry` now tracks all active mode prefixes in a `QSet<QChar>`.
+- **`/ping` and `/time` confirmation lines persist across channel switches** — "Pinged nick" and "Querying time for nick" local messages were previously lost when switching channels. They now go through the model buffer and survive re-renders.
+
+---
 
 ## [0.7.8] — 2026-05-29
 

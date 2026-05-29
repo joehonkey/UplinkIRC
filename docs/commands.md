@@ -109,20 +109,24 @@ Type any of these commands in the message input box and press Enter.
 
 | Command | Description |
 |---|---|
-| `/ping <nick>` | Send a CTCP PING to a user |
+| `/ping <nick>` | Send a CTCP PING to a user — reply shows round-trip time in the active channel |
+| `/time <nick>` | Ask a user for their local time — reply appears in the active channel |
 | `/version [nick]` | Request server version, or CTCP VERSION from a nick |
-| `/ctcp <nick> <command> [args]` | Send a CTCP request to a user |
+| `/ctcp <nick> <command> [args]` | Send a raw CTCP request to a user |
 | `/sysinfo` | Post OS, CPU, RAM, GPU, and uptime info to the current channel |
 
 Incoming CTCP VERSION and PING requests are answered automatically.
+
+> **Note:** `/time` and `/ping` only work if the target client supports those CTCP commands. Most IRC clients do, but bots often do not respond. If you see no reply, the other side simply does not support it.
 
 ### Examples
 
 ```
 /ping alice
+/time alice
 /version
 /version alice
-/ctcp alice TIME
+/ctcp alice CLIENTINFO
 /sysinfo
 ```
 

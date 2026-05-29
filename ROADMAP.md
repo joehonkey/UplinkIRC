@@ -60,7 +60,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] PM tabs — /msg opens sidebar buffer; incoming PMs land in sender's buffer
 - [x] Nick list right-click menu — Message, Send File (stub), Whois, Give Op, Give Voice, Version
 - [x] Tray icon left-click toggles window visibility
-- [x] Unread dot indicator in sidebar (dot-only, no color/bold change, no tray badge)
+- [x] Unread dot indicator in sidebar — 🔥 for activity, 💡 red for nick mentions; clears on focus
 - [x] Sidebar flat list — Halloy-style: no arrows, servers as section headers, connected icon, dock titles removed
 - [x] Font Config: Network Name and Typing Indicator size controls
 - [x] Info bar always visible with channel, modes, network, user count
@@ -104,11 +104,12 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] SASL authentication — PLAIN mechanism (CAP negotiation, AUTHENTICATE, 903/904/906)
 - [ ] SASL EXTERNAL — certificate-based auth (not yet implemented)
 - [x] NickServ IDENTIFY auto — `nickserv_password` in config; sent to NickServ on RPL_WELCOME
-- [ ] Server error routing — 482 and other server errors shown in active channel buffer, not just (server)
+- [x] Server error routing — 482 and other server errors shown in active channel buffer, not just (server)
 - [x] Multiple servers — Manage Servers dialog: add, edit, remove with live connect/disconnect
 - [x] Reconnect logic — auto-reconnect with backoff on disconnect
 - [ ] Connection status indicator — visual connected/disconnected state per server
-- [ ] Desktop notifications — notify on mention/PM when window not focused
+- [x] Mention notifications — 💡 red sidebar indicator when nick is mentioned in inactive channel; 🔥 for general activity; self-nick highlighted red bold in chat
+- [ ] Desktop notifications — system-level notification on mention/PM when window not focused
 
 ---
 
@@ -155,8 +156,6 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## Known Issues
 
-- Server errors (482 channel-op-needed etc.) appear in the (server) buffer, not the active channel
 - Link preview cards lost when switching channels (not stored in message history)
 - Link preview for title-only pages (no og:title) — may not preview; needs verification
 - DCC Send File in nick menu is disabled — not yet implemented
-- MODE prefix removal (e.g. `-o`) on a nick with multiple active prefixes only clears the removed prefix; lower-ranked prefixes are not re-displayed until a fresh NAMES reply (WHO only fetches highest active flag)

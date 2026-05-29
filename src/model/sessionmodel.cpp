@@ -1,6 +1,8 @@
 #include "sessionmodel.h"
 #include "irc/ircclient.h"
 
+#include <QRegularExpression>
+
 SessionModel::SessionModel(QObject *parent)
     : QObject(parent)
 {}
@@ -117,6 +119,18 @@ void SessionModel::localMessage(const QString &host, const QString &target, cons
     postMessage(host, target, Message::make(MessageType::Server, "", text));
 }
 
+QString SessionModel::selfNick(const QString &host)
+{
+    auto *sess = session(host);
+    return sess ? sess->nick : QString{};
+}
+
+bool SessionModel::hasMention(const QString &host, const QString &ch)
+{
+    auto *c = channel(host, ch);
+    return c && c->mentions > 0;
+}
+
 void SessionModel::sendJoin(const QString &host, const QString &channel, const QString &key)
 {
     auto *cl = clientFor(host);
@@ -156,7 +170,8 @@ void SessionModel::setActive(const QString &host, const QString &ch)
     m_activeChannel = ch;
     // Clear unread on the newly active channel
     if (auto *c = channel(host, ch)) {
-        c->unread = 0;
+        c->unread   = 0;
+        c->mentions = 0;
         emit unreadChanged(host, ch, 0);
     }
 }
@@ -227,8 +242,15 @@ void SessionModel::postMessage(const QString &host, const QString &target, const
     ch.addMessage(msg);
 
     const bool isActive = (host == m_activeHost && target.toLower() == m_activeChannel.toLower());
-    if (!isActive && !msg.isHistory && msg.type == MessageType::Privmsg)
+    if (!isActive && !msg.isHistory && msg.type == MessageType::Privmsg) {
         ++ch.unread;
+        if (!sess->nick.isEmpty()) {
+            QRegularExpression re("\\b" + QRegularExpression::escape(sess->nick) + "\\b",
+                                  QRegularExpression::CaseInsensitiveOption);
+            if (re.match(msg.text).hasMatch())
+                ++ch.mentions;
+        }
+    }
 
     emit messageAdded(host, target, msg);
     if (!isActive && !msg.isHistory && msg.type == MessageType::Privmsg)
