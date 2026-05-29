@@ -237,7 +237,8 @@ void MainWindow::setupToolbar()
     });
 
     m_hamburger->setMenu(menu);
-    tb->addWidget(m_hamburger);
+    m_hamburger->setObjectName("hamburger");
+    tb->hide();
 }
 
 void MainWindow::applyFontSizes()
@@ -284,6 +285,7 @@ void MainWindow::applyFontSizes()
         f.setItalic(true);
         m_typingLabel->setFont(f);
     }
+    statusBar()->setFont(makeFont(fs.statusBar));
 }
 
 static QIcon makeConnectedIcon()
@@ -357,7 +359,7 @@ void MainWindow::setupChatArea()
     // Info bar — always visible: #channel (modes)  *  NetworkName — N users
     m_topicBar  = new QWidget;
     auto *tHbox = new QHBoxLayout(m_topicBar);
-    tHbox->setContentsMargins(8, 4, 8, 4);
+    tHbox->setContentsMargins(0, 0, 8, 0);
     tHbox->setSpacing(6);
 
     m_topicLabel = new QLabel;
@@ -368,6 +370,7 @@ void MainWindow::setupChatArea()
 
     m_userInfoLabel = new QLabel;
     m_userInfoLabel->setObjectName("userInfoLabel");
+    tHbox->addWidget(m_hamburger);
     tHbox->addWidget(m_topicLabel);
     tHbox->addWidget(m_userInfoLabel);
     tHbox->addWidget(m_modesLabel, 1);

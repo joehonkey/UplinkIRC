@@ -140,6 +140,7 @@ QStatusBar {
     background-color: {{sidebarBg}};
     color: {{srvText}};
     border: none;
+    padding: 0px 6px;
 }
 QSizeGrip {
     width: 0px;
@@ -274,6 +275,17 @@ QToolButton {
 }
 QToolButton:hover {
     background-color: {{border}};
+}
+QToolButton#hamburger {
+    background-color: {{inputBg}};
+    color: {{text}};
+    border: none;
+    padding: 2px 8px;
+    font-weight: bold;
+}
+QToolButton#hamburger:hover {
+    background-color: {{border}};
+    border-radius: 3px;
 }
 
 /* ── Labels ── */

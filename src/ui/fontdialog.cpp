@@ -27,6 +27,7 @@ FontDialog::FontDialog(const QString &family, const FontSizes &sizes, QWidget *p
     m_spInputNick    = makeSpinBox(sizes.inputNick);
     m_spInput        = makeSpinBox(sizes.input);
     m_spTyping       = makeSpinBox(sizes.typing);
+    m_spStatusBar    = makeSpinBox(sizes.statusBar);
 
     m_preview = new QLabel("The quick brown fox — AaBbCc 0123");
     m_preview->setAlignment(Qt::AlignCenter);
@@ -56,6 +57,7 @@ FontDialog::FontDialog(const QString &family, const FontSizes &sizes, QWidget *p
     form->addRow("Nick Label:",     m_spInputNick);
     form->addRow("Input:",          m_spInput);
     form->addRow("Typing Indicator:", m_spTyping);
+    form->addRow("Status Bar:",       m_spStatusBar);
 
     auto *layout = new QVBoxLayout(this);
     layout->addLayout(form);
@@ -78,5 +80,5 @@ FontSizes FontDialog::selectedSizes()  const
     return { m_spToolbar->value(), m_spServerHeader->value(), m_spSidebar->value(),
              m_spChat->value(), m_spNickList->value(), m_spNickDock->value(),
              m_spTopicBar->value(), m_spInputNick->value(), m_spInput->value(),
-             m_spTyping->value() };
+             m_spTyping->value(), m_spStatusBar->value() };
 }
