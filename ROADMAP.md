@@ -33,6 +33,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Full documentation — configuration.md, commands.md, faq.md, ircv3.md, keyboard-shortcuts.md (beginner-friendly, real examples)
 - [x] GitHub repo — public, branch-protected, invite-only contributions
 - [x] GitHub Pages landing page — https://joehonkey.github.io/UplinkIRC/
+- [x] README beautification — badges, icon gallery, feature tables, annotated config, commands table, download buttons
 - [x] Global git hook — strips all AI attribution lines from every commit machine-wide
 - [x] Nick completion — Tab key completes nicks in input bar
 - [x] Input history — Up/Down arrow cycles through sent messages

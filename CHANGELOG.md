@@ -711,6 +711,49 @@ Next priorities:
   - AppImage packaging for Linux
 -->
 
+<!--
+Session summary — 2026-05-29  README redesign / repo beautification
+
+What was built:
+  - README.md completely redesigned from a plain bullet list to a rich,
+    visually structured GitHub page:
+    * 5 badges: latest release, CI status, MIT license, Qt6/C++17, IRCv3
+    * 3 platform download buttons (Linux, Windows, macOS) linking directly
+      to v0.6.0 release assets
+    * App icon gallery — all 5 icon variants (Dark, Light Default, Light,
+      Avatar, Mark) displayed side-by-side with labels
+    * Features reorganized into 6 category tables: Security & Auth,
+      IRC Protocol & IRCv3, Interface & Themes, Chat Features, Nick List
+      & Sidebar, Connectivity & Servers
+    * Quick Start up top with collapsible <details> blocks per OS for
+      dependency install (Arch, Ubuntu, Fedora, FreeBSD, macOS)
+    * Full annotated TOML config example with inline comments on every key,
+      including multi-server, SASL, NickServ, bouncer
+    * Slash commands table (all commands in one place)
+    * Emoji shortcut examples inline
+    * Keyboard shortcuts table
+    * Documentation links table
+    * Brand assets section with logo SVG displayed + file table
+
+Bugs fixed: none (docs-only session)
+Regressions: none
+Known issues unchanged from v0.6.0
+
+Next priorities:
+  - Route server errors (482 etc.) to active channel buffer
+  - Link preview persistence across channel switches
+  - Desktop notifications on mention/PM
+  - AppImage packaging for Linux
+-->
+
+## [Unreleased] — 2026-05-29
+
+**Repository beautification**
+
+- README redesigned — badges (release, CI, license, Qt6/C++17, IRCv3), platform download buttons, app icon gallery (all 5 variants), features organized into 6 category tables, collapsible OS dependency install sections, full annotated TOML config example, slash commands table, keyboard shortcuts table, documentation links table, brand assets section with logo
+
+---
+
 ## [0.6.0] — 2026-05-29
 
 **Emoji picker, :shortcode: autocomplete, bot icons, native Windows style, menu icons**
