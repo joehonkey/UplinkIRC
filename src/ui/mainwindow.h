@@ -134,6 +134,7 @@ private:
     bool                         m_typingActive{false};
     QHash<QString, QSet<QString>> m_typingNicks;       // "host|channel" → nicks
     QHash<QString, QTimer*>       m_typingNickTimers;  // "host|channel|nick" → timeout
+    QHash<QString, QString>       m_botIcons;          // lowercased nick → cached bot icon
 
     SessionModel *m_model;
     TrayIcon     *m_tray{nullptr};

@@ -55,6 +55,7 @@
 #include <QMouseEvent>
 #include <QTextDocument>
 #include <QTextCursor>
+#include <QRandomGenerator>
 #if defined(Q_OS_WIN)
 #  include <windows.h>
 #endif
@@ -1775,11 +1776,6 @@ void MainWindow::refreshChatView(const QString &host, const QString &channel)
         appendMessage(msg);
 }
 
-static QString botIconForNick(const QString &nick)
-{
-    return (qHash(nick.toLower()) & 1) ? QStringLiteral("🤖") : QStringLiteral("👾");
-}
-
 void MainWindow::refreshNickList(const QString &host, const QString &channel)
 {
     m_nickList->clear();
@@ -1790,8 +1786,11 @@ void MainWindow::refreshNickList(const QString &host, const QString &channel)
     for (const auto &e : std::as_const(ch->nicks)) {
         const bool isBot = (ch->botNicks.contains(e.nick.toLower()))
                         || (sess && sess->botNicks.contains(e.nick.toLower()));
+        if (isBot && !m_botIcons.contains(e.nick.toLower()))
+            m_botIcons[e.nick.toLower()] = QRandomGenerator::global()->bounded(2)
+                                           ? QStringLiteral("🤖") : QStringLiteral("👾");
         const QString label = isBot
-            ? e.display() + " " + botIconForNick(e.nick)
+            ? e.display() + " " + m_botIcons[e.nick.toLower()]
             : e.display();
         auto *item = new QListWidgetItem(label);
         item->setData(Qt::UserRole, e.nick);
