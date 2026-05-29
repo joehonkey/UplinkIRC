@@ -70,12 +70,16 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Minimal dock title bars — sidebar and nick list have a 16px bar with only a ⧉ float button
 - [x] Hamburger menu relocated — bottom-right of nick list panel, level with input bar
 - [x] Status bar text shrunk — 7pt via QSS
+- [x] Clickable URLs in chat messages — http/https links in PRIVMSG, actions, and notices open in browser
+- [x] Reconnect with exponential backoff — auto-reconnect on unexpected disconnect; 5s→10s→20s→40s→60s; deliberate quit disables it
+- [x] Sidebar right-click context menus — server items: Disconnect/Reconnect; channel items: Leave/Rejoin
+- [x] v0.3.0 released
 
 ---
 
 ## In Progress
 
-- [ ] Release workflow — confirm green end-to-end on all three platforms (CI confirmed green; release needs a tag push to verify)
+- [ ] Release workflow — v0.3.0 CI running at session close; confirm binaries attached to release
 
 ---
 
@@ -87,7 +91,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] NickServ IDENTIFY auto — `nickserv_password` in config; sent to NickServ on RPL_WELCOME
 - [ ] Server error routing — 482 and other server errors shown in active channel buffer, not just (server)
 - [x] Multiple servers — Manage Servers dialog: add, edit, remove with live connect/disconnect
-- [ ] Reconnect logic — auto-reconnect with backoff on disconnect
+- [x] Reconnect logic — auto-reconnect with backoff on disconnect
 - [ ] Connection status indicator — visual connected/disconnected state per server
 
 ---
@@ -130,11 +134,10 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 ## Known Issues — UI
 
 - Hamburger menu briefly shrinks when a theme is applied — `QMenu` re-polish on `setStyleSheet()` computes a different sizeHint; explicit item padding added but root cause not fully resolved
+- Dock separator lines visible at left/right edges of chat area — QMainWindow::separator extends into toolbar region
 
 ## Known Issues
 
-- No reconnect on disconnect — must restart app
 - Server errors (482 channel-op-needed etc.) appear in the (server) buffer, not the active channel — topic set failures are silent when in a channel
 - Emoji button toggle wired but picker not yet implemented
 - DCC Send File in nick menu is disabled — not yet implemented
-- Dock separator lines visible at left/right edges of chat area — QMainWindow::separator extends into toolbar region; QSplitter refactor would fix definitively

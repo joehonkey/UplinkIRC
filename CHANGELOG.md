@@ -564,6 +564,54 @@ Known issues left open:
   - Emoji picker not built
 -->
 
+<!--
+Session summary — 2026-05-29 v0.3.0 sprint:
+
+What was built:
+  - Clickable URLs in chat messages: swapped QTextEdit for QTextBrowser
+    (drop-in, adds anchorClicked signal). Added linkifyHtml() that runs
+    the same URL regex as linkifyTopic() on the already-HTML output of
+    ircToHtml(). Applied to Privmsg, Action, and Notice messages.
+    QDesktopServices::openUrl opens the link in the system browser.
+    Topic bar already had this; chat now matches.
+  - Reconnect with exponential backoff: IrcClient gained QTimer
+    m_reconnectTimer, m_intentionalDisconnect flag, and m_reconnectDelay
+    counter. Unexpected disconnect or socket error triggers scheduleReconnect()
+    which emits "Reconnecting in Ns..." to the server buffer and fires the
+    timer. Each failed attempt doubles the delay: 5s → 10s → 20s → 40s → 60s
+    (capped). Successful connect resets to 5s. User-initiated quit() sets
+    m_intentionalDisconnect to skip scheduling. SessionModel::onConnected
+    already auto-joins configured channels after reconnect.
+  - Sidebar right-click context menus: server items show Disconnect (if
+    connected) or Reconnect (if disconnected). Channel items (#, &) show
+    Rejoin (PART + 500ms delayed JOIN) and Leave. Menu built in
+    MainWindow::onSidebarContextMenu using itemAt(pos) and UserRole data.
+
+Bugs fixed: none — all new features.
+
+Known issues left open:
+  - Hamburger menu briefly shrinks on theme switch (root cause unknown)
+  - Server errors (482 etc.) still go to (server) buffer, not active channel
+  - Emoji picker not built
+  - DCC Send File not implemented
+  - Dock separator lines at chat edges
+
+Next priorities:
+  - Route server errors (482 etc.) to active channel buffer
+  - Connection status indicator per server in sidebar
+  - AppImage packaging for Linux
+-->
+
+## [0.3.0] — 2026-05-29
+
+**Reconnect backoff, clickable URLs in chat, sidebar context menus**
+
+- Clickable URLs in chat messages — `http://` and `https://` links in PRIVMSG, actions, and notices are now live links; click to open in the system browser
+- Auto-reconnect with exponential backoff — unexpected disconnects trigger automatic reconnect: 5s → 10s → 20s → 40s → 60s (capped); server buffer shows countdown; deliberate `/quit` disables it
+- Sidebar right-click menus — right-click a server to **Disconnect** or **Reconnect**; right-click a `#channel` to **Rejoin** or **Leave**
+
+---
+
 ## [Unreleased] — 2026-05-28
 
 **Server management UI + hamburger menu improvements**

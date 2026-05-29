@@ -22,8 +22,10 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - Typing indicator — IRCv3 `draft/typing`; shows "nick is typing..." in real time
 - Per-widget font sizes — independent size control for every UI zone including network name and typing indicator
 - **Manage Servers** dialog — add, edit, and remove server connections from within the app; changes take effect immediately without restart
+- Auto-reconnect with exponential backoff — reconnects automatically on unexpected disconnect (5s → 10s → 20s → 40s → 60s); deliberate `/quit` disables it
+- Sidebar right-click menus — right-click a server to Disconnect/Reconnect; right-click a channel to Leave/Rejoin
 - 55 built-in themes, switchable from the hamburger menu (bottom-right of the user list panel)
-- Clickable URLs in the topic bar — http/https links open in the browser
+- Clickable URLs in chat and topic bar — http/https links in messages and topic open in the browser
 - System tray: left-click toggles window; minimizes to tray on close
 - Unread dot indicator in sidebar (`● #channel`) — clears when channel is focused
 - Message buffer cap (2000 per channel) for stable long sessions

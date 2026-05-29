@@ -121,7 +121,11 @@ name = "#linux"
 
 ### UplinkIRC disconnected — will it reconnect?
 
-Not automatically yet. Auto-reconnect with backoff is planned. For now, close and reopen the app to reconnect.
+Yes. UplinkIRC reconnects automatically after an unexpected disconnect using exponential backoff: it waits 5 seconds, then 10, 20, 40, and caps at 60 seconds per attempt. A countdown message appears in the server buffer each time. Once reconnected, it re-joins all configured channels automatically.
+
+If you disconnect deliberately with `/quit` or the **Disconnect** option in the sidebar right-click menu, no reconnect is attempted.
+
+You can also right-click a server in the sidebar and choose **Reconnect** to connect immediately without waiting.
 
 ### How do I send a raw IRC command?
 
