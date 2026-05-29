@@ -659,14 +659,14 @@ void MainWindow::setupInputBar()
 
     bar->setObjectName("inputBar");
 
-    auto *layout = qobject_cast<QVBoxLayout *>(centralWidget()->layout());
-    layout->addWidget(bar);
-
-    // Typing indicator — overlaid on the chat view, not a separate row
-    m_typingLabel = new QLabel(m_chatView);
+    m_typingLabel = new QLabel;
     m_typingLabel->setObjectName("typingLabel");
-    m_typingLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
+    m_typingLabel->setContentsMargins(8, 2, 8, 2);
     m_typingLabel->setVisible(false);
+
+    auto *layout = qobject_cast<QVBoxLayout *>(centralWidget()->layout());
+    layout->addWidget(m_typingLabel);
+    layout->addWidget(bar);
 
     // Emoji picker popup
     m_emojiPicker = new EmojiPicker(this);
@@ -1191,13 +1191,7 @@ void MainWindow::onTypingReceived(const QString &host, const QString &channel,
 
 void MainWindow::repositionTypingLabel()
 {
-    if (!m_typingLabel || !m_chatView) return;
-    m_typingLabel->adjustSize();
-    const int pad = 8;
-    const int x = pad;
-    const int y = m_chatView->height() - m_typingLabel->height() - pad;
-    m_typingLabel->move(x, qMax(0, y));
-    m_typingLabel->raise();
+    // no-op: typing label is now a layout row, not an overlay
 }
 
 void MainWindow::updateTypingLabel()
@@ -1221,7 +1215,6 @@ void MainWindow::updateTypingLabel()
 
     m_typingLabel->setText(text);
     m_typingLabel->setVisible(true);
-    repositionTypingLabel();
 }
 
 // ---------------------------------------------------------------------------
