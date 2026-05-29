@@ -44,6 +44,8 @@ qt_add_executable(UplinkIRC WIN32
     src/ui/serverdialog.h
     src/ui/manageserversdialog.cpp
     src/ui/manageserversdialog.h
+    src/ui/preferencesdialog.cpp
+    src/ui/preferencesdialog.h
     src/ui/appicons.h
     src/ui/emojidata.h
     src/ui/emojipicker.h

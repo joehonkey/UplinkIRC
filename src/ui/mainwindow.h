@@ -12,6 +12,7 @@
 
 class TrayIcon;
 class DocsDialog;
+class PreferencesDialog;
 class LinkPreview;
 class EmojiPicker;
 
@@ -69,6 +70,7 @@ private:
     void setupNickDock();
     void setupInputBar();
     void connectModel();
+    void connectPreferences();
 
     void switchToChannel(const QString &host, const QString &channel);
     void refreshChatView(const QString &host, const QString &channel);
@@ -122,12 +124,12 @@ private:
     QLabel       *m_userInfoLabel{nullptr}; // * network — N users
     QWidget      *m_topicDisplay{nullptr};  // topic text — shown when showTopic
     QLabel       *m_topicText{nullptr};
-    QAction      *m_toggleTopicAction;
     QToolButton  *m_hamburger;
     QLabel       *m_appLabel{nullptr};
     QLabel       *m_typingLabel{nullptr};
-    DocsDialog   *m_docsDialog{nullptr};
-    EmojiPicker  *m_emojiPicker{nullptr};
+    DocsDialog        *m_docsDialog{nullptr};
+    PreferencesDialog *m_prefsDialog{nullptr};
+    EmojiPicker       *m_emojiPicker{nullptr};
 
     // Typing indicator state
     QTimer                      *m_typingOutTimer{nullptr};

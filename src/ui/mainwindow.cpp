@@ -4,6 +4,7 @@
 #include "ui/aboutdialog.h"
 #include "ui/docsdialog.h"
 #include "ui/fontdialog.h"
+#include "ui/preferencesdialog.h"
 #include "ui/serverdialog.h"
 #include "ui/manageserversdialog.h"
 #include "ui/appicons.h"
@@ -21,7 +22,6 @@
 #include <QToolButton>
 #include <QMenu>
 #include <QAction>
-#include <QWidgetAction>
 #include <QDockWidget>
 #include <QTreeWidget>
 #include <QListWidget>
@@ -34,7 +34,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QStatusBar>
-#include <QMenuBar>
 #include <QSplitter>
 #include <QTextCharFormat>
 #include <QScrollBar>
@@ -150,64 +149,33 @@ void MainWindow::setupToolbar()
     m_hamburger->setText("☰");
     m_hamburger->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_hamburger, &QWidget::customContextMenuRequested, this, [](const QPoint&){});
+    m_hamburger->setObjectName("hamburger");
+    tb->hide();
 
-    auto *menu = new QMenu(m_hamburger);
-
-    // About
-    auto *aboutAct = menu->addAction(MenuIcons::about(), "About UplinkIRC");
-    connect(aboutAct, &QAction::triggered, this, [this]{
-        AboutDialog dlg(this);
-        dlg.exec();
+    connect(m_hamburger, &QToolButton::clicked, this, [this]{
+        if (!m_prefsDialog) {
+            m_prefsDialog = new PreferencesDialog(m_config, this);
+            connectPreferences();
+        }
+        m_prefsDialog->show();
+        m_prefsDialog->raise();
+        m_prefsDialog->activateWindow();
     });
+}
 
-    // Manage servers
-    auto *manageAct = menu->addAction(MenuIcons::servers(), "Manage Servers...");
-    connect(manageAct, &QAction::triggered, this, [this]{
-        ManageServersDialog dlg(m_config.servers, this);
-        if (dlg.exec() != QDialog::Accepted) return;
-
-        const QList<ServerConfig> updated = dlg.servers();
-
-        // Disconnect servers that were removed
-        for (const ServerConfig &old : m_config.servers) {
-            const bool stillPresent = std::any_of(updated.begin(), updated.end(),
-                [&](const ServerConfig &s){ return s.host == old.host; });
-            if (!stillPresent)
-                m_model->removeServer(old.host);
-        }
-
-        // Connect new servers and reconnect edited ones
-        for (const ServerConfig &sc : updated) {
-            const ServerConfig *existing = nullptr;
-            for (const ServerConfig &old : m_config.servers)
-                if (old.host == sc.host) { existing = &old; break; }
-
-            if (!existing) {
-                m_model->addServer(sc);
-            } else if (*existing != sc) {
-                m_model->updateServer(existing->host, sc);
-            }
-        }
-
-        m_config.servers = updated;
+void MainWindow::connectPreferences()
+{
+    connect(m_prefsDialog, &PreferencesDialog::themeChanged, this, [this](const QString &name){
+        m_config.ui.theme = name;
+        ThemeLoader::apply(name);
+        m_theme = ThemeLoader::load(name);
+        if (m_chatView && m_theme.valid)
+            m_chatView->document()->setDefaultStyleSheet(
+                QString("a { color: %1; text-decoration: underline; }").arg(m_theme.accent));
         Config::save(m_config, Config::defaultPath());
     });
 
-    menu->addSeparator();
-
-    // Documentation
-    auto *docsAct = menu->addAction(MenuIcons::documentation(), "Documentation");
-    connect(docsAct, &QAction::triggered, this, [this]{
-        if (!m_docsDialog)
-            m_docsDialog = new DocsDialog(this);
-        m_docsDialog->show();
-        m_docsDialog->raise();
-        m_docsDialog->activateWindow();
-    });
-
-    // Font config
-    auto *fontAct = menu->addAction(MenuIcons::fontConfig(), "Font Config...");
-    connect(fontAct, &QAction::triggered, this, [this]{
+    connect(m_prefsDialog, &PreferencesDialog::fontConfigRequested, this, [this]{
         FontDialog dlg(m_config.ui.fontFamily, m_config.ui.fontSizes, this);
         if (dlg.exec() == QDialog::Accepted) {
             m_config.ui.fontFamily = dlg.selectedFamily();
@@ -220,112 +188,34 @@ void MainWindow::setupToolbar()
         }
     });
 
-    // Theme picker — QListWidget inside a QWidgetAction for reliable scrolling
-    auto *themeMenu = menu->addMenu("Theme");
-    themeMenu->setIcon(MenuIcons::theme());
-    auto *themeList = new QListWidget;
-    themeList->setFrameShape(QFrame::NoFrame);
-    themeList->setFixedHeight(260);
-    themeList->setMinimumWidth(160);
-    for (const QString &name : ThemeLoader::availableThemes())
-        themeList->addItem(name);
-    connect(themeList, &QListWidget::itemClicked, this, [this, themeMenu](QListWidgetItem *item){
-        m_config.ui.theme = item->text();
-        ThemeLoader::apply(item->text());
-        m_theme = ThemeLoader::load(item->text());
-        if (m_chatView && m_theme.valid)
-            m_chatView->document()->setDefaultStyleSheet(
-                QString("a { color: %1; text-decoration: underline; }").arg(m_theme.accent));
+    connect(m_prefsDialog, &PreferencesDialog::appIconChanged, this, [this](const QString &key){
+        m_config.ui.appIcon = key;
         Config::save(m_config, Config::defaultPath());
-        themeMenu->close();
+        applyAppIcon(key);
     });
-    connect(themeMenu, &QMenu::aboutToShow, this, [this, themeList]{
-        const auto matches = themeList->findItems(m_config.ui.theme, Qt::MatchExactly);
-        if (!matches.isEmpty()) {
-            themeList->setCurrentItem(matches.first());
-            themeList->scrollToItem(matches.first());
-        }
-    });
-    auto *themeAction = new QWidgetAction(themeMenu);
-    themeAction->setDefaultWidget(themeList);
-    themeMenu->addAction(themeAction);
 
-    // App icon picker
-    auto *iconMenu = menu->addMenu("App Icon");
-    iconMenu->setIcon(MenuIcons::appIcon());
-    const QList<QPair<QString,QString>> iconChoices = {
-        { "dark",          "Dark" },
-        { "light-default", "Light (default)" },
-        { "light",         "Light" },
-        { "avatar",        "Avatar" },
-    };
-    auto *iconList = new QListWidget;
-    iconList->setFrameShape(QFrame::NoFrame);
-    iconList->setFixedHeight(static_cast<int>(iconChoices.size()) * 24 + 8);
-    iconList->setMinimumWidth(150);
-    for (const auto &[key, label] : iconChoices)
-        iconList->addItem(label);
-    connect(iconList, &QListWidget::itemClicked, this, [this, iconMenu, iconList, iconChoices](QListWidgetItem *item){
-        const int idx = iconList->row(item);
-        if (idx < 0 || idx >= iconChoices.size()) return;
-        m_config.ui.appIcon = iconChoices[idx].first;
-        Config::save(m_config, Config::defaultPath());
-        applyAppIcon(m_config.ui.appIcon);
-        iconMenu->close();
-    });
-    connect(iconMenu, &QMenu::aboutToShow, this, [this, iconList, iconChoices]{
-        for (int i = 0; i < iconChoices.size(); ++i) {
-            if (iconChoices[i].first == m_config.ui.appIcon) {
-                iconList->setCurrentRow(i);
-                break;
-            }
-        }
-    });
-    auto *iconAction = new QWidgetAction(iconMenu);
-    iconAction->setDefaultWidget(iconList);
-    iconMenu->addAction(iconAction);
-
-    menu->addSeparator();
-
-    // Topic toggle
-    auto *topicAct = menu->addAction(MenuIcons::topicBar(), "Show Topic Bar");
-    topicAct->setCheckable(true);
-    topicAct->setChecked(m_showTopic);
-    m_toggleTopicAction = topicAct;
-    connect(topicAct, &QAction::toggled, this, [this](bool on){
+    connect(m_prefsDialog, &PreferencesDialog::topicBarToggled, this, [this](bool on){
         m_showTopic = on;
         m_config.ui.showTopic = on;
         m_topicDisplay->setVisible(on);
         Config::save(m_config, Config::defaultPath());
     });
 
-    // Nick prefix toggle
-    auto *nickPrefixAct = menu->addAction(MenuIcons::nickInInput(), "Show Nick in Input");
-    nickPrefixAct->setCheckable(true);
-    nickPrefixAct->setChecked(m_showNickPrefix);
-    connect(nickPrefixAct, &QAction::toggled, this, [this](bool on){
+    connect(m_prefsDialog, &PreferencesDialog::nickPrefixToggled, this, [this](bool on){
         m_showNickPrefix = on;
         m_config.ui.showNickPrefix = on;
         m_nickPrefix->setVisible(on);
         Config::save(m_config, Config::defaultPath());
     });
 
-    // Emoji button toggle
-    auto *emojiAct = menu->addAction(MenuIcons::emojiButton(), "Show Emoji Button");
-    emojiAct->setCheckable(true);
-    emojiAct->setChecked(m_showEmojiBtn);
-    connect(emojiAct, &QAction::toggled, this, [this](bool on){
+    connect(m_prefsDialog, &PreferencesDialog::emojiBtnToggled, this, [this](bool on){
         m_showEmojiBtn = on;
         m_config.ui.showEmojiButton = on;
         m_emojiBtn->setVisible(on);
         Config::save(m_config, Config::defaultPath());
     });
 
-    // Typing indicator toggle
-    auto *typingAct = menu->addAction(MenuIcons::typingIndicator(), "Typing Indicator");
-    typingAct->setCheckable(true);
-    typingAct->setChecked(m_config.ui.typingIndicator);
-    connect(typingAct, &QAction::toggled, this, [this](bool on){
+    connect(m_prefsDialog, &PreferencesDialog::typingIndicatorToggled, this, [this](bool on){
         m_config.ui.typingIndicator = on;
         Config::save(m_config, Config::defaultPath());
         if (!on) {
@@ -341,67 +231,60 @@ void MainWindow::setupToolbar()
         }
     });
 
-    // Connection status bar toggle
-    auto *connStatusAct = menu->addAction(MenuIcons::connStatus(), "Connection Status Bar");
-    connStatusAct->setCheckable(true);
-    connStatusAct->setChecked(m_config.ui.showConnStatus);
-    connect(connStatusAct, &QAction::toggled, this, [this](bool on){
+    connect(m_prefsDialog, &PreferencesDialog::connStatusToggled, this, [this](bool on){
         m_config.ui.showConnStatus = on;
         Config::save(m_config, Config::defaultPath());
         if (m_connStatusLabel) m_connStatusLabel->setVisible(on);
     });
 
-    // Colored nicks toggle
-    auto *colorNicksAct = menu->addAction(MenuIcons::coloredNicks(), "Colored Nicks");
-    colorNicksAct->setCheckable(true);
-    colorNicksAct->setChecked(m_config.ui.coloredNicks);
-    connect(colorNicksAct, &QAction::toggled, this, [this](bool on){
+    connect(m_prefsDialog, &PreferencesDialog::coloredNicksToggled, this, [this](bool on){
         m_config.ui.coloredNicks = on;
         Config::save(m_config, Config::defaultPath());
-        // Refresh nick list so color change takes effect immediately
         if (!m_model->activeHost().isEmpty() && !m_model->activeChannel().isEmpty())
             refreshNickList(m_model->activeHost(), m_model->activeChannel());
     });
 
-    // Nick brackets picker
-    auto *bracketsMenu = menu->addMenu("Nick Brackets");
-    const QList<QPair<QString,QString>> bracketChoices = {
-        { "<>",   "<nick>  (angle)"       },
-        { "[]",   "[nick]  (square)"      },
-        { "::::", "::nick::  (colon)"     },
-        { "",     "nick  (none)"          },
-    };
-    auto *bracketList = new QListWidget;
-    bracketList->setFrameShape(QFrame::NoFrame);
-    bracketList->setFixedHeight(static_cast<int>(bracketChoices.size()) * 24 + 8);
-    bracketList->setMinimumWidth(170);
-    for (const auto &[key, label] : bracketChoices)
-        bracketList->addItem(label);
-    connect(bracketList, &QListWidget::itemClicked, this, [this, bracketsMenu, bracketList, bracketChoices](QListWidgetItem *item){
-        const int idx = bracketList->row(item);
-        if (idx < 0 || idx >= bracketChoices.size()) return;
-        m_config.ui.nickBrackets = bracketChoices[idx].first;
+    connect(m_prefsDialog, &PreferencesDialog::nickBracketsChanged, this, [this](const QString &br){
+        m_config.ui.nickBrackets = br;
         Config::save(m_config, Config::defaultPath());
-        bracketsMenu->close();
     });
-    connect(bracketsMenu, &QMenu::aboutToShow, this, [this, bracketList, bracketChoices]{
-        for (int i = 0; i < bracketChoices.size(); ++i) {
-            if (bracketChoices[i].first == m_config.ui.nickBrackets) {
-                bracketList->setCurrentRow(i);
-                break;
+
+    connect(m_prefsDialog, &PreferencesDialog::manageServersRequested, this, [this]{
+        ManageServersDialog dlg(m_config.servers, this);
+        if (dlg.exec() != QDialog::Accepted) return;
+        const QList<ServerConfig> updated = dlg.servers();
+        for (const ServerConfig &old : m_config.servers) {
+            const bool stillPresent = std::any_of(updated.begin(), updated.end(),
+                [&](const ServerConfig &s){ return s.host == old.host; });
+            if (!stillPresent)
+                m_model->removeServer(old.host);
+        }
+        for (const ServerConfig &sc : updated) {
+            const ServerConfig *existing = nullptr;
+            for (const ServerConfig &old : m_config.servers)
+                if (old.host == sc.host) { existing = &old; break; }
+            if (!existing) {
+                m_model->addServer(sc);
+            } else if (*existing != sc) {
+                m_model->updateServer(existing->host, sc);
             }
         }
+        m_config.servers = updated;
+        Config::save(m_config, Config::defaultPath());
     });
-    auto *bracketsAction = new QWidgetAction(bracketsMenu);
-    bracketsAction->setDefaultWidget(bracketList);
-    bracketsMenu->addAction(bracketsAction);
 
-    connect(m_hamburger, &QToolButton::clicked, this, [this, menu]{
-        QPoint pos = m_hamburger->mapToGlobal(QPoint(0, m_hamburger->height()));
-        menu->popup(pos);
+    connect(m_prefsDialog, &PreferencesDialog::aboutRequested, this, [this]{
+        AboutDialog dlg(this);
+        dlg.exec();
     });
-    m_hamburger->setObjectName("hamburger");
-    tb->hide();
+
+    connect(m_prefsDialog, &PreferencesDialog::docsRequested, this, [this]{
+        if (!m_docsDialog)
+            m_docsDialog = new DocsDialog(this);
+        m_docsDialog->show();
+        m_docsDialog->raise();
+        m_docsDialog->activateWindow();
+    });
 }
 
 void MainWindow::applyAppIcon(const QString &choice)
