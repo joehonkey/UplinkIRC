@@ -131,6 +131,11 @@ QToolBar {
     margin: 0px;
     padding: 0px;
 }
+QToolBar::handle {
+    width: 0px;
+    height: 0px;
+    image: none;
+}
 QStatusBar {
     background-color: {{sidebarBg}};
     color: {{srvText}};

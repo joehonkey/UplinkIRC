@@ -33,6 +33,8 @@
 #include <QInputDialog>
 #include <QSysInfo>
 #include <QTimer>
+#include <QSettings>
+#include <QDateTime>
 #include <QFile>
 #include <QTextStream>
 #include <QProcess>
@@ -87,6 +89,16 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
         m_tray = new TrayIcon(model, this);
 
     statusBar()->showMessage("UplinkIRC ready");
+
+    QSettings settings("LinuxDojo", "UplinkIRC");
+    restoreGeometry(settings.value("geometry").toByteArray());
+    restoreState(settings.value("windowState").toByteArray());
+
+    connect(qApp, &QApplication::aboutToQuit, this, [this]{
+        QSettings s("LinuxDojo", "UplinkIRC");
+        s.setValue("geometry", saveGeometry());
+        s.setValue("windowState", saveState());
+    });
 }
 
 MainWindow::~MainWindow() = default;
@@ -103,6 +115,7 @@ void MainWindow::setupToolbar()
     tb->setContentsMargins(0, 0, 0, 0);
     if (tb->layout())
         tb->layout()->setContentsMargins(0, 0, 0, 0);
+    tb->setContextMenuPolicy(Qt::NoContextMenu);
 
     m_hamburger = new QToolButton;
     m_hamburger->setText("☰");
@@ -264,7 +277,6 @@ void MainWindow::setupSidebar()
     m_sidebar->setRootIsDecorated(true);
     m_sidebar->setIndentation(12);
     m_sidebar->setMinimumWidth(140);
-    m_sidebar->setMaximumWidth(220);
 
     auto *dock = new QDockWidget("Servers", this);
     dock->setWidget(m_sidebar);
@@ -279,7 +291,6 @@ void MainWindow::setupNickDock()
 {
     m_nickList = new QListWidget;
     m_nickList->setMinimumWidth(120);
-    m_nickList->setMaximumWidth(180);
 
     m_nickDock = new QDockWidget("Users", this);
     m_nickDock->setWidget(m_nickList);
@@ -309,9 +320,8 @@ void MainWindow::setupChatArea()
     m_userInfoLabel = new QLabel;
     m_userInfoLabel->setObjectName("userInfoLabel");
     tHbox->addWidget(m_topicLabel);
-    tHbox->addWidget(m_modesLabel);
+    tHbox->addWidget(m_modesLabel, 1);
     tHbox->addWidget(m_userInfoLabel);
-    tHbox->addStretch(1);
     m_topicBar->setObjectName("topicBar");
     m_topicBar->setVisible(m_showTopic);
     vbox->addWidget(m_topicBar);
@@ -716,38 +726,6 @@ void MainWindow::onSidebarSelectionChanged()
 // /sysinfo helpers
 // ---------------------------------------------------------------------------
 
-static QString sysinfoOS()
-{
-#if defined(Q_OS_LINUX)
-    QFile f("/etc/os-release");
-    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        QTextStream in(&f);
-        while (!in.atEnd()) {
-            QString line = in.readLine();
-            if (line.startsWith("PRETTY_NAME=")) {
-                QString val = line.mid(12);
-                if (val.startsWith('"') && val.endsWith('"'))
-                    val = val.mid(1, val.length() - 2);
-                return val;
-            }
-        }
-    }
-    return "Linux";
-#elif defined(Q_OS_FREEBSD)
-    QProcess p;
-    p.start("uname", {"-s"});
-    p.waitForFinished(2000);
-    const QString name = QString::fromLocal8Bit(p.readAllStandardOutput()).trimmed();
-    QProcess r;
-    r.start("uname", {"-r"});
-    r.waitForFinished(2000);
-    const QString rel = QString::fromLocal8Bit(r.readAllStandardOutput()).trimmed();
-    return name + " " + rel;
-#else
-    return QSysInfo::prettyProductName();
-#endif
-}
-
 static QString sysinfoKernel()
 {
     QProcess p;
@@ -757,85 +735,186 @@ static QString sysinfoKernel()
     return out.isEmpty() ? "Unknown" : out;
 }
 
+static QString sysinfoOS()
+{
+#if defined(Q_OS_LINUX)
+    QString name, buildId, versionId;
+    QFile f("/etc/os-release");
+    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        QTextStream in(&f);
+        const auto strip = [](QString s) {
+            if (s.startsWith('"') && s.endsWith('"'))
+                s = s.mid(1, s.length() - 2);
+            return s;
+        };
+        while (!in.atEnd()) {
+            const QString line = in.readLine();
+            if (line.startsWith("NAME=") && name.isEmpty())
+                name = strip(line.mid(5));
+            else if (line.startsWith("BUILD_ID=") && buildId.isEmpty())
+                buildId = strip(line.mid(9));
+            else if (line.startsWith("VERSION_ID=") && versionId.isEmpty())
+                versionId = strip(line.mid(11));
+        }
+    }
+    if (name.isEmpty()) name = "Linux";
+    const QString ver = !buildId.isEmpty() ? buildId : versionId;
+    const QString distro = ver.isEmpty() ? name : name + " " + ver;
+    return QString("Linux (%1) (%2)").arg(distro, sysinfoKernel());
+#elif defined(Q_OS_FREEBSD)
+    QProcess p;
+    p.start("uname", {"-s"});
+    p.waitForFinished(2000);
+    return QString("%1 (%2)").arg(QString::fromLocal8Bit(p.readAllStandardOutput()).trimmed(),
+                                  sysinfoKernel());
+#else
+    return QSysInfo::prettyProductName();
+#endif
+}
+
 static QString sysinfoCPU()
 {
 #if defined(Q_OS_LINUX)
     QFile f("/proc/cpuinfo");
     if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&f);
-        QString model;
-        int threads = 0;
         while (!in.atEnd()) {
             const QString line = in.readLine();
-            if (line.startsWith("model name") && model.isEmpty()) {
+            if (line.startsWith("model name")) {
                 const int colon = line.indexOf(':');
                 if (colon != -1)
-                    model = line.mid(colon + 1).trimmed();
+                    return line.mid(colon + 1).trimmed();
             }
-            if (line.startsWith("processor"))
-                ++threads;
         }
-        if (!model.isEmpty())
-            return QString("%1 (%2 threads)").arg(model).arg(threads);
     }
     return QSysInfo::currentCpuArchitecture();
 #elif defined(Q_OS_FREEBSD) || defined(Q_OS_DARWIN)
-    QProcess pm;
-    pm.start("sysctl", {"-n", "hw.model"});
-    pm.waitForFinished(2000);
-    const QString model = QString::fromLocal8Bit(pm.readAllStandardOutput()).trimmed();
-    QProcess pc;
-    pc.start("sysctl", {"-n", "hw.ncpu"});
-    pc.waitForFinished(2000);
-    const QString ncpu = QString::fromLocal8Bit(pc.readAllStandardOutput()).trimmed();
-    if (!model.isEmpty() && !ncpu.isEmpty())
-        return QString("%1 (%2 threads)").arg(model, ncpu);
+    QProcess p;
+    p.start("sysctl", {"-n", "hw.model"});
+    p.waitForFinished(2000);
+    const QString model = QString::fromLocal8Bit(p.readAllStandardOutput()).trimmed();
     return model.isEmpty() ? "Unknown" : model;
 #else
     return QSysInfo::currentCpuArchitecture();
 #endif
 }
 
-static QString sysinfoRAM()
+static QString sysinfoMEM()
 {
 #if defined(Q_OS_LINUX)
     QFile f("/proc/meminfo");
     if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
         QTextStream in(&f);
-        quint64 total = 0, available = 0;
         while (!in.atEnd()) {
             const QStringList parts = in.readLine().split(' ', Qt::SkipEmptyParts);
-            if (parts.size() >= 2) {
-                if (parts[0] == "MemTotal:")     total     = parts[1].toULongLong();
-                if (parts[0] == "MemAvailable:") available = parts[1].toULongLong();
+            if (parts.size() >= 2 && parts[0] == "MemTotal:") {
+                const quint64 kb = parts[1].toULongLong();
+                return QString("%1 GB").arg((kb + 512 * 1024) / (1024 * 1024));
             }
-        }
-        if (total > 0) {
-            const quint64 used = total - available;
-            return QString("%1/%2GB")
-                .arg(double(used)  / 1024.0 / 1024.0, 0, 'f', 1)
-                .arg(double(total) / 1024.0 / 1024.0, 0, 'f', 0);
         }
     }
     return "Unknown";
 #elif defined(Q_OS_FREEBSD)
-    QProcess pp;
-    pp.start("sysctl", {"-n", "hw.physmem"});
-    pp.waitForFinished(2000);
-    const quint64 total = QString::fromLocal8Bit(pp.readAllStandardOutput()).trimmed().toULongLong();
-    QProcess pf;
-    pf.start("sysctl", {"-n", "vm.stats.vm.v_free_count"});
-    pf.waitForFinished(2000);
-    const quint64 freePages = QString::fromLocal8Bit(pf.readAllStandardOutput()).trimmed().toULongLong();
-    QProcess ps;
-    ps.start("sysctl", {"-n", "hw.pagesize"});
-    ps.waitForFinished(2000);
-    const quint64 pageSize = QString::fromLocal8Bit(ps.readAllStandardOutput()).trimmed().toULongLong();
-    if (total > 0 && pageSize > 0) {
-        const quint64 used = total - freePages * pageSize;
-        return QString("%1/%2GB")
-            .arg(double(used)  / 1024.0 / 1024.0 / 1024.0, 0, 'f', 1)
-            .arg(double(total) / 1024.0 / 1024.0 / 1024.0, 0, 'f', 0);
+    QProcess p;
+    p.start("sysctl", {"-n", "hw.physmem"});
+    p.waitForFinished(2000);
+    const quint64 total = QString::fromLocal8Bit(p.readAllStandardOutput()).trimmed().toULongLong();
+    if (total > 0)
+        return QString("%1 GB").arg((total + 512ULL*1024*1024) / (1024ULL*1024*1024));
+    return "Unknown";
+#else
+    return "Unknown";
+#endif
+}
+
+static QString sysinfoGPU()
+{
+#if defined(Q_OS_LINUX)
+    // Try vulkaninfo first — gives device name + renderer string
+    QProcess vk;
+    vk.start("vulkaninfo", {"--summary"});
+    if (vk.waitForFinished(3000) && vk.exitCode() == 0) {
+        const QString out = QString::fromLocal8Bit(vk.readAllStandardOutput());
+        QString deviceName, driverInfo;
+        for (const QString &line : out.split('\n')) {
+            const QString t = line.trimmed();
+            if (t.startsWith("deviceName") && deviceName.isEmpty())
+                deviceName = t.section('=', 1).trimmed();
+            else if (t.startsWith("driverInfo") && driverInfo.isEmpty())
+                driverInfo = t.section('=', 1).trimmed();
+        }
+        if (!deviceName.isEmpty()) {
+            // driverInfo e.g. "Mesa 24.3.4 (RADV STRIX1)" → extract last parens
+            const int lp = driverInfo.lastIndexOf('(');
+            const int rp = driverInfo.lastIndexOf(')');
+            if (lp != -1 && rp > lp)
+                return QString("%1 (%2) (Vulkan)").arg(deviceName, driverInfo.mid(lp + 1, rp - lp - 1));
+            return deviceName + " (Vulkan)";
+        }
+    }
+    // Fallback: lspci
+    QProcess lp;
+    lp.start("lspci", {});
+    if (lp.waitForFinished(2000)) {
+        const QString out = QString::fromLocal8Bit(lp.readAllStandardOutput());
+        for (const QString &line : out.split('\n')) {
+            if (line.contains("VGA", Qt::CaseInsensitive) ||
+                line.contains("3D controller", Qt::CaseInsensitive) ||
+                line.contains("Display controller", Qt::CaseInsensitive)) {
+                // "06:00.0 VGA compatible controller: AMD ... [Radeon 890M] (rev c8)"
+                const int c2 = line.indexOf(':', line.indexOf(':') + 1);
+                if (c2 != -1)
+                    return line.mid(c2 + 1).section('(', 0, 0).trimmed();
+            }
+        }
+    }
+    return "Unknown";
+#else
+    return "Unknown";
+#endif
+}
+
+static QString sysinfoUptime()
+{
+#if defined(Q_OS_LINUX)
+    QFile f("/proc/uptime");
+    if (f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        const quint64 s = static_cast<quint64>(
+            QString::fromLocal8Bit(f.readLine()).section(' ', 0, 0).toDouble());
+        const quint64 days    = s / 86400;
+        const quint64 hours   = (s % 86400) / 3600;
+        const quint64 minutes = (s % 3600) / 60;
+        const quint64 seconds = s % 60;
+        QStringList parts;
+        if (days > 0)    parts << QString("%1 day%2").arg(days).arg(days != 1 ? "s" : "");
+        if (hours > 0)   parts << QString("%1 hour%2").arg(hours).arg(hours != 1 ? "s" : "");
+        if (minutes > 0) parts << QString("%1 minute%2").arg(minutes).arg(minutes != 1 ? "s" : "");
+        parts << QString("%1 second%2").arg(seconds).arg(seconds != 1 ? "s" : "");
+        return parts.join(' ') + " ago";
+    }
+    return "Unknown";
+#elif defined(Q_OS_FREEBSD) || defined(Q_OS_DARWIN)
+    QProcess p;
+    p.start("sysctl", {"-n", "kern.boottime"});
+    p.waitForFinished(2000);
+    // Parse "{ sec = N, usec = N } date" — extract sec and compute elapsed
+    const QString out = QString::fromLocal8Bit(p.readAllStandardOutput());
+    const int eq = out.indexOf("sec = ");
+    const int cm = out.indexOf(',', eq);
+    if (eq != -1 && cm != -1) {
+        const quint64 bootSec = out.mid(eq + 6, cm - eq - 6).trimmed().toULongLong();
+        const quint64 now = QDateTime::currentSecsSinceEpoch();
+        const quint64 s   = now > bootSec ? now - bootSec : 0;
+        const quint64 days    = s / 86400;
+        const quint64 hours   = (s % 86400) / 3600;
+        const quint64 minutes = (s % 3600) / 60;
+        const quint64 seconds = s % 60;
+        QStringList parts;
+        if (days > 0)    parts << QString("%1 day%2").arg(days).arg(days != 1 ? "s" : "");
+        if (hours > 0)   parts << QString("%1 hour%2").arg(hours).arg(hours != 1 ? "s" : "");
+        if (minutes > 0) parts << QString("%1 minute%2").arg(minutes).arg(minutes != 1 ? "s" : "");
+        parts << QString("%1 second%2").arg(seconds).arg(seconds != 1 ? "s" : "");
+        return parts.join(' ') + " ago";
     }
     return "Unknown";
 #else
@@ -927,8 +1006,8 @@ void MainWindow::onInputSubmit()
                 m_model->sendRaw(host, "PRIVMSG " + target + " :" + ctcp);
             }
         } else if (cmd == "/sysinfo") {
-            const QString info = QString("OS: %1 | Kernel: %2 | CPU: %3 | RAM: %4")
-                .arg(sysinfoOS(), sysinfoKernel(), sysinfoCPU(), sysinfoRAM());
+            const QString info = QString("OS: %1 CPU: %2 MEM: %3 GPU: %4 UP: %5")
+                .arg(sysinfoOS(), sysinfoCPU(), sysinfoMEM(), sysinfoGPU(), sysinfoUptime());
             m_model->sendMessage(host, channel, info);
         } else if (cmd == "/help") {
             const QStringList lines = {
@@ -1014,9 +1093,10 @@ void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
         m_topicLabel->setText(host);
         m_modesLabel->clear();
     } else {
-        m_topicLabel->setText(channel);
         const QString modes = ch ? ch->modes : QString();
-        m_modesLabel->setText(modes.isEmpty() ? QString() : "(" + modes + ")");
+        const QString modeStr = modes.isEmpty() ? QString() : " (" + modes + ")";
+        m_topicLabel->setText(channel + modeStr);
+        m_modesLabel->setText(ch ? ch->topic : QString());
     }
 
     QString serverName = host;

@@ -398,6 +398,7 @@ void IrcClient::handleNumeric(const QString &cmd, const QStringList &params, con
             const QString channel = params[1];
             emit namesReceived(m_host, channel, m_namesBuffer.take(channel));
             emit namesDone(m_host, channel);
+            sendRaw("MODE " + channel);
         }
         break;
     }
