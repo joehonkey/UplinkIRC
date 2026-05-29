@@ -351,7 +351,7 @@ QLabel#topicText {
 /* ── Typing indicator ── */
 QLabel#typingLabel {
     color: {{placeholder}};
-    background: {{inputBg}};
+    background: transparent;
     padding: 1px 6px;
 }
 )";
