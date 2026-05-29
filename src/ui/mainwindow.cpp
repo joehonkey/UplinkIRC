@@ -846,7 +846,7 @@ void MainWindow::handleTabComplete()
                 "/away", "/back", "/ban", "/clear", "/ctcp",
                 "/deop", "/devoice", "/invite", "/j", "/join",
                 "/kick", "/me", "/mode", "/motd", "/msg",
-                "/nick", "/notice", "/op", "/part", "/ping",
+                "/nick", "/notice", "/op", "/part", "/ping", "/time",
                 "/quit", "/quote", "/raw", "/sysinfo", "/topic",
                 "/unban", "/version", "/voice", "/whois",
             };
@@ -1569,6 +1569,12 @@ void MainWindow::onInputSubmit()
                 m_model->sendRaw(host, "PRIVMSG " + nick + " :\x01PING " + ts + "\x01");
                 appendMessage(Message::make(MessageType::Server, "", "Pinged " + nick));
             }
+        } else if (cmd == "/time") {
+            const QString nick = args.trimmed().section(' ', 0, 0);
+            if (!nick.isEmpty()) {
+                m_model->sendRaw(host, "PRIVMSG " + nick + " :\x01TIME\x01");
+                appendMessage(Message::make(MessageType::Server, "", "Querying time for " + nick));
+            }
         } else if (cmd == "/invite") {
             const QString nick = args.section(' ', 0, 0);
             const QString chan = args.section(' ', 1, 1);
@@ -1624,6 +1630,7 @@ void MainWindow::onInputSubmit()
                 "  /ban <mask>                 — ban a mask (+b)",
                 "  /unban <mask>               — remove a ban (-b)",
                 "  /ping <nick>                — CTCP PING a user",
+                "  /time <nick>                — query a user's local time",
                 "  /away [message]             — set away status",
                 "  /back                       — clear away status",
                 "  /whois <nick>               — request WHOIS info",

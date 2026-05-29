@@ -95,6 +95,7 @@ private:
     void onServerMessage  (const QString &host, const QString &text);
     void onErrorMessage   (const QString &host, const QString &text);
     void onCtcpPingReply  (const QString &host, const QString &nick, qint64 rttMs);
+    void onCtcpTimeReply  (const QString &host, const QString &nick, const QString &timeStr);
     void onSelfNickChanged(const QString &host, const QString &nick);
 
     void postMessage(const QString &host, const QString &target, const Message &msg);
