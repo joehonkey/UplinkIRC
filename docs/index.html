@@ -403,6 +403,45 @@
       margin-bottom: 1rem;
     }
 
+    /* ── DOWNLOAD ────────────────────────────────────── */
+    #download { background: var(--surface); }
+
+    .download-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .download-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--bg);
+      border: 1px solid var(--subtle);
+      border-radius: 12px;
+      padding: 1.5rem 1.25rem;
+      text-align: center;
+      transition: border-color 0.2s;
+      text-decoration: none;
+    }
+
+    .download-card:hover { border-color: var(--green); text-decoration: none; }
+    .download-card .dl-icon { font-size: 2rem; }
+    .download-card strong { font-size: 1rem; color: var(--text); }
+    .download-card span { font-size: 0.8rem; color: var(--subtext); }
+    .download-card .dl-btn {
+      margin-top: 0.5rem;
+      background: var(--overlay);
+      border: 1px solid var(--subtle);
+      border-radius: 6px;
+      padding: 0.3rem 0.9rem;
+      font-size: 0.82rem;
+      color: var(--green);
+      font-weight: 600;
+    }
+
     /* ── RESPONSIVE ──────────────────────────────────── */
     @media (max-width: 600px) {
       nav ul { gap: 1rem; }
@@ -415,8 +454,9 @@
 
 <!-- NAV -->
 <nav>
-  <div class="nav-brand">UplinkIRC <span>v0.2.0</span></div>
+  <div class="nav-brand">UplinkIRC <span>v0.7.2</span></div>
   <ul>
+    <li><a href="#download">Download</a></li>
     <li><a href="#features">Features</a></li>
     <li><a href="#platforms-detail">Platforms</a></li>
     <li><a href="#ircv3">IRCv3</a></li>
@@ -433,8 +473,41 @@
   </div>
   <p>UplinkIRC is a fast, secure, IRCv3-featured IRC client built to run for days. Native Qt6, small footprint, no Electron.</p>
   <div class="hero-buttons">
-    <a class="btn btn-primary" href="https://github.com/joehonkey/UplinkIRC">View on GitHub</a>
+    <a class="btn btn-primary" href="#download">Download v0.7.2</a>
+    <a class="btn btn-secondary" href="https://github.com/joehonkey/UplinkIRC">GitHub</a>
     <a class="btn btn-secondary" href="#docs">Documentation</a>
+  </div>
+</section>
+
+<!-- DOWNLOAD -->
+<section id="download">
+  <div class="container" style="text-align:center">
+    <div class="section-label">Download</div>
+    <h2 class="section-title">v0.7.2 — Latest release</h2>
+    <p class="section-sub" style="margin: 0 auto 2rem">Pre-built binaries for all platforms. No installer required — extract and run.</p>
+    <div class="download-grid">
+      <a class="download-card" href="https://github.com/joehonkey/UplinkIRC/releases/download/v0.7.2/UplinkIRC-v0.7.2-linux-x86_64.tar.gz">
+        <span class="dl-icon">🐧</span>
+        <strong>Linux</strong>
+        <span>x86_64 · tar.gz</span>
+        <span class="dl-btn">Download</span>
+      </a>
+      <a class="download-card" href="https://github.com/joehonkey/UplinkIRC/releases/download/v0.7.2/UplinkIRC-v0.7.2-windows-x64.zip">
+        <span class="dl-icon">🪟</span>
+        <strong>Windows</strong>
+        <span>x64 · .zip</span>
+        <span class="dl-btn">Download</span>
+      </a>
+      <a class="download-card" href="https://github.com/joehonkey/UplinkIRC/releases/download/v0.7.2/UplinkIRC-v0.7.2-macos-arm64.dmg">
+        <span class="dl-icon">🍎</span>
+        <strong>macOS</strong>
+        <span>ARM64 · .dmg</span>
+        <span class="dl-btn">Download</span>
+      </a>
+    </div>
+    <p style="font-size:0.85rem; color:var(--subtext)">
+      <a href="https://github.com/joehonkey/UplinkIRC/releases">All releases and source archives →</a>
+    </p>
   </div>
 </section>
 
@@ -716,7 +789,7 @@
       <a href="https://github.com/joehonkey/UplinkIRC/blob/main/CHANGELOG.md">Changelog</a>
       <a href="https://github.com/joehonkey/UplinkIRC/blob/main/SECURITY.md">Security</a>
     </div>
-    <div class="version-tag">v0.2.0</div>
+    <div class="version-tag">v0.7.2</div>
     <p>UplinkIRC &mdash; irc.linuxdojo.org &middot; #uplink</p>
   </div>
 </footer>
