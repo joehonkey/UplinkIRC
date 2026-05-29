@@ -12,6 +12,14 @@ int main(int argc, char *argv[])
     app.setApplicationVersion("0.1.0");
     app.setOrganizationName("LinuxDojo");
 
+#if defined(Q_OS_WIN)
+    // Use native Windows rendering as the base style.
+    // Custom themes layer QSS on top; the default theme leaves it pure native.
+    if (!QApplication::setStyle("windows11"))
+        if (!QApplication::setStyle("windowsvista"))
+            QApplication::setStyle("windows");
+#endif
+
     const QString cfgPath = Config::defaultPath();
     Config cfg = Config::load(cfgPath);
 

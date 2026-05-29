@@ -381,6 +381,15 @@ QLabel#typingLabel {
 
 void ThemeLoader::apply(const QString &name)
 {
+#if defined(Q_OS_WIN)
+    // On Windows, let the native style handle the default look.
+    // Only apply QSS when the user explicitly picks a custom theme.
+    if (name.isEmpty() || name == "default") {
+        qApp->setStyleSheet({});
+        return;
+    }
+#endif
+
     const Theme t = load(name);
     if (!t.valid) {
         qWarning() << "ThemeLoader: could not load theme" << name;
