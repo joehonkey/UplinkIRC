@@ -3,6 +3,19 @@
 ---
 
 <!--
+Session summary — 2026-05-28 .gitignore cleanup:
+
+What was fixed:
+  - CLAUDE.md and .claude/ were listed in the public .gitignore, revealing
+    internal tooling to anyone who reads the repo. Moved both entries to
+    .git/info/exclude (local-only, never pushed). Public .gitignore now
+    contains only standard build artifacts and common ignores.
+
+Known issues left open: same as previous session.
+Next priorities: reconnect with backoff, URL click in chat, server error routing.
+-->
+
+<!--
 Session summary — 2026-05-28 hamburger menu + server management:
 
 What was built:
@@ -565,6 +578,7 @@ Known issues left open:
 - All server changes persisted to `config.toml` on OK
 - Fix: explicit `QMenu::item` padding in theme stylesheet stabilizes menu height across theme switches
 - Known: menu still briefly shrinks on theme switch (investigation ongoing)
+- Fix: `CLAUDE.md` and `.claude/` removed from public `.gitignore`; moved to `.git/info/exclude`
 
 ---
 
