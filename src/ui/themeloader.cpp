@@ -274,12 +274,12 @@ QDockWidget::title {
 /* ── Scroll bars ── */
 QScrollBar:vertical {
     background: {{bg}};
-    width: 8px;
+    width: 4px;
     border: none;
 }
 QScrollBar::handle:vertical {
     background: {{border}};
-    border-radius: 4px;
+    border-radius: 2px;
     min-height: 20px;
 }
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0; }
