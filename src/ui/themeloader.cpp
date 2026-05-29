@@ -140,7 +140,29 @@ QStatusBar {
     background-color: {{sidebarBg}};
     color: {{srvText}};
     border: none;
+    font-size: 7pt;
 }
+/* ── Dock title bars ── */
+QWidget#dockTitleBar {
+    background-color: {{sidebarBg}};
+    max-height: 16px;
+}
+QToolButton#dockFloatBtn {
+    background: transparent;
+    color: {{placeholder}};
+    border: none;
+    font-size: 9pt;
+    padding: 0px;
+}
+QToolButton#dockFloatBtn:hover { color: {{text}}; }
+QWidget#nickContainer { background-color: {{nicklistBg}}; }
+QToolButton#hamburger {
+    background-color: {{nicklistBg}};
+    color: {{text}};
+    border: none;
+    padding: 0px 6px;
+}
+QToolButton#hamburger:hover { color: {{accent}}; }
 QSizeGrip {
     width: 0px;
     height: 0px;

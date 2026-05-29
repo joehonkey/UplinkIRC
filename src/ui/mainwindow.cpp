@@ -237,7 +237,8 @@ void MainWindow::setupToolbar()
     });
 
     m_hamburger->setMenu(menu);
-    tb->addWidget(m_hamburger);
+    m_hamburger->setObjectName("hamburger");
+    tb->hide();
 }
 
 void MainWindow::applyFontSizes()
@@ -255,6 +256,7 @@ void MainWindow::applyFontSizes()
         QFont f = makeFont(fs.toolbar * 2);
         f.setBold(false);
         m_hamburger->setFont(f);
+        m_hamburger->setFixedHeight(m_input ? m_input->sizeHint().height() : 28);
     }
     if (m_appLabel) {
         QFont f = makeFont(fs.toolbar);
@@ -312,6 +314,17 @@ void MainWindow::setupSidebar()
     m_sidebarDock->setWidget(m_sidebar);
     m_sidebarDock->setWindowTitle("");
     m_sidebarDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    {
+        auto *bar = new QWidget; bar->setObjectName("dockTitleBar");
+        auto *hbox = new QHBoxLayout(bar);
+        hbox->setContentsMargins(2, 1, 2, 1); hbox->setSpacing(0);
+        hbox->addStretch(1);
+        auto *btn = new QToolButton; btn->setObjectName("dockFloatBtn");
+        btn->setText("⧉"); btn->setFixedSize(14, 14); btn->setAutoRaise(true);
+        connect(btn, &QToolButton::clicked, m_sidebarDock, [this]{ m_sidebarDock->setFloating(!m_sidebarDock->isFloating()); });
+        hbox->addWidget(btn);
+        m_sidebarDock->setTitleBarWidget(bar);
+    }
     addDockWidget(Qt::LeftDockWidgetArea, m_sidebarDock);
     connect(m_sidebarDock, &QDockWidget::visibilityChanged, this, [this](bool visible){
         if (!visible && m_sidebarDock->isFloating()) {
@@ -334,10 +347,28 @@ void MainWindow::setupNickDock()
     connect(m_nickList, &QListWidget::customContextMenuRequested,
             this, &MainWindow::onNickListContextMenu);
 
+    auto *nickContainer = new QWidget;
+    nickContainer->setObjectName("nickContainer");
+    auto *nickVbox = new QVBoxLayout(nickContainer);
+    nickVbox->setContentsMargins(0, 0, 0, 0); nickVbox->setSpacing(0);
+    nickVbox->addWidget(m_nickList);
+    nickVbox->addWidget(m_hamburger, 0, Qt::AlignRight);
+
     m_nickDock = new QDockWidget(this);
-    m_nickDock->setWidget(m_nickList);
+    m_nickDock->setWidget(nickContainer);
     m_nickDock->setWindowTitle("");
     m_nickDock->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable);
+    {
+        auto *bar = new QWidget; bar->setObjectName("dockTitleBar");
+        auto *hbox = new QHBoxLayout(bar);
+        hbox->setContentsMargins(2, 1, 2, 1); hbox->setSpacing(0);
+        hbox->addStretch(1);
+        auto *btn = new QToolButton; btn->setObjectName("dockFloatBtn");
+        btn->setText("⧉"); btn->setFixedSize(14, 14); btn->setAutoRaise(true);
+        connect(btn, &QToolButton::clicked, m_nickDock, [this]{ m_nickDock->setFloating(!m_nickDock->isFloating()); });
+        hbox->addWidget(btn);
+        m_nickDock->setTitleBarWidget(bar);
+    }
     connect(m_nickDock, &QDockWidget::visibilityChanged, this, [this](bool visible){
         if (!visible && m_nickDock->isFloating()) {
             m_nickDock->setFloating(false);
