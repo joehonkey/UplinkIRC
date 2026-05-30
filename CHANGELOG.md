@@ -545,6 +545,54 @@ Next priorities:
   - DCC Send File
 -->
 
+<!--
+Session summary — 2026-05-30 (v0.9.0)
+
+What was built / fixed:
+  - Link preview entity decoding: QTextDocument-based decodeEntities() applied
+    to all three extractTitle() paths (og:title both attribute orderings and
+    <title> fallback). Pages with &amp;, &#39;, &lt; etc. now show decoded titles.
+  - DCC Send File: full implementation — DccSend (src/irc/dccsend.{h,cpp}) opens
+    a TCP listener and streams file data with 4-byte big-endian ACK protocol;
+    DccReceive (src/irc/dccreceive.{h,cpp}) connects to sender, writes file,
+    sends cumulative ACKs. IrcClient parses incoming DCC SEND CTCP and emits
+    dccSendReceived. SessionModel re-emits to MainWindow. Right-click nick menu
+    "Send File" action wired up; incoming offers show accept/reject dialog with
+    filename and size; both sides get a live QProgressDialog with cancel.
+    60-second send timeout (no connection), 30-second receive timeout.
+  - SASL EXTERNAL: sasl_external, client_cert, client_key added to ServerConfig,
+    config.{h,cpp}, and IrcClient. IrcClient loads PEM cert+key onto QSslSocket
+    before TLS handshake; negotiates AUTHENTICATE EXTERNAL + empty + response.
+    RSA and EC keys both tried. ServerDialog gains checkbox + browse buttons.
+  - AppImage packaging: packaging/build-appimage.sh — downloads linuxdeploy +
+    Qt plugin on first run; DESTDIR install into AppDir; UPDATE_INFORMATION env
+    var embeds zsync metadata for in-place updates via appimageupdatetool.
+    themeloader.cpp gains ../share/uplinkirc/themes candidate for AppImage layout.
+    CMakeLists.txt installs desktop file + SVG icon. release.yml Linux job builds
+    AppImage after tar.gz; both .AppImage and .AppImage.zsync uploaded to release.
+  - Docs: full SASL EXTERNAL walkthrough (cert generation, fingerprint registration,
+    config); DCC Send section in commands.md; AppImage install + update in faq.md;
+    ircv3.md SASL section expanded; README feature table + download badges updated.
+  - Released v0.9.0, pushed tag v0.9.0 to trigger CI.
+
+Known issues remaining:
+  - DCC over internet — local socket IP advertised; NAT/firewall on sender blocks
+    direct connections. Works on LAN; WAN requires NAT traversal (future).
+  - No in-app update check UI — zsync metadata is embedded and appimageupdatetool
+    works externally, but there is no "Check for Updates" button inside the app.
+  - Message search not yet implemented
+  - Per-channel logging not yet implemented
+  - Split view not yet implemented
+  - Password field encryption (plaintext passwords in config.toml)
+  - SOCKS5 proxy not yet supported
+
+Next priorities:
+  - Message search (Ctrl+F in channel buffer)
+  - Per-channel log files
+  - DCC NAT traversal or passive DCC
+  - In-app update check button (trigger appimageupdatetool or show version badge)
+-->
+
 ## [0.9.0] — 2026-05-30
 
 ### Added

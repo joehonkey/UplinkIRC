@@ -103,17 +103,11 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ---
 
-## In Progress
-
-- [ ] Link preview for title-only pages — pages without og:title (plain `<title>` only) may not preview; needs verification and potential fix
-
----
-
 ## Planned — Near Term
 
 - [x] /help command — lists available commands in chat view
 - [x] SASL authentication — PLAIN mechanism (CAP negotiation, AUTHENTICATE, 903/904/906)
-- [ ] SASL EXTERNAL — certificate-based auth (not yet implemented)
+- [x] SASL EXTERNAL — certificate-based auth; sasl_external + client_cert + client_key config keys; RSA and EC PEM keys; Server dialog browse buttons
 - [x] NickServ IDENTIFY auto — `nickserv_password` in config; sent to NickServ on RPL_WELCOME
 - [x] Server error routing — 482 and other server errors shown in active channel buffer, not just (server)
 - [x] Multiple servers — Manage Servers dialog: add, edit, remove with live connect/disconnect
@@ -130,7 +124,9 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [ ] Logging — per-channel log files at `~/.config/LinuxDojo/UplinkIRC/logs/`
 - [x] URL detection + click to open — http/https links in chat open in browser (v0.3.0)
 - [x] Link preview persistence — cards survive channel switches (stored in Channel struct)
-- [ ] DCC file transfer — send/receive files
+- [x] Link preview entity decoding — QTextDocument decodes &amp; &#39; &lt; etc. in og:title and &lt;title&gt; fallback paths
+- [x] DCC Send File — right-click nick → Send File; DccSend TCP listener + ACK protocol; DccReceive connect + ACK send; progress dialogs; 60s/30s timeouts. NAT limitation: local IP advertised; works on LAN, blocked by NAT on WAN.
+- [ ] DCC passive / NAT traversal — sender behind NAT cannot receive inbound connection; passive DCC or relay needed
 - [ ] Split view — view two channels side by side
 
 ---
@@ -153,23 +149,20 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Sidebar gear toggle — ⚙ button in the topic bar collapses the server/channel list; hamburger and gear stay pinned in the topic bar at all times (kBtnZoneMinW=48px floor); only the list collapses beneath them
 - [x] Native Windows style — windows11 Qt style by default; no alien dark theme on fresh installs
 - [ ] FreeBSD port skeleton
-- [ ] AppImage packaging for Linux
-- [ ] Auto-update check
+- [x] AppImage packaging for Linux — build-appimage.sh; linuxdeploy + Qt plugin; zsync metadata embedded; release.yml uploads .AppImage + .AppImage.zsync
+- [ ] In-app update check UI — zsync metadata is embedded; appimageupdatetool works externally; no "Check for Updates" button inside the app yet
 
 ---
 
 ## Security Backlog
 
-- [ ] Config file permissions — enforce 0600 on config.toml
+- [x] Config file permissions — 0600 enforced via QSaveFile (done v0.8.0)
 - [ ] Password field encryption — don't store plaintext passwords
 - [ ] Self-signed cert option — per-server accept/reject UI
 - [ ] SOCKS5 proxy support
 
 ---
 
-## Known Issues — UI
-
 ## Known Issues
 
-- Link preview for title-only pages (no og:title) — may not preview; needs verification
-- DCC Send File in nick menu is disabled — not yet implemented
+- DCC over internet — local socket IP advertised in DCC SEND offer; NAT/firewall on sender side blocks inbound connection. Works on LAN only. Fix requires passive DCC or relay.
