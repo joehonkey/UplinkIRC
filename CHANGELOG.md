@@ -3,6 +3,56 @@
 ---
 
 <!--
+Session summary — 2026-05-30 (hanging indent + How-To sync)
+
+What was built / fixed:
+  - Hanging indent: wrapped message lines now align past the timestamp+nick column
+    instead of wrapping back to column 0. Uses QTextBlockFormat (setLeftMargin +
+    setTextIndent) on the paragraph block — NOT HTML tables, which caused messages
+    to render in the centre of the chat view. Table approach was attempted and
+    reverted; QTextCursor + QTextBlockFormat is the correct Qt approach.
+    Applies to Privmsg, Action, Notice, and link preview cards via a shared
+    insertHtmlBlock() static helper. Toggleable: Preferences → Hanging Indent
+    (wrap under message), config key hanging_indent (default true).
+  - insertHtmlBlock() helper added to mainwindow.cpp — replaces all m_chatView->append()
+    calls for messages and cards. characterCount() > 1 guards against double blank
+    line on first message after clear().
+  - How-To guide (docs/howto.html) brought in sync with v0.9.0:
+      - AppImage: download table row added, new section with run + zsync update steps
+      - SASL EXTERNAL: full section (cert generation, NickServ fingerprint, config, GUI)
+      - DCC file transfer: send/receive steps, timeout table, LAN-only warning
+      - Hanging indent: new Tweaks section
+      - Fixed stale troubleshooting note: "preview cards don't survive channel switch"
+        → now correctly says fixed in v0.8.1
+  - configuration.md: hanging_indent added to default template and options table
+  - Close-session memory updated: howto.html explicitly listed as required surface
+
+Known issues remaining:
+  - DCC over internet (NAT/firewall blocks direct TCP connection)
+  - No in-app update check UI
+  - Message search not implemented
+  - Per-channel logging not implemented
+  - Split view not implemented
+  - Plaintext passwords in config.toml
+
+Next priorities:
+  - Message search (Ctrl+F in channel buffer)
+  - Per-channel log files
+  - DCC NAT traversal / passive DCC
+  - In-app update check button
+-->
+
+## v0.9.1 — 2026-05-30
+
+### Added
+- **Hanging indent** — wrapped message lines now align past the timestamp+nick column. When a long message wraps, continuation lines start under the message text, not at the left edge under the timestamp. Toggle at **☰ → Preferences → Hanging Indent (wrap under message)** or in config: `hanging_indent = true` (default on). Applies to messages, actions, notices, and link preview cards.
+
+### Fixed
+- **How-To guide sync** — `docs/howto.html` brought up to date with v0.9.0 features: AppImage download + zsync update, SASL EXTERNAL walkthrough, DCC file transfer section, hanging indent Tweaks entry. Stale troubleshooting note claiming link preview cards don't survive channel switches corrected (fixed in v0.8.1).
+
+---
+
+<!--
 Session summary — 2026-05-30 (CHANGELOG structure fix)
 
 What was built / fixed:

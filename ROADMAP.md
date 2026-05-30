@@ -120,6 +120,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 ## Planned — Medium Term
 
+- [x] Hanging indent — wrapped message lines align past the timestamp+nick column; toggleable from Preferences and `hanging_indent` config key; uses QTextBlockFormat for correct Qt rendering
 - [ ] Message search — search within current channel buffer
 - [ ] Logging — per-channel log files at `~/.config/LinuxDojo/UplinkIRC/logs/`
 - [x] URL detection + click to open — http/https links in chat open in browser (v0.3.0)
