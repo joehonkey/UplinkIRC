@@ -10,7 +10,6 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     app.setApplicationName("UplinkIRC");
     app.setApplicationVersion("0.7.10");
-    app.setOrganizationName("LinuxDojo");
 
 #if defined(Q_OS_WIN)
     // Use native Windows rendering as the base style.

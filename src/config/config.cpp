@@ -53,8 +53,8 @@ channels = "#uplink"
 
 QString Config::defaultPath()
 {
-    return QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation)
-           + "/config.toml";
+    return QStandardPaths::writableLocation(QStandardPaths::HomeLocation)
+           + "/.config/uplinkirc/config.toml";
 }
 
 void Config::ensureExists(const QString &path)
