@@ -173,13 +173,7 @@ QToolButton#sidebarToggleBtn:hover { color: {{accent}}; }
 QWidget#sidebarPanel {
     background-color: {{sidebarBg}};
 }
-QWidget#sidebarHeader {
-    background-color: {{inputBg}};
-    border-bottom: 1px solid {{border}};
-}
-QWidget#topicBarGroup {
-    background: transparent;
-}
+
 QSizeGrip {
     width: 0px;
     height: 0px;
@@ -362,6 +356,12 @@ QDialogButtonBox QPushButton {
 QWidget#topicBar {
     background-color: {{inputBg}};
     border-bottom: 1px solid {{border}};
+}
+QWidget#topicLeftZone {
+    background-color: {{inputBg}};
+}
+QWidget#topicRightZone {
+    background-color: {{inputBg}};
 }
 QLabel#channelLabel {
     color: {{accent}};

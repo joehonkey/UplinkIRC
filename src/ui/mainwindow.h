@@ -119,6 +119,7 @@ private:
     QPushButton  *m_emojiBtn;
     QWidget      *m_sidebarPanel{nullptr};
     QWidget      *m_sidebarHeader{nullptr};
+    QWidget      *m_topicLeft{nullptr};
     QToolButton  *m_sidebarToggleBtn{nullptr};
     bool          m_sidebarExpanded{true};
     int           m_sidebarExpandedWidth{180};

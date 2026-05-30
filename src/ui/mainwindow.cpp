@@ -120,19 +120,17 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
         m_sidebarExpandedWidth = settings.value("sidebarWidth").toInt();
 
     QTimer::singleShot(0, this, [this]{
-        if (m_sidebarHeader && m_topicBar)
-            m_sidebarHeader->setFixedHeight(m_topicBar->sizeHint().height());
         const int total = m_mainSplitter->width();
         if (total > 0)
             m_mainSplitter->setSizes({m_sidebarExpandedWidth, total - m_sidebarExpandedWidth});
+        if (m_topicLeft) m_topicLeft->setFixedWidth(m_sidebarExpandedWidth);
     });
 
     connect(m_mainSplitter, &QSplitter::splitterMoved, this, [this](int, int){
-        if (m_sidebarExpanded) {
-            const int w = m_mainSplitter->sizes().value(0);
-            if (w > 0)
-                m_sidebarExpandedWidth = w;
-        }
+        const int w = m_mainSplitter->sizes().value(0);
+        if (m_sidebarExpanded && w > 0)
+            m_sidebarExpandedWidth = w;
+        if (m_topicLeft) m_topicLeft->setFixedWidth(w);
     });
 
     connect(qApp, &QApplication::aboutToQuit, this, [this]{
@@ -472,10 +470,13 @@ void MainWindow::setupSidebar()
         m_sidebar->setVisible(m_sidebarExpanded);
         const QList<int> sizes = m_mainSplitter->sizes();
         const int total = sizes[0] + sizes[1];
-        if (m_sidebarExpanded)
+        if (m_sidebarExpanded) {
             m_mainSplitter->setSizes({m_sidebarExpandedWidth, total - m_sidebarExpandedWidth});
-        else
+            if (m_topicLeft) m_topicLeft->setFixedWidth(m_sidebarExpandedWidth);
+        } else {
             m_mainSplitter->setSizes({0, total});
+            if (m_topicLeft) m_topicLeft->setFixedWidth(0);
+        }
     });
 
     m_sidebarPanel = new QWidget;
@@ -484,10 +485,6 @@ void MainWindow::setupSidebar()
     vbox->setContentsMargins(0, 0, 0, 0);
     vbox->setSpacing(0);
 
-    m_sidebarHeader = new QWidget;
-    m_sidebarHeader->setObjectName("sidebarHeader");
-    m_sidebarHeader->setFixedHeight(30);
-    vbox->addWidget(m_sidebarHeader);
     vbox->addWidget(m_sidebar, 1);
 }
 
@@ -553,44 +550,52 @@ void MainWindow::setupNickPanel()
 
 void MainWindow::setupChatArea()
 {
+    // Single full-width bar spanning above sidebar AND chat, with border below
+    m_topicBar = new QWidget;
+    m_topicBar->setObjectName("topicBar");
+    auto *tHbox = new QHBoxLayout(m_topicBar);
+    tHbox->setContentsMargins(0, 0, 0, 0);
+    tHbox->setSpacing(0);
+
+    // Left zone — mirrors sidebar width: hamburger left, gear right
+    m_topicLeft = new QWidget;
+    m_topicLeft->setObjectName("topicLeftZone");
+    m_topicLeft->setFixedWidth(m_sidebarExpandedWidth);
+    auto *tlHbox = new QHBoxLayout(m_topicLeft);
+    tlHbox->setContentsMargins(0, 4, 4, 4);
+    tlHbox->setSpacing(0);
+    tlHbox->addWidget(m_hamburger);
+    tlHbox->addStretch(1);
+    tlHbox->addWidget(m_sidebarToggleBtn);
+
+    // Right zone — mirrors chat area: signal bars + channel info
+    auto *topicRight = new QWidget;
+    topicRight->setObjectName("topicRightZone");
+    auto *trHbox = new QHBoxLayout(topicRight);
+    trHbox->setContentsMargins(8, 4, 8, 4);
+    trHbox->setSpacing(6);
+
+    m_topicLabel = new QLabel;
+    m_topicLabel->setObjectName("channelLabel");
+    m_modesLabel = new QLabel;
+    m_modesLabel->setObjectName("modesLabel");
+    m_userInfoLabel = new QLabel;
+    m_userInfoLabel->setObjectName("userInfoLabel");
+    m_signalBars = new SignalBars(topicRight);
+
+    trHbox->addWidget(m_signalBars);
+    trHbox->addWidget(m_topicLabel);
+    trHbox->addWidget(m_userInfoLabel);
+    trHbox->addWidget(m_modesLabel, 1);
+
+    tHbox->addWidget(m_topicLeft);
+    tHbox->addWidget(topicRight, 1);
+
+    // Right content — topic display + chat + input (no info bar here)
     m_rightContent = new QWidget;
     auto *vbox     = new QVBoxLayout(m_rightContent);
     vbox->setContentsMargins(0, 0, 0, 0);
     vbox->setSpacing(0);
-
-    // Info bar — always visible: #channel (modes)  *  NetworkName — N users
-    m_topicBar  = new QWidget;
-    auto *tHbox = new QHBoxLayout(m_topicBar);
-    tHbox->setContentsMargins(8, 4, 8, 4);
-    tHbox->setSpacing(6);
-
-    m_topicLabel = new QLabel;
-    m_topicLabel->setObjectName("channelLabel");
-
-    m_modesLabel = new QLabel;
-    m_modesLabel->setObjectName("modesLabel");
-
-    m_userInfoLabel = new QLabel;
-    m_userInfoLabel->setObjectName("userInfoLabel");
-    m_signalBars = new SignalBars(m_topicBar);
-
-    auto *barGroup  = new QWidget(m_topicBar);
-    barGroup->setObjectName("topicBarGroup");
-    auto *barHbox   = new QHBoxLayout(barGroup);
-    barHbox->setContentsMargins(0, 0, 0, 0);
-    barHbox->setSpacing(0);
-    barHbox->addWidget(m_sidebarToggleBtn);
-    barHbox->addSpacing(1);
-    barHbox->addWidget(m_hamburger);
-    barHbox->addSpacing(6);
-    barHbox->addWidget(m_signalBars);
-
-    tHbox->addWidget(barGroup);
-    tHbox->addWidget(m_topicLabel);
-    tHbox->addWidget(m_userInfoLabel);
-    tHbox->addWidget(m_modesLabel, 1);
-    m_topicBar->setObjectName("topicBar");
-    vbox->addWidget(m_topicBar);
 
     // Topic display — shown below info bar only when Show Topic is on
     m_topicDisplay = new QWidget;
@@ -707,7 +712,14 @@ void MainWindow::setupChatArea()
     m_mainSplitter->setStretchFactor(0, 0);
     m_mainSplitter->setStretchFactor(1, 1);
 
-    setCentralWidget(m_mainSplitter);
+    auto *outer      = new QWidget;
+    auto *outerVbox  = new QVBoxLayout(outer);
+    outerVbox->setContentsMargins(0, 0, 0, 0);
+    outerVbox->setSpacing(0);
+    outerVbox->addWidget(m_topicBar);
+    outerVbox->addWidget(m_mainSplitter, 1);
+
+    setCentralWidget(outer);
 }
 
 void MainWindow::setupInputBar()
