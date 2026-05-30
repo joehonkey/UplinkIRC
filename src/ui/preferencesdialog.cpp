@@ -69,11 +69,11 @@ PreferencesDialog::PreferencesDialog(const Config &cfg, QWidget *parent)
             m_themeList->scrollToItem(matches.first());
         }
     }
-    connect(m_themeList, &QListWidget::currentItemChanged, this,
-            [this](QListWidgetItem *current, QListWidgetItem *){
-        if (current)
-            emit themeChanged(current->text());
-    });
+    auto applyTheme = [this](QListWidgetItem *item){
+        if (item) emit themeChanged(item->text());
+    };
+    connect(m_themeList, &QListWidget::itemClicked,    this, applyTheme);
+    connect(m_themeList, &QListWidget::itemActivated,  this, applyTheme);
     vbox->addWidget(m_themeList);
 
     vbox->addSpacing(4);
