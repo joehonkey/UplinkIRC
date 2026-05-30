@@ -157,7 +157,7 @@ QToolButton#dockFloatBtn {
 QToolButton#dockFloatBtn:hover { color: {{text}}; }
 QWidget#nickContainer { background-color: {{nicklistBg}}; }
 QToolButton#hamburger {
-    background-color: {{nicklistBg}};
+    background-color: {{inputBg}};
     color: {{text}};
     border: none;
     padding: 0px 6px;
@@ -172,6 +172,13 @@ QToolButton#sidebarToggleBtn {
 QToolButton#sidebarToggleBtn:hover { color: {{accent}}; }
 QWidget#sidebarPanel {
     background-color: {{sidebarBg}};
+}
+QWidget#sidebarHeader {
+    background-color: {{inputBg}};
+    border-bottom: 1px solid {{border}};
+}
+QWidget#topicBarGroup {
+    background: transparent;
 }
 QSizeGrip {
     width: 0px;

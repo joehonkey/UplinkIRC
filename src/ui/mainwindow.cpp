@@ -120,6 +120,8 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
         m_sidebarExpandedWidth = settings.value("sidebarWidth").toInt();
 
     QTimer::singleShot(0, this, [this]{
+        if (m_sidebarHeader && m_topicBar)
+            m_sidebarHeader->setFixedHeight(m_topicBar->sizeHint().height());
         const int total = m_mainSplitter->width();
         if (total > 0)
             m_mainSplitter->setSizes({m_sidebarExpandedWidth, total - m_sidebarExpandedWidth});
@@ -161,6 +163,7 @@ void MainWindow::setupToolbar()
 
     m_hamburger = new QToolButton;
     m_hamburger->setText("☰");
+    m_hamburger->setFixedHeight(22);
     m_hamburger->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(m_hamburger, &QWidget::customContextMenuRequested, this, [](const QPoint&){});
     m_hamburger->setObjectName("hamburger");
@@ -480,6 +483,11 @@ void MainWindow::setupSidebar()
     auto *vbox = new QVBoxLayout(m_sidebarPanel);
     vbox->setContentsMargins(0, 0, 0, 0);
     vbox->setSpacing(0);
+
+    m_sidebarHeader = new QWidget;
+    m_sidebarHeader->setObjectName("sidebarHeader");
+    m_sidebarHeader->setFixedHeight(30);
+    vbox->addWidget(m_sidebarHeader);
     vbox->addWidget(m_sidebar, 1);
 }
 
@@ -566,9 +574,18 @@ void MainWindow::setupChatArea()
     m_userInfoLabel->setObjectName("userInfoLabel");
     m_signalBars = new SignalBars(m_topicBar);
 
-    tHbox->addWidget(m_sidebarToggleBtn);
-    tHbox->addWidget(m_hamburger);
-    tHbox->addWidget(m_signalBars);
+    auto *barGroup  = new QWidget(m_topicBar);
+    barGroup->setObjectName("topicBarGroup");
+    auto *barHbox   = new QHBoxLayout(barGroup);
+    barHbox->setContentsMargins(0, 0, 0, 0);
+    barHbox->setSpacing(0);
+    barHbox->addWidget(m_sidebarToggleBtn);
+    barHbox->addSpacing(1);
+    barHbox->addWidget(m_hamburger);
+    barHbox->addSpacing(6);
+    barHbox->addWidget(m_signalBars);
+
+    tHbox->addWidget(barGroup);
     tHbox->addWidget(m_topicLabel);
     tHbox->addWidget(m_userInfoLabel);
     tHbox->addWidget(m_modesLabel, 1);
