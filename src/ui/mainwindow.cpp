@@ -872,7 +872,7 @@ void MainWindow::connectModel()
 
         auto *dcc  = new DccReceive(savePath, ip, port, filesize, this);
         auto *prog = new QProgressDialog("Receiving " + filename + " from " + fromNick,
-                                          "Cancel", 0, (int)std::min(filesize, (qint64)INT_MAX), this);
+                                          "Cancel", 0, filesize > INT_MAX ? INT_MAX : (int)filesize, this);
         prog->setWindowModality(Qt::NonModal);
         prog->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -1991,7 +1991,7 @@ void MainWindow::onNickListContextMenu(const QPoint &pos)
             + " " + QString::number(size) + "\x01");
 
         auto *prog = new QProgressDialog("Sending " + fn + " to " + nick,
-                                          "Cancel", 0, (int)std::min(size, (qint64)INT_MAX), this);
+                                          "Cancel", 0, size > INT_MAX ? INT_MAX : (int)size, this);
         prog->setWindowModality(Qt::NonModal);
         prog->setAttribute(Qt::WA_DeleteOnClose);
 
