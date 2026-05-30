@@ -32,8 +32,8 @@ show_topic        = true
 show_emoji_button = true               # shows 😊 button next to input bar
 colored_nicks     = true
 typing_indicator  = true
+notifications     = true               # green dot on tray icon for mentions/PMs when unfocused
 nick_brackets     = "<>"               # "<>" [nick] "()" "{}" "::::" or "" for none
-show_conn_status  = true
 app_icon          = "dark"
 font_family       = "IBM Plex Mono"   # Windows default is "Consolas"
 font_toolbar      = 10
@@ -76,8 +76,8 @@ Controls the look and feel of the interface. All keys are optional — missing k
 | `show_emoji_button` | bool | `false` | Show the 😊 emoji picker button next to the input box. Also works via `:shortcode:` typing. |
 | `colored_nicks` | bool | `true` | Give each nickname a unique color in chat and the nick list |
 | `typing_indicator` | bool | `true` | Show "nick is typing…" notifications (IRCv3 `draft/typing`) and send your own |
+| `notifications` | bool | `true` | Show a green dot on the tray icon when you receive a mention or PM and the window is not focused. Clears automatically when you focus the window. Also toggled from **Preferences → Desktop Notifications**. |
 | `nick_brackets` | string | `"<>"` | Characters that wrap nick names in chat messages. Can also be changed live from **Preferences → Nick Brackets**. See [Nick bracket style](#nick-bracket-style) below. |
-| `show_conn_status` | bool | `true` | Show the connection status label in the bottom-left status bar |
 | `app_icon` | string | `"dark"` | Which app icon variant to use. Choices: `"dark"`, `"light"`, `"light-default"`, `"avatar"` |
 | `font_family` | string | `"IBM Plex Mono"` | Font family applied to all UI zones |
 | `font_toolbar` | integer | `10` | Font size (pt) for the ☰ button |
@@ -134,7 +134,7 @@ nick_brackets = ""
 theme             = "nord"
 colored_nicks     = true
 typing_indicator  = true
-show_conn_status  = true
+notifications     = true
 app_icon          = "dark"
 font_family       = "IBM Plex Mono"
 font_chat         = 12

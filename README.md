@@ -131,8 +131,8 @@
 | **Manage Servers dialog** | Add, edit, remove servers at runtime. Changes take effect immediately, no config edit needed. |
 | **Multiple servers** | Connect to as many servers as you want simultaneously. |
 | **Auto-reconnect** | Exponential backoff: 5 s → 10 s → 20 s → 40 s → 60 s. Deliberate `/quit` disables it. |
-| **Connection status** | Persistent bar showing `Connecting…` / `Connected…` / `Disconnected…`. |
-| **System tray** | Minimizes to tray on close. Left-click shows window. Unread badge on mention. |
+| **Signal bars indicator** | 4-bar stair-step widget in the topic bar. Bar count = ping latency (4 bars < 50 ms … 1 bar > 300 ms). Blue flashing = connecting/reconnecting. Red flashing = disconnected. |
+| **System tray** | Minimizes to tray on close. Left-click shows window. Green dot on tray for mention/PM when unfocused; red dot for general unread. |
 
 ---
 
@@ -244,8 +244,8 @@ typing_indicator  = true
 # "<>" = <nick>  "[]" = [nick]  "::::" = ::nick::  "" = nick (no brackets)
 nick_brackets     = "<>"
 
-# Show "Connected to / Disconnected from" in the status bar
-show_conn_status  = true
+# Green dot on tray icon for mentions/PMs when window is not focused
+notifications     = true
 
 # App icon variant: "dark" | "light" | "light-default" | "avatar"
 app_icon          = "dark"

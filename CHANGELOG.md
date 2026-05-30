@@ -3,6 +3,52 @@
 ---
 
 <!--
+Session summary — 2026-05-29  post-v0.7.12 (UI overhaul + signal bars)
+
+What was built / fixed:
+  - Signal bars connection/latency indicator added to topic bar — 4 stair-step bars,
+    green solid when connected (bar count = ping latency: 4=<50ms, 3=<150ms,
+    2=<300ms, 1=>300ms), blue flashing when connecting/reconnecting, red flashing
+    when disconnected. Driven by periodic PING/PONG RTT measurement in IrcClient.
+  - Desktop notification implemented as green dot on the system tray icon — fires on
+    mention or PM when window is not focused. Toggle in Preferences → "Desktop
+    Notifications". Clears on window activation (changeEvent). No popup balloon.
+  - Full-width topic bar spanning the entire window width — left zone (sidebar width)
+    holds hamburger and gear, right zone (chat width) holds signal bars + channel
+    info. Left and right zones track the splitter so they stay pixel-aligned with
+    the server list and chat area below. Both zones have explicit inputBg backgrounds
+    so the bar renders continuously across the full window.
+  - Hamburger and gear relocated from topic bar (right-side only) to the left zone
+    of the new full-width bar — they now appear above the server list area.
+  - Status bar (connection status label at bottom) removed entirely; statusBar()
+    hidden. Input bar bottom padding bumped to compensate.
+  - Removed show_conn_status config key and Preferences toggle — replaced by signal bars.
+  - Added notifications = true config key for desktop notification toggle.
+  - IrcClient now sends periodic PING :uplink_rtt every 30s when connected (first
+    fires 2s after connect); handles PONG token match; emits pingRtt(host, ms).
+    Also emits reconnecting(host) signal when doReconnect() fires.
+  - Red dot on tray for general unread messages now also works (setUnread fixed
+    to call updateIcon() properly).
+
+Known issues remaining:
+  - Link preview for title-only pages (no og:title) needs verification
+  - AppImage packaging not done
+  - DCC Send File not implemented
+-->
+
+## v0.7.13-dev — 2026-05-29
+
+- **Full-width topic bar** — spans above the server list and chat area; hamburger (☰) and gear (⚙) sit in the left zone above the server list; signal bars + channel info in the right zone above the chat
+- **Signal bars indicator** — 4-bar stair-step signal strength widget in the topic bar; solid green when connected (bar count reflects ping latency), blue flashing when connecting/reconnecting, red flashing when disconnected
+- **Latency measurement** — IrcClient sends a periodic PING every 30 s (first ping 2 s after connect); PONG round-trip time drives the signal bar count
+- **Desktop notification dot** — tray icon gets a bright green dot on nick mention or PM when the window is not focused; clears automatically when the window gains focus; toggle in Preferences → Desktop Notifications
+- **Status bar removed** — connection status label at the bottom of the window is gone; replaced entirely by signal bars
+- Fix: tray icon unread (red) and notify (green) dot states now render correctly via unified `updateIcon()` logic
+- Fix: `show_conn_status` config key and Preferences toggle removed; `notifications` key added (default `true`)
+
+---
+
+<!--
 Session summary — 2026-05-29  post-v0.7.12
 
 What was built / fixed:

@@ -27,7 +27,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Open Config / Reload Config — Open Config opens config.toml in system editor; Reload Config re-applies all settings from disk without restarting
 - [x] Input commands — /join, /j, /part, /nick, /me, /msg, /quote, /raw, /quit, /ping, /invite, /mode, /op, /deop, /voice, /devoice, /ban, /unban, /clear
 - [x] System tray — minimize to tray on close, left-click shows window, right-click menu (Show/Quit)
-- [x] Unread badge — tray icon gets red dot on unread messages, balloon notification when hidden
+- [x] Unread badge — tray icon gets red dot on unread messages; green dot for mention/PM when window not focused
 - [x] Theme loader — 55 TOML themes, applies as QSS stylesheet, live switching from hamburger
 - [x] App icon — single uplink.svg via Qt6::Svg; icon picker removed (one icon)
 - [x] About dialog — shows dark app icon (96×96), version, and server info
@@ -106,9 +106,9 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Server error routing — 482 and other server errors shown in active channel buffer, not just (server)
 - [x] Multiple servers — Manage Servers dialog: add, edit, remove with live connect/disconnect
 - [x] Reconnect logic — auto-reconnect with backoff on disconnect
-- [ ] Connection status indicator — visual connected/disconnected state per server
+- [x] Connection status indicator — signal bars widget in topic bar; latency-based bar count (4=<50ms … 1=>300ms); blue flash=connecting, red flash=disconnected
 - [x] Mention notifications — 💡 red sidebar indicator when nick is mentioned in inactive channel; 🔥 for general activity; self-nick highlighted red bold in chat
-- [ ] Desktop notifications — system-level notification on mention/PM when window not focused
+- [x] Desktop notifications — green dot on tray icon on mention/PM when window not focused; clears on window focus; toggle in Preferences
 
 ---
 
