@@ -141,6 +141,66 @@ Notifies the client if the server gains or loses capabilities after the initial 
 
 If a server advertises STS, UplinkIRC would remember to always require TLS for that host and refuse plaintext fallback — similar to HSTS in web browsers.
 
+### `draft/reply`
+
+A client-only tag that marks a message as a reply to a specific `msgid`. Enables threaded reply display. Requires `msgid`.
+
+### `draft/message-redaction`
+
+A command that removes a message from history and signals other clients to hide it. Requires `msgid` to identify the target message.
+
+### `draft/multiline`
+
+Allows composing and sending messages that span multiple lines, delivered to clients as a `batch` of type `draft/multiline`. Useful for pastes and structured content.
+
+### `draft/react`
+
+A client tag for sending emoji reactions to a specific message. Reactions are attached to a `msgid`. Requires `msgid`.
+
+### `account-tag`
+
+Attaches the sender's NickServ account name as a `account` tag on every incoming message. Complements `account-notify` by providing per-message account context without a separate WHOIS.
+
+### `Monitor`
+
+A standardized command for watching when specific nicks come online or go offline. Replaces polling via ISON. The server notifies you in real time when a monitored nick connects or disconnects.
+
+### `invite-notify`
+
+When you are an operator or have channel privileges, the server sends you a notification when someone is invited to your channel, rather than only the inviter seeing confirmation.
+
+### `setname`
+
+Allows users to update their realname (GECOS) field after connecting via a `SETNAME` command. Other clients in shared channels receive a notification of the change.
+
+### `WHOX`
+
+An extended version of the `WHO` command. Lets clients request specific fields (account name, idle time, real name, etc.) in a single query using a custom field mask. More efficient than repeated WHOIS lookups.
+
+### `userhost-in-names`
+
+Modifies `NAMES` replies to include `user@host` for each nick — e.g. `@alice!alice@example.com` instead of just `@alice`. Useful for ban matching and ignore lists.
+
+### `netsplit` / `netjoin` batch types
+
+When a netsplit occurs, the server wraps the resulting flood of QUITs in a `BATCH` of type `netsplit`, and the subsequent reconnect JOINs in a `netjoin` batch. Clients can collapse these into a single folded entry instead of showing hundreds of individual lines.
+
+### `standard-replies`
+
+A structured format for servers to send notes, warnings, and errors to clients using `NOTE`, `WARN`, and `FAIL` commands with machine-readable codes. More informative than plain NOTICE messages.
+
+### `UTF8ONLY`
+
+An ISUPPORT token that signals the server only accepts UTF-8 encoded traffic. Allows the client to enforce UTF-8 encoding and warn the user if their input contains non-UTF-8 bytes.
+
+### WebSocket transport
+
+Conventions for carrying IRC lines over a WebSocket connection (`wss://`). Useful for connecting to servers hosted behind web infrastructure, or in environments where raw TCP is blocked.
+
+### User metadata (`metadata-2`)
+
+A framework for associating key-value metadata with users — display names, avatars, pronouns, homepage, color, status. Values are stored server-side and synced to clients. Negotiated via the `metadata-2` capability.
+
 ---
 
 ## Reference

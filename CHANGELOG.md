@@ -3,6 +3,40 @@
 ---
 
 <!--
+Session summary — 2026-05-30 (planning — IRCv3 roadmap audit)
+
+No code written this session. Analysis and planning only.
+
+What happened:
+  - Full project size audit: ~8,200 lines C++, 43 source files across src/irc/, src/ui/, src/model/, src/config/
+  - Compared UplinkIRC against Halloy (Rust/iced) in depth — ~78,000 lines Rust, 205 .rs files
+  - Audited entire IRCv3 spec against what UplinkIRC already implements vs has planned
+  - Verified from source: ZNC + Soju bouncer support, SASL PLAIN+EXTERNAL, CHATHISTORY, batch,
+    server-time, message-tags, labeled-response, away-notify, multi-prefix, draft/typing, bot mode
+    display (+B), all confirmed fully implemented
+  - Added 21 new IRCv3 roadmap items to ROADMAP.md (msgid, echo-message, draft/reply,
+    draft/message-redaction, account-notify/tag/extended-join, Monitor, chghost, STS,
+    invite-notify, setname, WHOX, userhost-in-names, netsplit/netjoin batches, Standard Replies,
+    UTF8ONLY, message reactions, multiline messages, WebSocket transport, user metadata)
+  - Updated docs/ircv3.md to list all new planned capabilities
+  - Confirmed split view and SOCKS5 proxy were already on ROADMAP
+
+Known issues remaining (unchanged):
+  - DCC over internet (NAT/firewall blocks direct TCP)
+  - No in-app update check UI
+  - Message search not implemented
+  - Per-channel logging not implemented
+  - Split view not implemented
+  - Plaintext passwords in config.toml
+
+Next priorities (updated — see project_overview.md):
+  - msgid (prerequisite for reactions, redaction, reply threading)
+  - Message search (Ctrl+F)
+  - Per-channel log files
+  - echo-message
+-->
+
+<!--
 Session summary — 2026-05-30 (v0.9.3 — Server buffer unread indicator)
 
 What was built / fixed:

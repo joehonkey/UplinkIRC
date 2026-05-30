@@ -125,12 +125,31 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Hanging indent — wrapped message lines align past the timestamp+nick column; toggleable from Preferences and `hanging_indent` config key; uses QTextBlockFormat for correct Qt rendering
 - [ ] Message search — search within current channel buffer
 - [ ] Logging — per-channel log files at `~/.config/LinuxDojo/UplinkIRC/logs/`
+- [ ] msgid — IRCv3 unique message IDs; prerequisite for reply threading, reactions, and redaction
+- [ ] echo-message — server echoes sent messages back; essential for multi-client accuracy and self-message confirmation
+- [ ] draft/reply — client tag marking a message as a reply to a specific msgid; threaded replies
+- [ ] draft/message-redaction — delete/hide a sent message; requires msgid
+- [ ] account-notify + account-tag + extended-join — track NickServ account per nick; show account on JOIN
+- [ ] Monitor — standardized online/offline watch list (replaces ISON polling)
+- [ ] chghost — see username/hostname changes without fake QUIT+JOIN noise
+- [ ] STS (Strict Transport Security) — auto-upgrade plaintext connections to TLS; prevent downgrade attacks
+- [ ] invite-notify — see when someone is invited to a channel you're in
+- [ ] setname — see and send realname changes after connection (SETNAME command)
+- [ ] WHOX — extended WHO; request account, idle time, and other fields in one query
+- [ ] userhost-in-names — NAMES reply includes user@host; useful for ban/ignore logic
+- [ ] netsplit/netjoin batch types — collapse netsplit noise into a single folded entry
+- [ ] Standard Replies — structured error/warning/note messages from server
+- [ ] UTF8ONLY — detect server UTF-8-only signal and enforce encoding
 - [x] URL detection + click to open — http/https links in chat open in browser (v0.3.0)
 - [x] Link preview persistence — cards survive channel switches (stored in Channel struct)
 - [x] Link preview entity decoding — QTextDocument decodes &amp; &#39; &lt; etc. in og:title and &lt;title&gt; fallback paths
 - [x] DCC Send File — right-click nick → Send File; DccSend TCP listener + ACK protocol; DccReceive connect + ACK send; progress dialogs; 60s/30s timeouts. NAT limitation: local IP advertised; works on LAN, blocked by NAT on WAN.
 - [ ] DCC passive / NAT traversal — sender behind NAT cannot receive inbound connection; passive DCC or relay needed
 - [ ] Split view — view two channels side by side
+- [ ] Message reactions — IRCv3 react support; display and send emoji reactions on messages
+- [ ] Multiline messages — IRCv3 draft/multiline; compose and render multi-line message blocks
+- [ ] IRCv3 WebSocket transport — connect to servers over wss:// in addition to plain TCP+TLS
+- [ ] User metadata — IRCv3 metadata keys: display-name, avatar, pronouns; show in nick list and tooltips
 
 ---
 
