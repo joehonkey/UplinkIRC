@@ -115,8 +115,19 @@ void TrayIcon::setNotify(bool hasNotify)
     updateIcon();
 }
 
+void TrayIcon::setNotificationsEnabled(bool enabled)
+{
+    m_notificationsEnabled = enabled;
+    if (!enabled) m_hasNotify = false;
+    updateIcon();
+}
+
 void TrayIcon::updateIcon()
 {
+    if (!m_notificationsEnabled) {
+        setIcon(m_baseIcon);
+        return;
+    }
     if (m_hasNotify)
         setIcon(withDot(m_baseIcon, QColor("#50e050")));
     else if (m_totalUnread > 0)

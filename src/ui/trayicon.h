@@ -16,6 +16,7 @@ public:
     void setUnread(bool hasUnread);
     void setNotify(bool hasNotify);
     void setBaseIcon(const QIcon &icon);
+    void setNotificationsEnabled(bool enabled);
 
 private slots:
     void onActivated(QSystemTrayIcon::ActivationReason reason);
@@ -37,4 +38,5 @@ private:
     QIcon         m_baseIcon;
     int           m_totalUnread{0};
     bool          m_hasNotify{false};
+    bool          m_notificationsEnabled{true};
 };

@@ -134,6 +134,7 @@ private:
 
     QSet<QString>               m_requestedCaps;
     QSet<QString>               m_ackedCaps;
+    QStringList                 m_capLsBuffer;
     QHash<QString, QStringList> m_namesBuffer;
 
     // Batch tracking

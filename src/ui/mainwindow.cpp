@@ -132,8 +132,10 @@ MainWindow::MainWindow(SessionModel *model, const Config &cfg, QWidget *parent)
     connectModel();
     applyFontSizes();
 
-    if (QSystemTrayIcon::isSystemTrayAvailable())
+    if (QSystemTrayIcon::isSystemTrayAvailable()) {
         m_tray = new TrayIcon(model, this);
+        m_tray->setNotificationsEnabled(m_config.ui.notifications);
+    }
 
     statusBar()->hide();
 
@@ -334,6 +336,8 @@ void MainWindow::connectPreferences()
     connect(m_prefsDialog, &PreferencesDialog::notificationsToggled, this, [this](bool on){
         m_config.ui.notifications = on;
         Config::save(m_config, Config::defaultPath());
+        if (m_tray)
+            m_tray->setNotificationsEnabled(on);
     });
 
     connect(m_prefsDialog, &PreferencesDialog::coloredNicksToggled, this, [this](bool on){

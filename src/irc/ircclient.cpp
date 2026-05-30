@@ -185,6 +185,7 @@ void IrcClient::onDisconnected()
     m_namesBuffer.clear();
     m_requestedCaps.clear();
     m_ackedCaps.clear();
+    m_capLsBuffer.clear();
     m_batches.clear();
     m_saslPending = false;
     emit disconnected(m_host);
@@ -575,7 +576,21 @@ void IrcClient::handleCap(const QStringList &params, const QString &trailing)
     const QString subCmd = params[1].toUpper();
 
     if (subCmd == "LS") {
-        const QStringList available = trailing.split(' ', Qt::SkipEmptyParts);
+        // Buffer multi-line responses (params[2] == "*" means more lines coming)
+        const bool more = (params.size() >= 3 && params[2] == "*");
+        m_capLsBuffer += trailing.split(' ', Qt::SkipEmptyParts);
+        if (more) return;
+
+        const QStringList available = m_capLsBuffer;
+        m_capLsBuffer.clear();
+
+        // Servers may advertise caps as "name=value" (e.g. "sasl=PLAIN,EXTERNAL")
+        auto hasAvailable = [&](const QString &cap) {
+            for (const QString &a : available)
+                if (a == cap || a.startsWith(cap + "="))
+                    return true;
+            return false;
+        };
 
         QStringList desired = {
             "multi-prefix", "away-notify", "server-time",
@@ -603,7 +618,7 @@ void IrcClient::handleCap(const QStringList &params, const QString &trailing)
 
         QStringList want;
         for (const QString &cap : desired)
-            if (available.contains(cap))
+            if (hasAvailable(cap))
                 want << cap;
 
         if (!want.isEmpty()) {

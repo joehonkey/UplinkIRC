@@ -162,7 +162,7 @@ PreferencesDialog::PreferencesDialog(const Config &cfg, QWidget *parent)
     connect(m_typingCheck, &QCheckBox::toggled, this, [this](bool on){ emit typingIndicatorToggled(on); });
     vbox->addWidget(m_typingCheck);
 
-    m_notificationsCheck = new QCheckBox("Desktop Notifications");
+    m_notificationsCheck = new QCheckBox("Tray Notifications");
     m_notificationsCheck->setChecked(cfg.ui.notifications);
     connect(m_notificationsCheck, &QCheckBox::toggled, this, [this](bool on){ emit notificationsToggled(on); });
     vbox->addWidget(m_notificationsCheck);
@@ -212,3 +212,4 @@ PreferencesDialog::PreferencesDialog(const Config &cfg, QWidget *parent)
     mainLayout->setContentsMargins(0, 0, 0, 0);
     mainLayout->addWidget(scroll);
 }
+
