@@ -38,6 +38,19 @@ If you built with CMake, themes are copied to the build directory automatically 
 
 Open it in any text editor and restart UplinkIRC to apply changes.
 
+### Is my config file secure?
+
+On Linux and macOS, UplinkIRC writes `config.toml` with **owner-only permissions** (mode `0600`) so other users on the same machine cannot read your passwords. On Windows, the file inherits standard per-user `%APPDATA%` permissions.
+
+Saves are **atomic** — UplinkIRC writes to a temporary file and renames it into place. A crash mid-save cannot leave the config corrupt or empty.
+
+If you ever need to verify permissions on Linux:
+
+```bash
+ls -l ~/.config/LinuxDojo/UplinkIRC/config.toml
+# should show: -rw------- (600)
+```
+
 ### My config change isn't taking effect
 
 Edit `config.toml`, then click **☰ → Reload Config** to apply changes without restarting. Channel list changes take effect on the next reconnect. For all other settings (theme, fonts, toggles) they apply immediately.
@@ -281,6 +294,8 @@ Hovering over any URL in chat shows the domain immediately in the status bar and
 
 Preview fetches are lightweight and automatic — HTML is capped at 32 KB, images at 200 KB, and results are cached in memory for the session.
 
+**Private addresses are never fetched** — loopback (`127.x`, `::1`), RFC 1918 private ranges (`10.x`, `172.16–31.x`, `192.168.x`), link-local (`169.254.x`), and `.local` hostnames are blocked. A link posted in chat cannot be used to probe services on your local network.
+
 **Note:** Preview cards appear only for messages received while that channel is active. Switching away and back clears the cards — this is a known limitation tracked for a future fix.
 
 ### The emoji button doesn't show
@@ -360,7 +375,7 @@ UplinkIRC fetches the page title and thumbnail for URLs posted in chat. If a pre
 - **The site redirects** (e.g. `http://` → `https://`, or bare domain → `www.`) — redirects are followed automatically since v0.7.0.
 - **The site has a large `<head>` section** — the HTML buffer was raised to 32 KB in v0.7.0; pages with unusually large headers before the `<title>` tag may still miss.
 - **The site blocks bots** — some sites check the User-Agent and return empty or minimal content. UplinkIRC uses a standard Chrome/Linux UA.
-- **SSL certificate errors** — self-signed or expired certs block the fetch silently. There is no per-site cert bypass yet.
+- **SSL certificate errors** — self-signed or expired certs block the fetch. There is no per-site cert override.
 - **The page has no `<title>` or `og:title`** — no preview will appear; there is nothing to display.
 
 ### Previews disappear when I switch channels

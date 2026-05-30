@@ -37,6 +37,8 @@ The full IRCv3 message tag extension is negotiated. Tags are parsed as a key-val
 - `chathistory` — messages are delivered as history (dimmed, original timestamps, no unread count)
 - `znc.in/batch/playback` — same treatment as chathistory
 
+Safety limits apply: at most **8 batches** may be open simultaneously, and each batch may contain at most **1 000 messages**. A misbehaving or malicious server that opens a batch and never closes it cannot grow client RAM without bound.
+
 ### `chathistory`
 
 When `chathistory` is negotiated, UplinkIRC sends `CHATHISTORY LATEST <channel> * 100` after joining each channel, requesting up to 100 recent messages. The server (or bouncer) responds with a `BATCH` of type `chathistory`.

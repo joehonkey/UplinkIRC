@@ -88,6 +88,73 @@ Known issues remaining:
   - AppImage packaging not done
 -->
 
+<!--
+Session summary — 2026-05-29  v0.8.0 — security hardening and stability pass
+
+Context: a lead security/stability code review of the full codebase was performed.
+Every finding was triaged, confirmed against source, and fixed. This is the first
+dedicated security release for UplinkIRC.
+
+What was fixed / built:
+
+SECURITY
+  - onSslErrors was calling ignoreSslErrors() unconditionally — MITM trivially
+    possible on any TLS connection. Fixed: emit error + disconnectFromHost().
+  - sendRaw emitted the raw line BEFORE writing it, so PASS :password,
+    AUTHENTICATE <base64>, and NickServ IDENTIFY appeared verbatim in the raw
+    log panel. Fixed: redactRawForLog() strips all three before emit.
+  - Config save: QFile write with no permissions (world-readable on Linux),
+    no escaping of special chars in TOML strings, no atomic write. Fixed:
+    QSaveFile (atomic), QFile::setPermissions(ReadOwner|WriteOwner), tomlQuote()
+    helper escapes \, ", \n, \r, \t.
+  - Link previews auto-fetched every URL including private/LAN/loopback addresses.
+    Fixed: isPrivateUrl() blocks loopback, 10/8, 172.16/12, 192.168/16,
+    169.254/16, ::1, fc00::/7, localhost, and *.local before any fetch.
+  - CTCP PING and VERSION replied unconditionally to any sender — reflection/
+    amplification risk. Fixed: QHash<QString,qint64> m_ctcpTimestamps rate-limits
+    both to once per nick per 5 s; PING echo payload capped at 32 bytes.
+
+STABILITY / RAM
+  - onReadyRead had no buffer cap — malicious server could send without \n and
+    grow RAM indefinitely. Fixed: 64 KB cap on pending buffer, 8 KB cap per line.
+  - Batch message storage had no cap — server could open BATCH and never close it,
+    streaming unlimited messages. Fixed: 8 open batches max, 1 000 messages/batch.
+  - QTextBrowser appended forever while model capped at 2 000 — long-session RAM
+    growth in busy channels. Fixed: setMaximumBlockCount(kMessageBufferCap + 300).
+  - onErrorOccurred emitted disconnected() and called scheduleReconnect() directly;
+    onDisconnected() does the same on socket close — double signal + double timer.
+    Fixed: onErrorOccurred emits only socketError(); onDisconnected() owns state.
+  - trimmed() was stripping trailing IRC parameter spaces. Fixed: chop('\r') only.
+  - Link preview image decode: loadFromData() after 200 KB cap still vulnerable to
+    small compressed image that expands into huge pixel buffer. Fixed: QImageReader
+    checks dimensions first; rejects > 4096×4096; scales during decode.
+  - Channel::previews hash unbounded. Fixed: Channel::addPreview() evicts oldest
+    entry when count >= 100.
+
+PERFORMANCE
+  - Nick comparisons used toLower()==toLower() throughout channel.h and
+    sessionmodel.cpp — two allocs per call. Fixed: Qt::CaseInsensitive everywhere.
+  - ServerSession::get() called toLower() + contains() + operator[] (two hash
+    lookups). Fixed: one key + one find().
+  - ircToHtml() allocated output string without reservation. Fixed: reserve(raw*2).
+  - /sysinfo blocked UI thread on every call (vulkaninfo, lspci, powershell).
+    Fixed: static cache for OS/CPU/MEM/GPU; only uptime re-queried.
+  - loadConfig() and addServer() had identical server-session creation block.
+    Fixed: shared spawnSession() helper.
+
+Known issues remaining:
+  - Link preview cards don't survive channel switches
+  - Link preview for title-only pages (no og:title) — unverified
+  - DCC Send File not implemented
+  - AppImage packaging not done
+  - SASL EXTERNAL (cert-based) not implemented
+
+Next priorities:
+  - Link preview card persistence across channel switches
+  - AppImage packaging for Linux
+  - DCC Send File
+-->
+
 ## v0.8.0 — 2026-05-29
 
 ### Security
