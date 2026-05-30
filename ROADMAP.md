@@ -44,6 +44,8 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Input history — Up/Down arrow cycles through sent messages
 - [x] Colored nicks — consistent hash color per nick in chat and nick list
 - [x] In-app Documentation panel — Hamburger → Documentation opens tabbed help viewer
+- [x] Documentation search — live search bar in the tab bar (right of Shortcuts); jumps to first match in active tab; re-runs on tab switch
+- [x] About dialog centered on app window — overlay QFrame positioned in parent-local coordinates; works on Wayland and X11
 - [x] Save theme + icon choice to config.toml (persists across restarts)
 - [x] about.png background normalized — logo visible on both light and dark backgrounds
 - [x] IRC color code rendering — mIRC bold, italic, underline, strikethrough, reverse, 16 colors (fg+bg)

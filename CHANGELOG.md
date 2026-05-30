@@ -68,6 +68,33 @@ Known issues remaining:
   - DCC Send File not implemented
 -->
 
+<!--
+Session summary — 2026-05-29  post-v0.7.14 (About dialog centering + docs search)
+
+What was built / fixed:
+  - About dialog now appears centered on the app window on all platforms including
+    Wayland. Previous approach used QDialog::move() which Wayland compositors ignore.
+    Refactored to a QFrame child widget (overlay) parented to the main window;
+    positioned in parent-local coordinates via showCentered(); stays inside the
+    app window, compositor has no involvement.
+  - Documentation dialog gained a live search field in the tab bar corner (right of
+    the Shortcuts tab). Uses QTabWidget::setCornerWidget; QLineEdit with leading
+    search icon and a clear button. Typing jumps the active tab to the first match
+    via QTextBrowser::find(); switching tabs re-applies the current query.
+
+Known issues remaining:
+  - Link preview cards don't survive channel switching (not stored in history)
+  - DCC Send File not implemented
+  - AppImage packaging not done
+-->
+
+## v0.7.15 — 2026-05-29
+
+- Fix: About dialog now appears centered on the app window on Wayland and X11 — refactored from a top-level QDialog (position ignored by Wayland compositor) to an in-app QFrame overlay positioned in parent-local coordinates
+- Feature: Documentation search — live search field in the tab bar (right of Shortcuts); clears with ×, jumps to first match in the active tab, re-runs on tab switch
+
+---
+
 ## v0.7.14 — 2026-05-29
 
 - Fix: hamburger (☰) and gear (⚙) buttons stay visible in the topic bar when the sidebar is collapsed; only the server list collapses beneath them
