@@ -3,6 +3,33 @@
 ---
 
 <!--
+Session summary — 2026-05-30 (post-v0.9.0 doc catch-up)
+
+What was built / fixed:
+  - No new features. Investigation session: confirmed v0.9.0 tag and branch are
+    both on remote (origin/main is up to date). The v0.9.0 tag points to the MSVC
+    hotfix commit (820af24) rather than the release commit (ee3b9ff) — cosmetic only,
+    does not affect CI or release artifacts.
+  - Caught that the MSVC std::min hotfix (820af24) landed after the close-session
+    commit and was not documented. Added it to the v0.9.0 CHANGELOG Fixed section
+    and the v0.9.0 session summary.
+
+Known issues remaining (same as v0.9.0):
+  - DCC over internet: local IP advertised; NAT blocks WAN connections
+  - No in-app update check UI
+  - Message search not implemented
+  - Per-channel logging not implemented
+  - Split view not implemented
+  - Plaintext passwords in config.toml
+
+Next priorities:
+  - Message search (Ctrl+F in channel buffer)
+  - Per-channel log files
+  - DCC NAT traversal / passive DCC
+  - In-app update check button
+-->
+
+<!--
 Session summary — 2026-05-29 (exploration only — no release)
 
 What was explored:
@@ -574,6 +601,9 @@ What was built / fixed:
     config); DCC Send section in commands.md; AppImage install + update in faq.md;
     ircv3.md SASL section expanded; README feature table + download badges updated.
   - Released v0.9.0, pushed tag v0.9.0 to trigger CI.
+  - MSVC std::min conflict: replaced std::min calls in mainwindow.cpp with ternary
+    expressions to avoid Windows min/max macro collision. Committed as hotfix after
+    the session summary, so the close-session docs missed it.
 
 Known issues remaining:
   - DCC over internet — local socket IP advertised; NAT/firewall on sender blocks
@@ -603,6 +633,7 @@ Next priorities:
 
 ### Fixed
 - **Link preview entity decoding** — page titles containing HTML entities (`&amp;`, `&#39;`, `&lt;`, etc.) are now decoded via `QTextDocument` before being displayed. Both `og:title` and the plain `<title>` fallback path are affected.
+- **MSVC `std::min` conflict** — replaced `std::min` calls in `mainwindow.cpp` with ternary expressions to avoid the `min`/`max` macro collision on MSVC (Windows builds).
 
 ---
 
