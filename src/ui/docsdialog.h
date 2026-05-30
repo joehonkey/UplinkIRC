@@ -3,6 +3,7 @@
 #include <QDialog>
 
 class QTabWidget;
+class QLineEdit;
 
 class DocsDialog : public QDialog
 {
@@ -13,4 +14,8 @@ public:
 
 private:
     void addTab(QTabWidget *tabs, const QString &title, const QString &resource);
+    void searchCurrentTab(const QString &text);
+
+    QTabWidget *m_tabs{nullptr};
+    QLineEdit  *m_search{nullptr};
 };

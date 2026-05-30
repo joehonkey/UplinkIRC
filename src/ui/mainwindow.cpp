@@ -182,8 +182,8 @@ void MainWindow::setupToolbar()
         menu->setAttribute(Qt::WA_DeleteOnClose);
 
         menu->addAction(MenuIcons::about(), "About UplinkIRC", this, [this]{
-            AboutDialog dlg(this);
-            dlg.exec();
+            if (!m_aboutDialog) m_aboutDialog = new AboutDialog(this);
+            m_aboutDialog->showCentered();
         });
 
         menu->addAction(MenuIcons::documentation(), "Documentation", this, [this]{
@@ -351,8 +351,8 @@ void MainWindow::connectPreferences()
     });
 
     connect(m_prefsDialog, &PreferencesDialog::aboutRequested, this, [this]{
-        AboutDialog dlg(this);
-        dlg.exec();
+        if (!m_aboutDialog) m_aboutDialog = new AboutDialog(this);
+        m_aboutDialog->showCentered();
     });
 
     connect(m_prefsDialog, &PreferencesDialog::docsRequested, this, [this]{

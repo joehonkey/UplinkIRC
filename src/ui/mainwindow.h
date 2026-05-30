@@ -12,6 +12,7 @@
 
 class TrayIcon;
 class SignalBars;
+class AboutDialog;
 class DocsDialog;
 class PreferencesDialog;
 class LinkPreview;
@@ -142,6 +143,7 @@ private:
     QToolButton  *m_hamburger;
     QLabel       *m_appLabel{nullptr};
     QLabel       *m_typingLabel{nullptr};
+    AboutDialog       *m_aboutDialog{nullptr};
     DocsDialog        *m_docsDialog{nullptr};
     PreferencesDialog *m_prefsDialog{nullptr};
     EmojiPicker       *m_emojiPicker{nullptr};

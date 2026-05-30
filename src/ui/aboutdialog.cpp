@@ -5,18 +5,24 @@
 #include <QVBoxLayout>
 #include <QLabel>
 #include <QDialogButtonBox>
+#include <QPushButton>
+#include <QKeyEvent>
+#include <QGraphicsDropShadowEffect>
 
 AboutDialog::AboutDialog(QWidget *parent)
-    : QDialog(parent)
+    : QFrame(parent)
 {
-    setWindowTitle("About UplinkIRC");
-    setWindowIcon(AppIcons::appIcon());
     setFixedSize(460, 280);
+    setFrameStyle(QFrame::Box | QFrame::Raised);
+    setLineWidth(1);
+    setAutoFillBackground(true);
+    hide();
 
-    if (parent) {
-        move(parent->width()  / 2 - 230,
-             parent->height() / 2 - 140);
-    }
+    auto *shadow = new QGraphicsDropShadowEffect(this);
+    shadow->setBlurRadius(18);
+    shadow->setOffset(0, 4);
+    shadow->setColor(QColor(0, 0, 0, 120));
+    setGraphicsEffect(shadow);
 
     auto *layout = new QVBoxLayout(this);
     layout->setSpacing(10);
@@ -27,7 +33,6 @@ AboutDialog::AboutDialog(QWidget *parent)
     logo->setAlignment(Qt::AlignCenter);
     layout->addWidget(logo);
 
-    // Version + description
     auto *version = new QLabel("UplinkIRC  v" UPLINKIRC_VERSION);
     QFont f = version->font();
     f.setBold(true);
@@ -48,6 +53,27 @@ AboutDialog::AboutDialog(QWidget *parent)
     layout->addStretch();
 
     auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok);
-    connect(buttons, &QDialogButtonBox::accepted, this, &QDialog::accept);
+    connect(buttons, &QDialogButtonBox::accepted, this, &AboutDialog::hide);
     layout->addWidget(buttons);
+}
+
+void AboutDialog::showCentered()
+{
+    if (QWidget *p = parentWidget()) {
+        move(
+            (p->width()  - width())  / 2,
+            (p->height() - height()) / 2
+        );
+    }
+    show();
+    raise();
+    setFocus();
+}
+
+void AboutDialog::keyPressEvent(QKeyEvent *event)
+{
+    if (event->key() == Qt::Key_Escape || event->key() == Qt::Key_Return)
+        hide();
+    else
+        QFrame::keyPressEvent(event);
 }

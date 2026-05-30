@@ -1,9 +1,14 @@
 #pragma once
-#include <QDialog>
+#include <QFrame>
 
-class AboutDialog : public QDialog
+class QKeyEvent;
+
+class AboutDialog : public QFrame
 {
     Q_OBJECT
 public:
     explicit AboutDialog(QWidget *parent = nullptr);
+    void showCentered();
+protected:
+    void keyPressEvent(QKeyEvent *event) override;
 };
