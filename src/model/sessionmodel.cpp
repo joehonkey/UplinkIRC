@@ -7,27 +7,10 @@ SessionModel::SessionModel(QObject *parent)
     : QObject(parent)
 {}
 
-void SessionModel::loadConfig(const Config &cfg)
+void SessionModel::spawnSession(const ServerConfig &sc, bool addToConfig)
 {
-    m_config = cfg;
-    for (const ServerConfig &sc : cfg.servers) {
-        ServerSession sess;
-        sess.name = sc.name;
-        sess.host = sc.host;
-        sess.nick = sc.nick;
-        m_sessions.append(sess);
-        emit serverAdded(sc.host);
-
-        auto *client = new IrcClient(this);
-        attachClient(client, sc);
-        m_clients.append(client);
-        client->connectToServer(sc);
-    }
-}
-
-void SessionModel::addServer(const ServerConfig &sc)
-{
-    m_config.servers.append(sc);
+    if (addToConfig)
+        m_config.servers.append(sc);
 
     ServerSession sess;
     sess.name = sc.name;
@@ -40,6 +23,18 @@ void SessionModel::addServer(const ServerConfig &sc)
     attachClient(client, sc);
     m_clients.append(client);
     client->connectToServer(sc);
+}
+
+void SessionModel::loadConfig(const Config &cfg)
+{
+    m_config = cfg;
+    for (const ServerConfig &sc : cfg.servers)
+        spawnSession(sc, false);
+}
+
+void SessionModel::addServer(const ServerConfig &sc)
+{
+    spawnSession(sc, true);
 }
 
 void SessionModel::removeServer(const QString &host)
@@ -399,7 +394,7 @@ void SessionModel::onUserQuit(const QString &host, const QString &nick, const QS
     for (auto &ch : sess->channels) {
         bool found = false;
         for (const auto &e : std::as_const(ch.nicks))
-            if (e.nick.toLower() == nick.toLower()) { found = true; break; }
+            if (QString::compare(e.nick, nick, Qt::CaseInsensitive) == 0) { found = true; break; }
         if (!found) continue;
         ch.removeNick(nick);
         emit nickListChanged(host, ch.name);
@@ -415,7 +410,7 @@ void SessionModel::onNickChanged(const QString &host, const QString &oldNick, co
     for (auto &ch : sess->channels) {
         bool found = false;
         for (const auto &e : std::as_const(ch.nicks))
-            if (e.nick.toLower() == oldNick.toLower()) { found = true; break; }
+            if (QString::compare(e.nick, oldNick, Qt::CaseInsensitive) == 0) { found = true; break; }
         if (!found) continue;
         ch.renameNick(oldNick, newNick);
         emit nickListChanged(host, ch.name);

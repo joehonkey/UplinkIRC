@@ -75,6 +75,7 @@ signals:
 
 private:
     void attachClient(IrcClient *client, const ServerConfig &cfg);
+    void spawnSession(const ServerConfig &sc, bool addToConfig);
 
     // IrcClient signal handlers
     void onConnected      (const QString &host);

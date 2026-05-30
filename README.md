@@ -24,15 +24,15 @@
 ---
 
 <p align="center">
-  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.7.15-linux-x86_64.tar.gz">
+  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.8.0-linux-x86_64.tar.gz">
     <img src="https://img.shields.io/badge/⬇%20Linux-x86__64-1793d1?style=for-the-badge&logo=linux&logoColor=white" alt="Download Linux" />
   </a>
   &nbsp;
-  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.7.15-windows-x64.zip">
+  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.8.0-windows-x64.zip">
     <img src="https://img.shields.io/badge/⬇%20Windows-x64-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download Windows" />
   </a>
   &nbsp;
-  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.7.15-macos-arm64.dmg">
+  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.8.0-macos-arm64.dmg">
     <img src="https://img.shields.io/badge/⬇%20macOS-arm64-555?style=for-the-badge&logo=apple&logoColor=white" alt="Download macOS" />
   </a>
   &nbsp;
@@ -81,8 +81,14 @@
 | Feature | Details |
 |---|---|
 | **TLS/SSL only** | All connections via `QSslSocket`. Plaintext IRC is not supported. |
+| **TLS certificate verification** | Invalid or self-signed certificates disconnect immediately with an error. No silent bypass. |
 | **SASL PLAIN** | Set `sasl_user` + `sasl_password` in config. Full CAP flow: `AUTHENTICATE`, `903`/`904`/`906`. |
 | **NickServ auto-identify** | Set `nickserv_password` to send `IDENTIFY` on `RPL_WELCOME`. |
+| **Credential redaction** | `PASS`, `AUTHENTICATE`, and `NickServ IDENTIFY` payloads are never echoed in the raw log or any visible panel. |
+| **Config file hardening** | `config.toml` is written with owner-only permissions (mode `0600`). Saves are atomic via `QSaveFile` — a crash mid-save cannot corrupt the file. |
+| **Link preview privacy** | Auto-previews skip loopback, RFC 1918 private ranges, link-local, and `.local` addresses. A malicious user cannot cause the client to probe your LAN. |
+| **DoS resistance** | Inbound IRC data is capped at 64 KB (oversized streams disconnect). Batch messages cap at 1 000 per batch, 8 open batches maximum. `QTextBrowser` block count is bounded so busy channels cannot grow RAM indefinitely. |
+| **CTCP rate limiting** | `VERSION` and `PING` CTCP replies are limited to once per nick per 5 seconds. Reflected `PING` payloads are capped at 32 bytes to prevent amplification. |
 
 ### 🌐 IRC Protocol & IRCv3
 

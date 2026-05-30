@@ -90,6 +90,16 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Typing indicator layout — moved from chat-view overlay (covered text) to dedicated layout row; collapses when idle
 - [x] FreeBSD download badge in README — links to build-from-source instructions; signals FreeBSD support
 - [x] Cross-platform OS characters image on GitHub project page
+- [x] TLS certificate verification — certificates are now verified; invalid certs disconnect with an error message instead of being silently accepted
+- [x] Credential redaction — `PASS`, `AUTHENTICATE`, and NickServ `IDENTIFY` payloads never appear in the raw log
+- [x] Config file hardened — `config.toml` written with owner-only `0600` permissions; save is atomic via `QSaveFile`; all string values properly TOML-escaped
+- [x] Link preview LAN protection — private/loopback/link-local addresses blocked from auto-fetch; prevents internal network probing via chat links
+- [x] CTCP rate limiting — `VERSION` and `PING` replies limited to once per nick per 5 s; PING echo payload capped at 32 bytes
+- [x] Inbound DoS protection — input buffer capped at 64 KB; oversized IRC lines (> 8 KB) dropped; `BATCH` open count (max 8) and message count (max 1 000) bounded
+- [x] QTextBrowser block count bounded — chat view kept in sync with message model cap; no unbounded RAM growth on long sessions
+- [x] Duplicate disconnect signal fixed — `onErrorOccurred` no longer double-emits or double-schedules reconnect
+- [x] Link preview image decode safety — `QImageReader` dimension check before decode; images > 4096×4096 rejected; scaled during decode, not after
+- [x] Channel preview hash capped — per-channel link preview store evicts oldest at 100 entries
 
 ---
 

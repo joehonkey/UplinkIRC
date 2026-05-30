@@ -88,6 +88,38 @@ Known issues remaining:
   - AppImage packaging not done
 -->
 
+## v0.8.0 — 2026-05-29
+
+### Security
+
+- **TLS certificate verification enforced** — `onSslErrors` previously called `ignoreSslErrors()` unconditionally, making every SSL connection silently vulnerable to MITM attacks. Now emits a TLS error and disconnects. Certificates must be valid.
+- **Credentials never logged** — `PASS`, `AUTHENTICATE`, and `NickServ `IDENTIFY` commands are redacted before emission to the raw log. Passwords no longer appear in any visible panel.
+- **Config file owner-only permissions** — `config.toml` is written with mode `0600`. Credentials in the config are no longer world-readable on multi-user systems.
+- **Atomic config save** — replaced `QFile` write with `QSaveFile`. A crash during save cannot leave the config in a corrupt or truncated state.
+- **TOML string escaping** — passwords, realnames, or any other string containing `"`, `\`, or newlines can no longer corrupt the config file.
+- **Link preview blocks private/LAN addresses** — auto-previews now reject loopback, RFC 1918 (10/8, 172.16/12, 192.168/16), link-local (169.254/16), and `.local` hostnames. A malicious user cannot post a link to probe your internal network.
+- **CTCP rate limiting** — `VERSION` and `PING` replies are limited to once per nick per 5 seconds. Reflected `PING` payloads are capped at 32 bytes to prevent amplification.
+
+### Stability & RAM
+
+- **Inbound buffer DoS protection** — `onReadyRead()` caps the pending input buffer at 64 KB; oversized lines (> 8 KB) are dropped. A server sending data without newlines can no longer grow RAM without bound.
+- **IRC line parsing fix** — `trimmed()` was incorrectly stripping meaningful trailing spaces from IRC parameters; replaced with a simple `\r` chop.
+- **Batch message caps** — max 8 open batches, 1 000 messages per batch. A misbehaving server cannot fill RAM via an unclosed `BATCH`.
+- **QTextBrowser block count bounded** — `setMaximumBlockCount(kMessageBufferCap + 300)` keeps the chat view in sync with the message model, preventing RAM growth on long sessions in busy channels.
+- **Duplicate disconnect signal fixed** — `onErrorOccurred()` no longer double-emits `disconnected()` or double-schedules reconnect.
+- **Link preview image decode safety** — `QImageReader` checks dimensions before decoding; images over 4096×4096 are rejected; scaling happens during decode rather than after, preventing compressed-bomb inflation.
+- **Channel previews capped at 100 entries** per channel; oldest entry evicted when the cap is reached.
+
+### Performance
+
+- **Nick comparisons use `Qt::CaseInsensitive`** — eliminates temporary `toLower()` string allocations on every comparison in large channels.
+- **`ServerSession::get()` single lookup** — was calling `toLower()` and hashing twice per call; now one key + one `find()`.
+- **`ircToHtml()` pre-allocates** — `out.reserve(raw.size() * 2)` avoids repeated reallocations on every message render.
+- **`/sysinfo` caches static fields** — OS, CPU, MEM, and GPU are gathered once; only uptime is re-queried. No more blocking the UI thread on `vulkaninfo`/`lspci` after the first call.
+- **Server session creation deduplicated** — `loadConfig()` and `addServer()` now share a single `spawnSession()` helper; less surface for divergence bugs.
+
+---
+
 ## v0.7.15 — 2026-05-29
 
 - Fix: About dialog now appears centered on the app window on Wayland and X11 — refactored from a top-level QDialog (position ignored by Wayland compositor) to an in-app QFrame overlay positioned in parent-local coordinates

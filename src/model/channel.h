@@ -97,7 +97,7 @@ struct Channel {
         e.nick = raw.mid(i);
         // avoid duplicates
         for (const auto &n : std::as_const(nicks))
-            if (n.nick.toLower() == e.nick.toLower()) return;
+            if (QString::compare(n.nick, e.nick, Qt::CaseInsensitive) == 0) return;
         nicks.append(e);
         std::sort(nicks.begin(), nicks.end());
     }
@@ -105,14 +105,25 @@ struct Channel {
     void removeNick(const QString &nick)
     {
         nicks.removeIf([&](const NickEntry &e){
-            return e.nick.toLower() == nick.toLower();
+            return QString::compare(e.nick, nick, Qt::CaseInsensitive) == 0;
         });
     }
 
     void renameNick(const QString &oldNick, const QString &newNick)
     {
         for (auto &e : nicks)
-            if (e.nick.toLower() == oldNick.toLower()) { e.nick = newNick; break; }
+            if (QString::compare(e.nick, oldNick, Qt::CaseInsensitive) == 0) {
+                e.nick = newNick; break;
+            }
         std::sort(nicks.begin(), nicks.end());
+    }
+
+    static constexpr int kPreviewCap = 100;
+
+    void addPreview(const QString &url, const QString &html)
+    {
+        if (previews.size() >= kPreviewCap)
+            previews.erase(previews.begin());
+        previews.insert(url, html);
     }
 };

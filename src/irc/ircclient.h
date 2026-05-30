@@ -146,4 +146,7 @@ private:
         QList<Msg> msgs;
     };
     QHash<QString, BatchInfo> m_batches;
+
+    // CTCP reply rate-limit: key = "nick:cmd", value = last-reply ms timestamp
+    QHash<QString, qint64> m_ctcpTimestamps;
 };

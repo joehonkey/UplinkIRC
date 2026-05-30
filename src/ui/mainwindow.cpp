@@ -622,6 +622,7 @@ void MainWindow::setupChatArea()
     m_chatView->setReadOnly(true);
     m_chatView->setLineWrapMode(QTextEdit::WidgetWidth);
     m_chatView->setOpenLinks(false);
+    m_chatView->document()->setMaximumBlockCount(kMessageBufferCap + 300);
     if (m_theme.valid)
         m_chatView->document()->setDefaultStyleSheet(
             QString("a { color: %1; text-decoration: underline; }").arg(m_theme.accent));
@@ -687,7 +688,7 @@ void MainWindow::setupChatArea()
                  imgHtml.isEmpty() ? "" : " style=\"padding-left:6px\"",
                  fg.name(), titleEsc, sub.name(), domainEsc);
 
-        ch->previews.insert(urlStr, cardHtml);
+        ch->addPreview(urlStr, cardHtml);
 
         if (host != m_model->activeHost() ||
             channel.toLower() != m_model->activeChannel().toLower())
@@ -1702,8 +1703,11 @@ void MainWindow::onInputSubmit()
                 m_model->sendRaw(host, "PRIVMSG " + target + " :" + ctcp);
             }
         } else if (cmd == "/sysinfo") {
-            const QString info = QString("OS: %1 CPU: %2 MEM: %3 GPU: %4 UP: %5")
-                .arg(sysinfoOS(), sysinfoCPU(), sysinfoMEM(), sysinfoGPU(), sysinfoUptime());
+            static QString sysinfoStaticCache;
+            if (sysinfoStaticCache.isEmpty())
+                sysinfoStaticCache = QString("OS: %1 CPU: %2 MEM: %3 GPU: %4")
+                    .arg(sysinfoOS(), sysinfoCPU(), sysinfoMEM(), sysinfoGPU());
+            const QString info = sysinfoStaticCache + " UP: " + sysinfoUptime();
             m_model->sendMessage(host, channel, info);
         } else if (cmd == "/j") {
             m_model->sendJoin(host, args.section(' ', 0, 0), args.section(' ', 1, 1));
@@ -2107,6 +2111,7 @@ static QString ircToHtml(const QString &raw)
     Fmt     cur;
     int     openSpans = 0;
     QString out;
+    out.reserve(raw.size() * 2);
 
     auto closeAll = [&] {
         for (int i = 0; i < openSpans; ++i) out += "</span>";

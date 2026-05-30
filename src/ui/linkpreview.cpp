@@ -4,6 +4,9 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QRegularExpression>
+#include <QHostAddress>
+#include <QBuffer>
+#include <QImageReader>
 #include <memory>
 
 static constexpr int kMaxBytes    = 32768;   // 32 KB — more room for late <title> tags
@@ -23,8 +26,33 @@ static bool isImageUrl(const QUrl &url)
         || p.endsWith(".gif") || p.endsWith(".webp");
 }
 
+static bool isPrivateUrl(const QUrl &url)
+{
+    const QString scheme = url.scheme().toLower();
+    if (scheme != "http" && scheme != "https") return true;
+
+    const QString host = url.host().toLower();
+    if (host == "localhost" || host.endsWith(".local")) return true;
+
+    QHostAddress addr(host);
+    if (!addr.isNull()) {
+        if (addr.isLoopback())                                       return true;
+        if (addr.isInSubnet(QHostAddress("10.0.0.0"),    8))        return true;
+        if (addr.isInSubnet(QHostAddress("172.16.0.0"),  12))       return true;
+        if (addr.isInSubnet(QHostAddress("192.168.0.0"), 16))       return true;
+        if (addr.isInSubnet(QHostAddress("169.254.0.0"), 16))       return true;
+        if (addr.isInSubnet(QHostAddress("127.0.0.0"),   8))        return true;
+        if (addr.isInSubnet(QHostAddress("::1"),         128))      return true;
+        if (addr.isInSubnet(QHostAddress("fc00::"),      7))        return true;
+    }
+
+    return false;
+}
+
 void LinkPreview::fetch(const QUrl &url)
 {
+    if (isPrivateUrl(url)) return;
+
     const QString key = url.toString();
 
     if (m_cache.contains(key)) {
@@ -118,12 +146,15 @@ void LinkPreview::fetchImage(const QUrl &pageUrl, const QString &title, const QU
             [this, imgReply, imgBuf, pageUrl, title]{
         QPixmap pm;
         if (!imgBuf->isEmpty()) {
-            pm.loadFromData(*imgBuf);
-            if (!pm.isNull()) {
-                if (pm.width() > 120)
-                    pm = pm.scaledToWidth(120, Qt::SmoothTransformation);
-                if (pm.height() > 90)
-                    pm = pm.scaledToHeight(90, Qt::SmoothTransformation);
+            QBuffer buf(imgBuf.get());
+            buf.open(QIODevice::ReadOnly);
+            QImageReader reader(&buf);
+            const QSize srcSize = reader.size();
+            if (srcSize.isValid() && srcSize.width() <= 4096 && srcSize.height() <= 4096) {
+                reader.setScaledSize(srcSize.scaled(120, 90, Qt::KeepAspectRatio));
+                QImage img = reader.read();
+                if (!img.isNull())
+                    pm = QPixmap::fromImage(std::move(img));
             }
         }
         imgReply->deleteLater();

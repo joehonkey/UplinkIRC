@@ -109,10 +109,23 @@ void IrcClient::markRead(const QString &target, const QDateTime &ts)
     sendRaw("MARKREAD " + target + " timestamp=" + ts.toUTC().toString(Qt::ISODateWithMs));
 }
 
+static QString redactRawForLog(const QString &line)
+{
+    const QString cmd = line.section(' ', 0, 0).toUpper();
+    if (cmd == "PASS")
+        return "PASS :<redacted>";
+    if (cmd == "AUTHENTICATE")
+        return "AUTHENTICATE <redacted>";
+    if (line.contains("NickServ", Qt::CaseInsensitive) &&
+        line.contains("IDENTIFY", Qt::CaseInsensitive))
+        return "<NickServ IDENTIFY redacted>";
+    return line;
+}
+
 void IrcClient::sendRaw(const QString &line)
 {
     if (m_socket->state() != QAbstractSocket::ConnectedState) return;
-    emit rawReceived(">> " + line);
+    emit rawReceived(">> " + redactRawForLog(line));
     m_socket->write((line + "\r\n").toUtf8());
 }
 
@@ -151,14 +164,33 @@ void IrcClient::onDisconnected()
     m_intentionalDisconnect = false;
 }
 
+static constexpr qsizetype kMaxPendingBuffer = 64 * 1024;
+static constexpr qsizetype kMaxIrcLine       = 8192;
+static constexpr int       kMaxOpenBatches   = 8;
+static constexpr int       kMaxBatchMessages = 1000;
+
 void IrcClient::onReadyRead()
 {
     m_buffer += QString::fromUtf8(m_socket->readAll());
+
+    if (m_buffer.size() > kMaxPendingBuffer) {
+        emit socketError(m_host, "Server sent oversized unterminated data; disconnecting");
+        m_socket->disconnectFromHost();
+        m_buffer.clear();
+        return;
+    }
+
     int idx;
     while ((idx = m_buffer.indexOf('\n')) != -1) {
-        QString line = m_buffer.left(idx).trimmed();
+        QString line = m_buffer.left(idx);
         m_buffer.remove(0, idx + 1);
+        if (line.endsWith('\r'))
+            line.chop(1);
         if (line.isEmpty()) continue;
+        if (line.size() > kMaxIrcLine) {
+            emit socketError(m_host, "Dropped oversized IRC line from server");
+            continue;
+        }
         emit rawReceived(line);
         processLine(line);
     }
@@ -166,15 +198,18 @@ void IrcClient::onReadyRead()
 
 void IrcClient::onSslErrors(const QList<QSslError> &errors)
 {
-    Q_UNUSED(errors)
-    m_socket->ignoreSslErrors();
+    QStringList msgs;
+    for (const auto &e : errors)
+        msgs << e.errorString();
+    emit socketError(m_host, "TLS error: " + msgs.join("; "));
+    m_socket->disconnectFromHost();
 }
 
 void IrcClient::onErrorOccurred(QAbstractSocket::SocketError)
 {
     emit socketError(m_host, m_socket->errorString());
-    emit disconnected(m_host);
-    scheduleReconnect();
+    // disconnected() and scheduleReconnect() are handled by onDisconnected()
+    // which Qt emits after every socket error that closes the connection.
 }
 
 void IrcClient::scheduleReconnect()
@@ -273,13 +308,18 @@ void IrcClient::processLine(const QString &line)
     // If this message belongs to an active batch, buffer it
     const QString batchRef = msg.tags.value("batch");
     if (!batchRef.isEmpty() && m_batches.contains(batchRef)) {
+        auto &batch = m_batches[batchRef];
+        if (batch.msgs.size() >= kMaxBatchMessages) {
+            emit errorMessage(m_host, "IRC batch too large; dropping extra messages");
+            return;
+        }
         BatchInfo::Msg bm;
         bm.command    = cmd;
         bm.nick       = msg.nick;
         bm.params     = msg.params;
         bm.trailing   = msg.trailing;
         bm.serverTime = msg.serverTime;
-        m_batches[batchRef].msgs.append(bm);
+        batch.msgs.append(bm);
         return;
     }
 
@@ -301,10 +341,21 @@ void IrcClient::processLine(const QString &line)
                 emit actionReceived(m_host, isSelf ? target : target,
                                     msg.nick, ctcp.mid(7), serverTime, false);
             } else if (ctcpCmd == "VERSION") {
-                sendRaw("NOTICE " + msg.nick + " :\x01VERSION UplinkIRC " UPLINKIRC_VERSION "\x01");
-                emit serverMessage(m_host, "CTCP VERSION from " + msg.nick);
+                const QString rkey = msg.nick + ":VERSION";
+                const qint64  now  = QDateTime::currentMSecsSinceEpoch();
+                if (now - m_ctcpTimestamps.value(rkey, 0) >= 5000) {
+                    m_ctcpTimestamps.insert(rkey, now);
+                    sendRaw("NOTICE " + msg.nick + " :\x01VERSION UplinkIRC " UPLINKIRC_VERSION "\x01");
+                    emit serverMessage(m_host, "CTCP VERSION from " + msg.nick);
+                }
             } else if (ctcpCmd == "PING") {
-                sendRaw("NOTICE " + msg.nick + " :\x01PING " + ctcp.section(' ', 1) + "\x01");
+                const QString rkey = msg.nick + ":PING";
+                const qint64  now  = QDateTime::currentMSecsSinceEpoch();
+                if (now - m_ctcpTimestamps.value(rkey, 0) >= 5000) {
+                    m_ctcpTimestamps.insert(rkey, now);
+                    QString payload = ctcp.section(' ', 1).left(32);
+                    sendRaw("NOTICE " + msg.nick + " :\x01PING " + payload + "\x01");
+                }
             } else {
                 emit serverMessage(m_host, "CTCP " + ctcpCmd + " from " + msg.nick);
             }
@@ -398,9 +449,12 @@ void IrcClient::handleBatch(const QStringList &params)
     const QString refArg = params[0];
 
     if (refArg.startsWith('+')) {
-        // Start batch
-        const QString ref  = refArg.mid(1);
-        const QString type = params.size() > 1 ? params[1] : QString();
+        if (m_batches.size() >= kMaxOpenBatches) {
+            emit errorMessage(m_host, "Too many open IRC batches; ignoring");
+            return;
+        }
+        const QString ref   = refArg.mid(1);
+        const QString type  = params.size() > 1 ? params[1] : QString();
         const QString param = params.size() > 2 ? params[2] : QString();
         BatchInfo bi;
         bi.type  = type;

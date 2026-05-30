@@ -2,10 +2,21 @@
 
 #include <QDir>
 #include <QFile>
+#include <QSaveFile>
 #include <QStandardPaths>
 #include <QDebug>
 
 #include <toml++/toml.hpp>
+
+static QString tomlQuote(QString s)
+{
+    s.replace("\\", "\\\\");
+    s.replace("\"", "\\\"");
+    s.replace("\n", "\\n");
+    s.replace("\r", "\\r");
+    s.replace("\t", "\\t");
+    return "\"" + s + "\"";
+}
 
 static const char *kDefaultConfig = R"(
 [ui]
@@ -52,10 +63,12 @@ void Config::ensureExists(const QString &path)
 
     QDir().mkpath(fi.absolutePath());
     QFile f(path);
-    if (f.open(QIODevice::WriteOnly | QIODevice::Text))
+    if (f.open(QIODevice::WriteOnly | QIODevice::Text)) {
         f.write(kDefaultConfig);
-    else
+        f.setPermissions(QFileDevice::ReadOwner | QFileDevice::WriteOwner);
+    } else {
         qWarning() << "UplinkIRC: could not create config at" << path;
+    }
 }
 
 Config Config::load(const QString &path)
@@ -143,25 +156,26 @@ Config Config::load(const QString &path)
 void Config::save(const Config &cfg, const QString &path)
 {
     QDir().mkpath(QFileInfo(path).absolutePath());
-    QFile f(path);
+
+    QSaveFile f(path);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        qWarning() << "UplinkIRC: could not save config to" << path;
+        qWarning() << "UplinkIRC: could not open config for writing at" << path;
         return;
     }
 
     QTextStream out(&f);
 
     out << "[ui]\n";
-    out << "theme             = \"" << cfg.ui.theme << "\"\n";
+    out << "theme             = " << tomlQuote(cfg.ui.theme)       << "\n";
     out << "show_nick_prefix  = " << (cfg.ui.showNickPrefix  ? "true" : "false") << "\n";
     out << "show_topic        = " << (cfg.ui.showTopic       ? "true" : "false") << "\n";
     out << "show_emoji_button = " << (cfg.ui.showEmojiButton ? "true" : "false") << "\n";
     out << "colored_nicks     = " << (cfg.ui.coloredNicks     ? "true" : "false") << "\n";
     out << "typing_indicator  = " << (cfg.ui.typingIndicator  ? "true" : "false") << "\n";
-    out << "nick_brackets     = \"" << cfg.ui.nickBrackets << "\"\n";
+    out << "nick_brackets     = " << tomlQuote(cfg.ui.nickBrackets) << "\n";
     out << "notifications     = " << (cfg.ui.notifications    ? "true" : "false") << "\n";
-    out << "app_icon          = \"" << cfg.ui.appIcon << "\"\n";
-    out << "font_family       = \"" << cfg.ui.fontFamily << "\"\n";
+    out << "app_icon          = " << tomlQuote(cfg.ui.appIcon)     << "\n";
+    out << "font_family       = " << tomlQuote(cfg.ui.fontFamily)  << "\n";
     out << "font_toolbar       = " << cfg.ui.fontSizes.toolbar      << "\n";
     out << "font_server_header = " << cfg.ui.fontSizes.serverHeader << "\n";
     out << "font_sidebar       = " << cfg.ui.fontSizes.sidebar      << "\n";
@@ -175,35 +189,40 @@ void Config::save(const Config &cfg, const QString &path)
 
     for (const auto &s : cfg.servers) {
         out << "[[server]]\n";
-        out << "name     = \"" << s.name     << "\"\n";
-        out << "host     = \"" << s.host     << "\"\n";
-        out << "port     = "   << s.port     << "\n";
-        out << "ssl      = "   << (s.ssl ? "true" : "false") << "\n";
-        out << "nick     = \"" << s.nick     << "\"\n";
-        out << "user     = \"" << s.user     << "\"\n";
-        out << "realname = \"" << s.realname << "\"\n";
+        out << "name     = " << tomlQuote(s.name)     << "\n";
+        out << "host     = " << tomlQuote(s.host)     << "\n";
+        out << "port     = " << s.port                << "\n";
+        out << "ssl      = " << (s.ssl ? "true" : "false") << "\n";
+        out << "nick     = " << tomlQuote(s.nick)     << "\n";
+        out << "user     = " << tomlQuote(s.user)     << "\n";
+        out << "realname = " << tomlQuote(s.realname) << "\n";
         if (!s.password.isEmpty())
-            out << "password     = \"" << s.password << "\"\n";
+            out << "password          = " << tomlQuote(s.password) << "\n";
         if (!s.saslUser.isEmpty())
-            out << "sasl_user         = \"" << s.saslUser << "\"\n";
+            out << "sasl_user         = " << tomlQuote(s.saslUser) << "\n";
         if (!s.saslPassword.isEmpty())
-            out << "sasl_password     = \"" << s.saslPassword << "\"\n";
+            out << "sasl_password     = " << tomlQuote(s.saslPassword) << "\n";
         if (!s.nickservPassword.isEmpty())
-            out << "nickserv_password = \"" << s.nickservPassword << "\"\n";
+            out << "nickserv_password = " << tomlQuote(s.nickservPassword) << "\n";
         if (s.bouncerType == BouncerType::ZNC)
             out << "bouncer           = \"znc\"\n";
         else if (s.bouncerType == BouncerType::Soju)
             out << "bouncer           = \"soju\"\n";
         if (!s.bouncerNetwork.isEmpty())
-            out << "bouncer_network   = \"" << s.bouncerNetwork << "\"\n";
+            out << "bouncer_network   = " << tomlQuote(s.bouncerNetwork) << "\n";
         if (!s.channels.isEmpty()) {
             QStringList names;
             for (const auto &ch : s.channels)
                 names << ch.name;
-            out << "channels = \"" << names.join(", ") << "\"\n";
+            out << "channels = " << tomlQuote(names.join(", ")) << "\n";
         }
         out << "\n";
     }
+
+    if (!f.commit())
+        qWarning() << "UplinkIRC: failed to commit config to" << path;
+    else
+        QFile::setPermissions(path, QFileDevice::ReadOwner | QFileDevice::WriteOwner);
 }
 
 bool Config::needsNickSetup() const

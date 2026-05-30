@@ -29,7 +29,9 @@ struct ServerSession {
 
     Channel *get(const QString &name)
     {
-        return channels.contains(name.toLower()) ? &channels[name.toLower()] : nullptr;
+        const QString key = name.toLower();
+        auto it = channels.find(key);
+        return it == channels.end() ? nullptr : &it.value();
     }
 
     // Server-level messages go into a pseudo-channel called "(server)"
