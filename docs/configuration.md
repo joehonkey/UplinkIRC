@@ -8,9 +8,9 @@ UplinkIRC is configured with a single TOML file. On first launch it is created a
 
 | Platform | Path |
 |---|---|
-| Linux / FreeBSD | `~/.config/LinuxDojo/UplinkIRC/config.toml` |
-| macOS | `~/Library/Application Support/LinuxDojo/UplinkIRC/config.toml` |
-| Windows | `%APPDATA%\LinuxDojo\UplinkIRC\config.toml` |
+| Linux / FreeBSD | `~/.config/uplinkirc/config.toml` |
+| macOS | `~/.config/uplinkirc/config.toml` |
+| Windows | `%USERPROFILE%\.config\uplinkirc\config.toml` |
 
 You can edit the file directly, or use the in-app tools under ☰:
 
@@ -461,11 +461,11 @@ Themes can be switched live from the **Preferences** dialog (click ☰) without 
 
 ### Theme search path
 
-1. `~/.config/LinuxDojo/UplinkIRC/themes/<name>.toml` — personal themes
+1. `~/.config/uplinkirc/themes/<name>.toml` — personal themes
 2. `<exe directory>/themes/<name>.toml` — shipped themes next to the binary
 3. `themes/<name>.toml` — relative to the current working directory
 
-To add a custom theme, drop a `.toml` file into `~/.config/LinuxDojo/UplinkIRC/themes/`. It appears in the Preferences theme list on the next launch.
+To add a custom theme, drop a `.toml` file into `~/.config/uplinkirc/themes/`. It appears in the Preferences theme list on the next launch.
 
 ---
 

@@ -44,7 +44,7 @@ UplinkIRC detected that your config still has the placeholder nick `yournick`. T
 
 ### themes/ folder missing — no themes load
 
-The `themes/` folder must be in the same directory as the `UplinkIRC` binary (or at `~/.config/LinuxDojo/UplinkIRC/themes/`). If you moved the binary, copy the folder back:
+The `themes/` folder must be in the same directory as the `UplinkIRC` binary (or at `~/.config/uplinkirc/themes/`). If you moved the binary, copy the folder back:
 
 ```bash
 cp -r themes/ /path/to/your/binary/
@@ -60,9 +60,9 @@ If you built with CMake, themes are copied to the build directory automatically 
 
 | Platform | Path |
 |---|---|
-| Linux / FreeBSD | `~/.config/LinuxDojo/UplinkIRC/config.toml` |
-| macOS | `~/Library/Application Support/LinuxDojo/UplinkIRC/config.toml` |
-| Windows | `%APPDATA%\LinuxDojo\UplinkIRC\config.toml` |
+| Linux / FreeBSD | `~/.config/uplinkirc/config.toml` |
+| macOS | `~/.config/uplinkirc/config.toml` |
+| Windows | `%USERPROFILE%\.config\uplinkirc\config.toml` |
 
 Open it in any text editor and restart UplinkIRC to apply changes.
 
@@ -75,7 +75,7 @@ Saves are **atomic** — UplinkIRC writes to a temporary file and renames it int
 If you ever need to verify permissions on Linux:
 
 ```bash
-ls -l ~/.config/LinuxDojo/UplinkIRC/config.toml
+ls -l ~/.config/uplinkirc/config.toml
 # should show: -rw------- (600)
 ```
 

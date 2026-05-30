@@ -1,5 +1,5 @@
 # UplinkIRC configuration example
-# Copy to ~/.config/LinuxDojo/UplinkIRC/config.toml and set your nick.
+# Copy to ~/.config/uplinkirc/config.toml and set your nick.
 # This file is created automatically on first launch if it does not exist.
 
 [ui]

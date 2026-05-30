@@ -219,9 +219,9 @@ The config file is created automatically on first launch. You only need to fill 
 
 | Platform | Path |
 |---|---|
-| Linux / FreeBSD | `~/.config/LinuxDojo/UplinkIRC/config.toml` |
-| macOS | `~/Library/Application Support/LinuxDojo/UplinkIRC/config.toml` |
-| Windows | `%APPDATA%\LinuxDojo\UplinkIRC\config.toml` |
+| Linux / FreeBSD | `~/.config/uplinkirc/config.toml` |
+| macOS | `~/.config/uplinkirc/config.toml` |
+| Windows | `%USERPROFILE%\.config\uplinkirc\config.toml` |
 
 ### Minimal example
 
