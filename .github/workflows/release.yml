@@ -32,7 +32,8 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y \
             qt6-base-dev qt6-tools-dev libqt6svg6-dev \
-            cmake ninja-build
+            cmake ninja-build \
+            libfuse2 librsvg2-bin
 
       - name: Setup Python (Windows)
         if: runner.os == 'Windows'
@@ -80,6 +81,12 @@ jobs:
           tar -czf UplinkIRC-${{ github.ref_name }}-linux-x86_64.tar.gz \
               -C artifact UplinkIRC
 
+      - name: Build AppImage (Linux)
+        if: runner.os == 'Linux'
+        env:
+          UPDATE_INFORMATION: "gh-releases-zsync|${{ github.repository_owner }}|${{ github.event.repository.name }}|latest|UplinkIRC-*-x86_64.AppImage.zsync"
+        run: bash packaging/build-appimage.sh
+
       # ── Windows ──────────────────────────────────────────────────────────
       - name: Package (Windows)
         if: runner.os == 'Windows'
@@ -105,6 +112,9 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          files: UplinkIRC-${{ github.ref_name }}-*
+          files: |
+            UplinkIRC-${{ github.ref_name }}-*
+            UplinkIRC-*.AppImage
+            UplinkIRC-*.AppImage.zsync
           generate_release_notes: true
 

@@ -86,6 +86,13 @@ fi
 
 export OUTPUT="UplinkIRC-$VERSION-$ARCH.AppImage"
 
+# If UPDATE_INFORMATION is set (e.g. by CI), embed zsync metadata for auto-update.
+# Format: gh-releases-zsync|owner|repo|latest|UplinkIRC-*-ARCH.AppImage.zsync
+if [[ -n "${UPDATE_INFORMATION:-}" ]]; then
+    export UPDATE_INFORMATION
+    echo "==> Embedding update info: $UPDATE_INFORMATION"
+fi
+
 "$LD" \
     --appdir "$APPDIR" \
     --plugin qt \
