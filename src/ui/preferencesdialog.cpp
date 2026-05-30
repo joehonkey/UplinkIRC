@@ -135,6 +135,11 @@ PreferencesDialog::PreferencesDialog(const Config &cfg, QWidget *parent)
     connect(m_coloredNicksCheck, &QCheckBox::toggled, this, [this](bool on){ emit coloredNicksToggled(on); });
     vbox->addWidget(m_coloredNicksCheck);
 
+    m_hangingIndentCheck = new QCheckBox("Hanging Indent (wrap under message)");
+    m_hangingIndentCheck->setChecked(cfg.ui.hangingIndent);
+    connect(m_hangingIndentCheck, &QCheckBox::toggled, this, [this](bool on){ emit hangingIndentToggled(on); });
+    vbox->addWidget(m_hangingIndentCheck);
+
     vbox->addSpacing(4);
     {
         auto *row = new QHBoxLayout;

@@ -71,6 +71,7 @@ struct UiConfig {
     FontSizes fontSizes;
     bool      typingIndicator{true};
     bool      notifications{true};
+    bool      hangingIndent{true};
     QString   appIcon{"dark"};
     QString   nickBrackets{"<>"};
 };

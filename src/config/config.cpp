@@ -26,6 +26,7 @@ show_topic        = true
 show_emoji_button = false
 colored_nicks     = true
 typing_indicator  = true
+hanging_indent    = true
 nick_brackets     = "<>"         # "<>" angle, "[]" square, "::::" double-colon, "" none
 font_family       = "IBM Plex Mono"
 font_toolbar    = 10
@@ -94,6 +95,7 @@ Config Config::load(const QString &path)
             cfg.ui.showEmojiButton = (*ui)["show_emoji_button"].value_or(false);
             cfg.ui.coloredNicks          = (*ui)["colored_nicks"].value_or(true);
             cfg.ui.typingIndicator       = (*ui)["typing_indicator"].value_or(true);
+            cfg.ui.hangingIndent         = (*ui)["hanging_indent"].value_or(true);
             cfg.ui.nickBrackets          = QString::fromStdString((*ui)["nick_brackets"].value_or<std::string>("<>"));
             cfg.ui.notifications         = (*ui)["notifications"].value_or(true);
             cfg.ui.appIcon               = QString::fromStdString((*ui)["app_icon"].value_or<std::string>("dark"));
@@ -175,6 +177,7 @@ void Config::save(const Config &cfg, const QString &path)
     out << "show_emoji_button = " << (cfg.ui.showEmojiButton ? "true" : "false") << "\n";
     out << "colored_nicks     = " << (cfg.ui.coloredNicks     ? "true" : "false") << "\n";
     out << "typing_indicator  = " << (cfg.ui.typingIndicator  ? "true" : "false") << "\n";
+    out << "hanging_indent    = " << (cfg.ui.hangingIndent    ? "true" : "false") << "\n";
     out << "nick_brackets     = " << tomlQuote(cfg.ui.nickBrackets) << "\n";
     out << "notifications     = " << (cfg.ui.notifications    ? "true" : "false") << "\n";
     out << "app_icon          = " << tomlQuote(cfg.ui.appIcon)     << "\n";

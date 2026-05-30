@@ -22,6 +22,7 @@ signals:
     void typingIndicatorToggled(bool on);
     void notificationsToggled(bool on);
     void coloredNicksToggled(bool on);
+    void hangingIndentToggled(bool on);
     void nickBracketsChanged(const QString &brackets);
     void manageServersRequested();
     void aboutRequested();
@@ -36,6 +37,7 @@ private:
     QCheckBox   *m_typingCheck{nullptr};
     QCheckBox   *m_notificationsCheck{nullptr};
     QCheckBox   *m_coloredNicksCheck{nullptr};
+    QCheckBox   *m_hangingIndentCheck{nullptr};
     QComboBox   *m_bracketsCombo{nullptr};
 
     static const QList<QPair<QString,QString>> s_iconChoices;

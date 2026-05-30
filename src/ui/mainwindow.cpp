@@ -69,6 +69,23 @@
 // hamburger (22) + gear (22) + right margin (4) even when the sidebar is closed.
 static constexpr int kBtnZoneMinW = 48;
 
+static void insertHtmlBlock(QTextBrowser *view, const QString &html, bool hangIndent = false)
+{
+    QTextCursor cursor(view->document());
+    cursor.movePosition(QTextCursor::End);
+    if (view->document()->characterCount() > 1)
+        cursor.insertBlock();
+    if (hangIndent) {
+        const QFontMetrics fm(view->font());
+        const int indent = fm.horizontalAdvance("00:00  ");
+        QTextBlockFormat fmt;
+        fmt.setLeftMargin(indent);
+        fmt.setTextIndent(-indent);
+        cursor.setBlockFormat(fmt);
+    }
+    cursor.insertHtml(html);
+}
+
 // ---------------------------------------------------------------------------
 // Nick color — consistent hash-based color per nick
 // ---------------------------------------------------------------------------
@@ -324,6 +341,11 @@ void MainWindow::connectPreferences()
         Config::save(m_config, Config::defaultPath());
         if (!m_model->activeHost().isEmpty() && !m_model->activeChannel().isEmpty())
             refreshNickList(m_model->activeHost(), m_model->activeChannel());
+    });
+
+    connect(m_prefsDialog, &PreferencesDialog::hangingIndentToggled, this, [this](bool on){
+        m_config.ui.hangingIndent = on;
+        Config::save(m_config, Config::defaultPath());
     });
 
     connect(m_prefsDialog, &PreferencesDialog::nickBracketsChanged, this, [this](const QString &br){
@@ -679,16 +701,21 @@ void MainWindow::setupChatArea()
         const QString titleEsc  = title.toHtmlEscaped().left(120);
         const QString domainEsc = pageUrl.host().toHtmlEscaped();
 
+        const int cardLeft = m_config.ui.hangingIndent
+            ? QFontMetrics(m_chatView->font()).horizontalAdvance("00:00  ")
+            : 20;
+
         const QString cardHtml = QString(
             "<table cellpadding=\"5\" cellspacing=\"0\" "
-            "style=\"margin:1px 0 3px 20px;"
-            "border-left:3px solid %1;"
-            "background-color:%2\">"
-            "<tr>%3"
-            "<td valign=\"top\"%4>"
-            "<span style=\"color:%5;font-weight:bold\">%6</span><br/>"
-            "<span style=\"color:%7;font-size:8pt\">%8</span>"
+            "style=\"margin:1px 0 3px %1px;"
+            "border-left:3px solid %2;"
+            "background-color:%3\">"
+            "<tr>%4"
+            "<td valign=\"top\"%5>"
+            "<span style=\"color:%6;font-weight:bold\">%7</span><br/>"
+            "<span style=\"color:%8;font-size:8pt\">%9</span>"
             "</td></tr></table>")
+            .arg(cardLeft)
             .arg(border.name(), bg.name(), imgHtml,
                  imgHtml.isEmpty() ? "" : " style=\"padding-left:6px\"",
                  fg.name(), titleEsc, sub.name(), domainEsc);
@@ -702,7 +729,7 @@ void MainWindow::setupChatArea()
         QScrollBar *sb = m_chatView->verticalScrollBar();
         const bool atBottom = sb->value() >= sb->maximum() - 4;
 
-        m_chatView->append(cardHtml);
+        insertHtmlBlock(m_chatView, cardHtml);
 
         if (atBottom)
             sb->setValue(sb->maximum());
@@ -2054,7 +2081,7 @@ void MainWindow::refreshChatView(const QString &host, const QString &channel)
                 const QString urlStr = QUrl(it.next().captured(0)).toString();
                 const auto p = ch->previews.constFind(urlStr);
                 if (p != ch->previews.constEnd())
-                    m_chatView->append(p.value());
+                    insertHtmlBlock(m_chatView, p.value());
             }
         }
     }
@@ -2137,7 +2164,10 @@ void MainWindow::refreshTopicBar(const QString &host, const QString &channel)
 
 void MainWindow::appendMessage(const Message &msg, bool autoPreview)
 {
-    m_chatView->append(formatMessage(msg));
+    const bool isText = (msg.type == MessageType::Privmsg ||
+                         msg.type == MessageType::Action  ||
+                         msg.type == MessageType::Notice);
+    insertHtmlBlock(m_chatView, formatMessage(msg), isText && m_config.ui.hangingIndent);
 
     if (autoPreview &&
         (msg.type == MessageType::Privmsg ||
