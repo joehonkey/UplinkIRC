@@ -36,6 +36,12 @@ Known issues remaining:
   - DCC Send File not implemented
 -->
 
+## v0.7.14 — 2026-05-29
+
+- Fix: hamburger (☰) and gear (⚙) buttons stay visible in the topic bar when the sidebar is collapsed; only the server list collapses beneath them
+
+---
+
 ## v0.7.13 — 2026-05-29
 
 - **Full-width topic bar** — spans above the server list and chat area; hamburger (☰) and gear (⚙) sit in the left zone above the server list; signal bars + channel info in the right zone above the chat
