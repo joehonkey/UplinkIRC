@@ -305,6 +305,7 @@
   <ul>
     <li><a href="#what-is">What is UplinkIRC?</a></li>
     <li><a href="#download">Download (pre-built)</a></li>
+    <li><a href="#appimage">AppImage (Linux)</a></li>
     <li><a href="#dependencies">Install dependencies</a></li>
     <li><a href="#build">Build from source</a></li>
     <li><a href="#first-launch">First launch</a></li>
@@ -323,6 +324,7 @@
   <ul>
     <li><a href="#nickserv">NickServ auto-identify</a></li>
     <li><a href="#sasl">SASL PLAIN</a></li>
+    <li><a href="#sasl-external">SASL EXTERNAL (cert)</a></li>
   </ul>
 
   <div class="nav-section">Multiple Servers</div>
@@ -352,6 +354,7 @@
     <li><a href="#tab">Tab completion</a></li>
     <li><a href="#history">Input history</a></li>
     <li><a href="#link-previews">Link previews</a></li>
+    <li><a href="#dcc">DCC file transfer</a></li>
   </ul>
 
   <div class="nav-section">Tweaks</div>
@@ -360,6 +363,7 @@
     <li><a href="#fonts">Font sizes</a></li>
     <li><a href="#brackets">Nick brackets</a></li>
     <li><a href="#panels">Show/hide panels</a></li>
+    <li><a href="#hanging-indent">Hanging indent</a></li>
     <li><a href="#app-icon">App icon</a></li>
     <li><a href="#notifications">Notifications</a></li>
   </ul>
@@ -400,7 +404,12 @@
     <table>
       <tr><th>Platform</th><th>Download</th><th>How to run</th></tr>
       <tr>
-        <td>Linux x86_64</td>
+        <td>Linux x86_64 (AppImage)</td>
+        <td><a href="https://github.com/joehonkey/UplinkIRC/releases/latest">Latest release ↗</a></td>
+        <td><code>chmod +x UplinkIRC-*.AppImage &amp;&amp; ./UplinkIRC-*.AppImage</code></td>
+      </tr>
+      <tr>
+        <td>Linux x86_64 (tar.gz)</td>
         <td><a href="https://github.com/joehonkey/UplinkIRC/releases/latest">Latest release ↗</a></td>
         <td>Extract the <code>.tar.gz</code>, run <code>./UplinkIRC</code></td>
       </tr>
@@ -422,7 +431,26 @@
     </table>
 
     <div class="tip">
-      <strong>Linux users:</strong> make sure Qt6 runtime libraries are installed. On Arch: <code>sudo pacman -S qt6-base qt6-svg</code>. On Ubuntu 22.04+: <code>sudo apt install libqt6widgets6 libqt6network6</code>.
+      <strong>Linux users:</strong> the AppImage is the recommended download — it is self-contained and runs on any modern x86_64 Linux without installing Qt. See the <a href="#appimage">AppImage section</a> for update instructions.
+    </div>
+  </section>
+
+  <!-- APPIMAGE -->
+  <section id="appimage">
+    <h2>AppImage — run anywhere, update in-place</h2>
+    <p>The AppImage bundles UplinkIRC and its Qt libraries into a single executable file. It runs on any modern x86_64 Linux with glibc 2.35+ — no package manager, no Qt install needed.</p>
+
+    <h3>Run it</h3>
+    <pre>chmod +x UplinkIRC-*.AppImage
+./UplinkIRC-*.AppImage</pre>
+
+    <h3>Update in-place (zsync)</h3>
+    <p>The AppImage embeds zsync metadata pointing to the latest release. Install <a href="https://github.com/AppImageCommunity/AppImageUpdate" target="_blank">appimageupdatetool</a>, then:</p>
+    <pre>appimageupdatetool ./UplinkIRC-0.9.0-x86_64.AppImage</pre>
+    <p>Only the changed blocks are downloaded — much faster than a full re-download.</p>
+
+    <div class="tip">
+      <strong>Optional:</strong> place the AppImage in <code>~/bin/</code> or <code>~/.local/bin/</code> and it will appear in your application launcher if your desktop environment supports AppImage integration (most do with <code>libappindicator</code> installed).
     </div>
   </section>
 
@@ -637,6 +665,49 @@ sasl_password = "mysecretpassword" # ← your NickServ password</pre>
 
     <div class="tip">
       <strong>SASL or NickServ?</strong> Use SASL if the server supports it (Libera, OFTC). Use <code>nickserv_password</code> for servers that don't (LinuxDojo, older networks).
+    </div>
+  </section>
+
+  <!-- SASL EXTERNAL -->
+  <section id="sasl-external">
+    <h2>SASL EXTERNAL (certificate authentication)</h2>
+    <p>SASL EXTERNAL authenticates you by your TLS client certificate instead of a password. The server derives your identity from the certificate's fingerprint — nothing is ever typed or transmitted. Supported on Libera.Chat, OFTC, and most modern IRC servers.</p>
+
+    <h3>1. Generate a client certificate</h3>
+    <pre># RSA (most compatible)
+openssl req -newkey rsa:4096 -nodes -x509 -days 3650 \
+  -keyout ~/.irc/client.key -out ~/.irc/client.crt \
+  -subj "/CN=yournick"
+
+# EC (smaller, equally secure)
+openssl req -newkey ec -pkeyopt ec_paramgen_curve:P-384 -nodes -x509 -days 3650 \
+  -keyout ~/.irc/client.key -out ~/.irc/client.crt \
+  -subj "/CN=yournick"</pre>
+
+    <h3>2. Register the fingerprint with NickServ</h3>
+    <p>Connect once with your password, then add the certificate fingerprint:</p>
+    <pre>/msg NickServ cert add</pre>
+    <p>The server extracts the fingerprint automatically from your certificate.</p>
+
+    <h3>3. Configure UplinkIRC</h3>
+    <pre>[[server]]
+name          = "Libera.Chat"
+host          = "irc.libera.chat"
+port          = 6697
+ssl           = true
+nick          = "alice"
+user          = "uplink"
+realname      = "UplinkIRC User"
+channels      = "#linux"
+sasl_external = true
+client_cert   = "/home/alice/.irc/client.crt"
+client_key    = "/home/alice/.irc/client.key"</pre>
+
+    <p>UplinkIRC loads the certificate before the TLS handshake, negotiates <code>AUTHENTICATE EXTERNAL</code>, and sends an empty response. Both RSA and EC (ECDSA) PEM keys are supported.</p>
+    <p>You can also set the cert and key paths from the Server dialog: <strong>☰ → Preferences → Manage Servers → Edit</strong>, then tick <strong>SASL EXTERNAL</strong> and browse to your files.</p>
+
+    <div class="warn">
+      <strong>Do not set <code>sasl_user</code> / <code>sasl_password</code> alongside <code>sasl_external</code></strong> — only one SASL mechanism is used per connection.
     </div>
   </section>
 
@@ -950,6 +1021,31 @@ show_emoji_button = true</pre>
     <p>Previews are lightweight — HTML is capped at 32 KB, images at 200 KB, results are cached for the session.</p>
   </section>
 
+  <!-- DCC -->
+  <section id="dcc">
+    <h2>DCC file transfer</h2>
+    <p>DCC (Direct Client-to-Client) lets you send files directly to another user without going through the IRC server.</p>
+
+    <h3>Sending a file</h3>
+    <div class="step-row"><span class="step">1</span><div>Right-click the recipient's nick in the user list.</div></div>
+    <div class="step-row"><span class="step">2</span><div>Choose <strong>Send File</strong>.</div></div>
+    <div class="step-row"><span class="step">3</span><div>Pick a file in the file picker. UplinkIRC opens a TCP port and sends the offer.</div></div>
+    <div class="step-row"><span class="step">4</span><div>A progress dialog with a Cancel button appears. Transfer begins once the recipient accepts.</div></div>
+
+    <h3>Receiving a file</h3>
+    <p>When someone sends you a file, an accept/reject dialog appears showing the filename and size. If you accept, you're asked where to save it. A live progress dialog shows transfer status with a Cancel button.</p>
+
+    <h3>Timeouts</h3>
+    <ul>
+      <li><strong>Sender side:</strong> 60 seconds to receive an incoming connection before the offer is cancelled.</li>
+      <li><strong>Receiver side:</strong> 30 seconds to connect to the sender before giving up.</li>
+    </ul>
+
+    <div class="warn">
+      <strong>LAN only for now.</strong> DCC advertises your local IP address. If you or the other person is behind NAT (home router, VPN), the direct connection will fail. This is a standard DCC limitation — passive DCC / NAT traversal is planned for a future release.
+    </div>
+  </section>
+
   <hr />
 
   <!-- THEMES -->
@@ -1045,6 +1141,18 @@ show_topic = true   # drops a topic line below the info bar</pre>
     <h3>Nick label in input box</h3>
     <pre>[ui]
 show_nick_prefix = false   # hides "alice ▸" next to the input</pre>
+  </section>
+
+  <!-- HANGING INDENT -->
+  <section id="hanging-indent">
+    <h2>Hanging indent (word wrap alignment)</h2>
+    <p>By default, when a long message wraps to the next line the wrapped text aligns under the message text rather than back at the left edge under the timestamp. This keeps the timestamp and nick visually separate from the message body.</p>
+
+    <p>Toggle from <strong>☰ → Preferences → Hanging Indent (wrap under message)</strong>, or in config:</p>
+    <pre>[ui]
+hanging_indent = true   # default on</pre>
+
+    <p>Turn it off if you prefer the classic flush-left wrap style.</p>
   </section>
 
   <!-- APP ICON -->
@@ -1162,7 +1270,7 @@ theme = "Catppuccin-Mocha"   # ✗ won't load — wrong case</pre>
     </ul>
 
     <h3>Previews disappeared when I switched channels</h3>
-    <p>This is a known limitation — preview cards are not stored in the message history and don't survive a channel switch. It's on the roadmap to fix.</p>
+    <p>This was fixed in v0.8.1 — preview cards are now stored per-channel and reinjected when you switch back. If you are still seeing this, make sure you are running v0.8.1 or later.</p>
   </section>
 
 </main>
