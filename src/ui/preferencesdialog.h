@@ -21,6 +21,7 @@ signals:
     void emojiBtnToggled(bool on);
     void typingIndicatorToggled(bool on);
     void connStatusToggled(bool on);
+    void notificationsToggled(bool on);
     void coloredNicksToggled(bool on);
     void nickBracketsChanged(const QString &brackets);
     void manageServersRequested();
@@ -35,6 +36,7 @@ private:
     QCheckBox   *m_emojiCheck{nullptr};
     QCheckBox   *m_typingCheck{nullptr};
     QCheckBox   *m_connStatusCheck{nullptr};
+    QCheckBox   *m_notificationsCheck{nullptr};
     QCheckBox   *m_coloredNicksCheck{nullptr};
     QComboBox   *m_bracketsCombo{nullptr};
 

@@ -83,6 +83,7 @@ Config Config::load(const QString &path)
             cfg.ui.typingIndicator       = (*ui)["typing_indicator"].value_or(true);
             cfg.ui.nickBrackets          = QString::fromStdString((*ui)["nick_brackets"].value_or<std::string>("<>"));
             cfg.ui.showConnStatus        = (*ui)["show_conn_status"].value_or(true);
+            cfg.ui.notifications         = (*ui)["notifications"].value_or(true);
             cfg.ui.appIcon               = QString::fromStdString((*ui)["app_icon"].value_or<std::string>("dark"));
             cfg.ui.fontFamily            = QString::fromStdString((*ui)["font_family"].value_or<std::string>(kDefaultFontFamily));
             cfg.ui.fontSizes.toolbar      = (*ui)["font_toolbar"].value_or(10);
@@ -160,6 +161,7 @@ void Config::save(const Config &cfg, const QString &path)
     out << "typing_indicator  = " << (cfg.ui.typingIndicator  ? "true" : "false") << "\n";
     out << "nick_brackets     = \"" << cfg.ui.nickBrackets << "\"\n";
     out << "show_conn_status  = " << (cfg.ui.showConnStatus   ? "true" : "false") << "\n";
+    out << "notifications     = " << (cfg.ui.notifications    ? "true" : "false") << "\n";
     out << "app_icon          = \"" << cfg.ui.appIcon << "\"\n";
     out << "font_family       = \"" << cfg.ui.fontFamily << "\"\n";
     out << "font_toolbar       = " << cfg.ui.fontSizes.toolbar      << "\n";

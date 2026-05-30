@@ -130,6 +130,11 @@ PreferencesDialog::PreferencesDialog(const Config &cfg, QWidget *parent)
     connect(m_connStatusCheck, &QCheckBox::toggled, this, [this](bool on){ emit connStatusToggled(on); });
     vbox->addWidget(m_connStatusCheck);
 
+    m_notificationsCheck = new QCheckBox("Desktop Notifications");
+    m_notificationsCheck->setChecked(cfg.ui.notifications);
+    connect(m_notificationsCheck, &QCheckBox::toggled, this, [this](bool on){ emit notificationsToggled(on); });
+    vbox->addWidget(m_notificationsCheck);
+
     m_coloredNicksCheck = new QCheckBox("Colored Nicks");
     m_coloredNicksCheck->setChecked(cfg.ui.coloredNicks);
     connect(m_coloredNicksCheck, &QCheckBox::toggled, this, [this](bool on){ emit coloredNicksToggled(on); });

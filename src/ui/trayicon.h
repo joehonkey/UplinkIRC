@@ -14,6 +14,7 @@ public:
     explicit TrayIcon(SessionModel *model, MainWindow *window);
 
     void setUnread(bool hasUnread);
+    void setNotify(bool hasNotify);
     void setBaseIcon(const QIcon &icon);
 
 private slots:
@@ -25,6 +26,7 @@ private slots:
 private:
     void buildMenu();
     void updateTooltip();
+    void updateIcon();
 
     void updateShowAction();
 
@@ -34,4 +36,5 @@ private:
     QAction      *m_showAction;
     QIcon         m_baseIcon;
     int           m_totalUnread{0};
+    bool          m_hasNotify{false};
 };

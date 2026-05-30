@@ -7,13 +7,12 @@
 #include <QPixmap>
 #include <QPainter>
 
-// Overlay a red dot on the icon to signal unread messages
-static QIcon withUnreadBadge(const QIcon &base)
+static QIcon withDot(const QIcon &base, const QColor &color)
 {
     QPixmap pm = base.pixmap(32, 32);
     QPainter p(&pm);
     p.setRenderHint(QPainter::Antialiasing);
-    p.setBrush(QColor("#e05050"));
+    p.setBrush(color);
     p.setPen(Qt::NoPen);
     p.drawEllipse(20, 0, 11, 11);
     return QIcon(pm);
@@ -60,7 +59,7 @@ void TrayIcon::buildMenu()
 void TrayIcon::setBaseIcon(const QIcon &icon)
 {
     m_baseIcon = icon;
-    setIcon(m_totalUnread > 0 ? withUnreadBadge(m_baseIcon) : m_baseIcon);
+    updateIcon();
 }
 
 void TrayIcon::updateShowAction()
@@ -107,7 +106,23 @@ void TrayIcon::onUnreadChanged(const QString &, const QString &, int)
 void TrayIcon::setUnread(bool hasUnread)
 {
     Q_UNUSED(hasUnread)
-    setIcon(m_baseIcon);
+    updateIcon();
+}
+
+void TrayIcon::setNotify(bool hasNotify)
+{
+    m_hasNotify = hasNotify;
+    updateIcon();
+}
+
+void TrayIcon::updateIcon()
+{
+    if (m_hasNotify)
+        setIcon(withDot(m_baseIcon, QColor("#50e050")));
+    else if (m_totalUnread > 0)
+        setIcon(withDot(m_baseIcon, QColor("#e05050")));
+    else
+        setIcon(m_baseIcon);
 }
 
 void TrayIcon::updateTooltip()

@@ -310,6 +310,11 @@ void MainWindow::connectPreferences()
         if (m_connStatusLabel) m_connStatusLabel->setVisible(on);
     });
 
+    connect(m_prefsDialog, &PreferencesDialog::notificationsToggled, this, [this](bool on){
+        m_config.ui.notifications = on;
+        Config::save(m_config, Config::defaultPath());
+    });
+
     connect(m_prefsDialog, &PreferencesDialog::coloredNicksToggled, this, [this](bool on){
         m_config.ui.coloredNicks = on;
         Config::save(m_config, Config::defaultPath());
@@ -1191,6 +1196,17 @@ void MainWindow::onMessageAdded(const QString &host, const QString &channel, con
     {
         appendMessage(msg, true);
     }
+
+    if (m_config.ui.notifications && m_tray && !isActiveWindow()
+        && (msg.type == MessageType::Privmsg || msg.type == MessageType::Action))
+    {
+        const QString myNick = m_model->selfNick(host);
+        const bool isPM = !channel.startsWith('#') && !channel.startsWith('&');
+        const bool isMention = !isPM && !myNick.isEmpty()
+                               && msg.text.contains(myNick, Qt::CaseInsensitive);
+        if (isPM || isMention)
+            m_tray->setNotify(true);
+    }
 }
 
 void MainWindow::onTopicChanged(const QString &host, const QString &channel, const QString &topic)
@@ -2019,6 +2035,13 @@ void MainWindow::closeEvent(QCloseEvent *event)
     } else {
         event->accept();
     }
+}
+
+void MainWindow::changeEvent(QEvent *event)
+{
+    if (event->type() == QEvent::ActivationChange && isActiveWindow() && m_tray)
+        m_tray->setNotify(false);
+    QMainWindow::changeEvent(event);
 }
 
 static QString ircToHtml(const QString &raw)
