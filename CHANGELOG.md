@@ -3,6 +3,23 @@
 ---
 
 <!--
+Session summary — 2026-05-29 (exploration only — no release)
+
+What was explored:
+  - Investigated converting PreferencesDialog and DocsDialog from QDialog (separate
+    window) to QFrame in-window overlays, matching the existing AboutDialog style.
+  - Prototype was built and compiled cleanly: both dialogs converted to QFrame,
+    shadow effect added, showCentered() wired up in mainwindow, close → hide().
+  - User decided Preferences and Documentation need a proper OS window frame and
+    reverted both back to QDialog. AboutDialog remains as the only in-window overlay.
+
+Known issues remaining (unchanged):
+  - Link preview cards don't survive channel switching
+  - DCC Send File not implemented
+  - AppImage packaging not done
+-->
+
+<!--
 Session summary — 2026-05-30  post-v0.7.13 (hamburger UI polish + sidebar fix + docs overhaul)
 
 What was built / fixed:
