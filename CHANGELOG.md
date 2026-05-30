@@ -172,6 +172,34 @@ Next priorities:
   - DCC Send File
 -->
 
+<!--
+Session summary — 2026-05-29  post-v0.8.0 (link preview persistence fix)
+
+What was fixed:
+  - Link preview cards now survive channel switches. The infrastructure (ch->previews,
+    addPreview, refreshChatView re-injection) was already in place from a prior session
+    but had a subtle URL key normalization mismatch: appendMessage stored raw regex-
+    captured strings in m_previewChannels, while cardReady looked them up via
+    pageUrl.toString() (QUrl-normalized). For URLs containing IRC control characters
+    or percent-encoding, the keys diverged and addPreview() was never called.
+    Fixed: both appendMessage and refreshChatView now normalize via
+    QUrl(captured).toString() before using the string as a key.
+  - ROADMAP "In Progress" stale item removed.
+  - docs/faq.md updated: removed two "known limitation" notes about preview persistence.
+
+Known issues remaining:
+  - Link preview for title-only pages (no og:title) — unverified
+  - DCC Send File not implemented
+  - AppImage packaging not done
+  - SASL EXTERNAL (cert-based) not implemented
+-->
+
+## v0.8.1 — 2026-05-29
+
+### Fix
+
+- **Link preview cards survive channel switches** — cards are stored per-channel (`Channel::previews`) and reinjected into the chat view when switching back. A URL key normalization mismatch (raw regex capture vs. `QUrl::toString()`) prevented storage for URLs containing IRC control characters or percent-encoded sequences; both extraction sites now normalize consistently.
+
 ## v0.8.0 — 2026-05-29
 
 ### Security

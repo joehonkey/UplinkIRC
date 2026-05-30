@@ -296,7 +296,7 @@ Preview fetches are lightweight and automatic — HTML is capped at 32 KB, image
 
 **Private addresses are never fetched** — loopback (`127.x`, `::1`), RFC 1918 private ranges (`10.x`, `172.16–31.x`, `192.168.x`), link-local (`169.254.x`), and `.local` hostnames are blocked. A link posted in chat cannot be used to probe services on your local network.
 
-**Note:** Preview cards appear only for messages received while that channel is active. Switching away and back clears the cards — this is a known limitation tracked for a future fix.
+Preview cards survive channel switches — cards are stored per-channel and reinjected when you switch back.
 
 ### The emoji button doesn't show
 
@@ -380,4 +380,4 @@ UplinkIRC fetches the page title and thumbnail for URLs posted in chat. If a pre
 
 ### Previews disappear when I switch channels
 
-Known limitation — preview cards are appended to the chat view but not stored in the message history, so they don't survive a channel switch. This is tracked for a future fix.
+Preview cards are stored per-channel and reinjected when you switch back, so they survive channel switches. If a card is missing after switching back, the fetch may still be in progress — wait a moment and it will appear.

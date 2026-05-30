@@ -24,15 +24,15 @@
 ---
 
 <p align="center">
-  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.8.0-linux-x86_64.tar.gz">
+  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.8.1-linux-x86_64.tar.gz">
     <img src="https://img.shields.io/badge/⬇%20Linux-x86__64-1793d1?style=for-the-badge&logo=linux&logoColor=white" alt="Download Linux" />
   </a>
   &nbsp;
-  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.8.0-windows-x64.zip">
+  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.8.1-windows-x64.zip">
     <img src="https://img.shields.io/badge/⬇%20Windows-x64-0078D4?style=for-the-badge&logo=windows&logoColor=white" alt="Download Windows" />
   </a>
   &nbsp;
-  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.8.0-macos-arm64.dmg">
+  <a href="https://github.com/joehonkey/UplinkIRC/releases/latest/download/UplinkIRC-v0.8.1-macos-arm64.dmg">
     <img src="https://img.shields.io/badge/⬇%20macOS-arm64-555?style=for-the-badge&logo=apple&logoColor=white" alt="Download macOS" />
   </a>
   &nbsp;

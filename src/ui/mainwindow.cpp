@@ -1963,7 +1963,7 @@ void MainWindow::refreshChatView(const QString &host, const QString &channel)
              msg.type == MessageType::Notice)) {
             auto it = urlRe.globalMatch(msg.text);
             while (it.hasNext()) {
-                const QString urlStr = it.next().captured(0);
+                const QString urlStr = QUrl(it.next().captured(0)).toString();
                 const auto p = ch->previews.constFind(urlStr);
                 if (p != ch->previews.constEnd())
                     m_chatView->append(p.value());
@@ -2060,12 +2060,11 @@ void MainWindow::appendMessage(const Message &msg, bool autoPreview)
             QRegularExpression::CaseInsensitiveOption);
         auto it = urlRe.globalMatch(msg.text);
         while (it.hasNext()) {
-            const QString urlStr = it.next().captured(0);
-            if (!m_previewChannels.contains(urlStr)) {
-                m_previewChannels.insert(urlStr,
-                    {m_model->activeHost(), m_model->activeChannel()});
-                m_linkPreview->fetch(QUrl(urlStr));
-            }
+            const QString urlStr = QUrl(it.next().captured(0)).toString();
+            if (urlStr.isEmpty() || m_previewChannels.contains(urlStr)) continue;
+            m_previewChannels.insert(urlStr,
+                {m_model->activeHost(), m_model->activeChannel()});
+            m_linkPreview->fetch(QUrl(urlStr));
         }
     }
 

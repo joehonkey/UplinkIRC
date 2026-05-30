@@ -106,7 +106,6 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 ## In Progress
 
 - [ ] Link preview for title-only pages — pages without og:title (plain `<title>` only) may not preview; needs verification and potential fix
-- [ ] Link preview cards don't survive channel switches — cards not stored in message history; clears on switch
 
 ---
 
