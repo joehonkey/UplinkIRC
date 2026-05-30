@@ -265,6 +265,10 @@ sasl_password = "yourpassword"
 
 UplinkIRC will negotiate the `sasl` CAP and authenticate during the connection handshake. The server buffer shows `SASL authentication successful` when it works. Use this instead of `nickserv_password` on networks that support it (Libera.Chat, OFTC, etc.).
 
+### How do I search the Documentation?
+
+Click **☰ → Documentation** to open the help viewer. A search field sits at the top right of the tab bar, just to the right of the **Shortcuts** tab. Type any word or phrase — the active tab jumps to the first match immediately. Click **×** to clear. Switching tabs with a query active re-runs the search in the new tab.
+
 ### How do link previews work?
 
 When a live message arrives containing an `http://` or `https://` URL, UplinkIRC fetches the link in the background and appends a small card below the message.
