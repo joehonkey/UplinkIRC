@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=UplinkIRC
+Comment=Fast, secure IRC client
+Exec=UplinkIRC
+Icon=uplinkirc
+Categories=Network;IRCClient;
+Terminal=false

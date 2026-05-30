@@ -89,3 +89,7 @@ endif()
 
 install(TARGETS UplinkIRC DESTINATION bin)
 install(DIRECTORY themes/ DESTINATION share/uplinkirc/themes)
+install(FILES packaging/UplinkIRC.desktop DESTINATION share/applications)
+install(FILES resources/icons/app-icon-dark.svg
+        DESTINATION share/icons/hicolor/scalable/apps
+        RENAME uplinkirc.svg)

@@ -4,6 +4,12 @@ config.toml
 
 # Build
 build/
+build-appimage/
+
+# AppImage packaging (generated/downloaded, not sources)
+packaging/tools/
+packaging/uplinkirc.png
+*.AppImage
 .cmake/
 CMakeCache.txt
 CMakeFiles/
