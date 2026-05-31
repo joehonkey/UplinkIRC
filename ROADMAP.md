@@ -62,7 +62,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] GitHub Actions release workflow — builds platform binaries on tag push, attaches to GitHub releases
 - [x] v0.2.0 released
 - [x] PM tabs — /msg opens sidebar buffer; incoming PMs land in sender's buffer
-- [x] Nick list right-click menu — Message, Send File (stub), Whois, Give Op, Give Voice, Version
+- [x] Nick list right-click menu — Message, Send File, Whois, Invite, Give Op, Take Op, Give Voice, Take Voice, Version, Ping (CTCP RTT), Copy Nick, Kick, Ban, Kick & Ban
 - [x] Right-click nick in chat view — same context menu as nick list; nicks rendered as nick: anchors in HTML
 - [x] Tray icon left-click toggles window visibility
 - [x] Unread dot indicator in sidebar — 🔥 for activity, 💡 red for nick mentions; clears on focus
@@ -127,6 +127,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Message search — Ctrl+F opens search bar; Enter/Shift+Enter next/prev with wrap; Escape closes
 - [x] Hamburger Close Menu button — explicit dismiss action at bottom of ☰ menu
 - [ ] Logging — per-channel log files at `~/.config/uplinkirc/logs/`
+- [ ] Ignore list — client-side suppress of incoming PRIVMSGs/NOTICEs from specific nicks; right-click → Ignore; /ignore and /unignore commands
 - [x] msgid — IRCv3 unique message IDs stored on every received message; full signal chain (messageReceived, noticeReceived, actionReceived, batch delivery); prerequisite for reply threading, reactions, and redaction
 - [x] echo-message — server echoes sent messages back; duplicate local echo suppressed; PM routing corrected for self-echoes; also fixes ZNC self-message PM routing
 - [x] draft/reply — right-click any message → Reply; reply bar above input; ↩ origNick shown on received replies; @+draft/reply= tag sent on outgoing messages
