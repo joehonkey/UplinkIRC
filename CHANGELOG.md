@@ -3,6 +3,40 @@
 ---
 
 <!--
+Session summary — 2026-05-30 (v0.10.1 — hamburger Close Menu button)
+
+What was built:
+  - Close Menu button: a separator + "Close Menu" action added at the bottom
+    of the hamburger (☰) menu. One line in mainwindow.cpp:
+    menu->addAction("Close Menu", menu, &QMenu::close).
+    Requested by users who prefer an explicit dismiss button over clicking
+    outside the menu.
+
+Regressions found: none.
+Known issues remaining (unchanged from v0.10.0):
+  - DCC over internet (NAT/firewall blocks direct TCP)
+  - No in-app update check UI
+  - Per-channel logging not implemented
+  - Split view not implemented
+  - Plaintext passwords in config.toml
+  - draft/react not yet implemented
+  - draft/message-redaction not yet implemented
+
+Next priorities (unchanged):
+  - Per-channel log files
+  - draft/message-redaction
+  - draft/react
+  - account-notify + account-tag + extended-join
+  - Monitor
+-->
+
+## v0.10.1 — 2026-05-30
+
+- Feat: **Close Menu** button at the bottom of the ☰ hamburger menu — explicit dismiss for users who prefer not to click outside
+
+---
+
+<!--
 Session summary — 2026-05-30 (v0.9.6 — msgid foundation + chat nick right-click)
 
 What was built / fixed:

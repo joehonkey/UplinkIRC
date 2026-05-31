@@ -125,6 +125,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 
 - [x] Hanging indent — wrapped message lines align past the timestamp+nick column; toggleable from Preferences and `hanging_indent` config key; uses QTextBlockFormat for correct Qt rendering
 - [x] Message search — Ctrl+F opens search bar; Enter/Shift+Enter next/prev with wrap; Escape closes
+- [x] Hamburger Close Menu button — explicit dismiss action at bottom of ☰ menu
 - [ ] Logging — per-channel log files at `~/.config/uplinkirc/logs/`
 - [x] msgid — IRCv3 unique message IDs stored on every received message; full signal chain (messageReceived, noticeReceived, actionReceived, batch delivery); prerequisite for reply threading, reactions, and redaction
 - [x] echo-message — server echoes sent messages back; duplicate local echo suppressed; PM routing corrected for self-echoes; also fixes ZNC self-message PM routing

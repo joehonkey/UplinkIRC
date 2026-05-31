@@ -261,6 +261,9 @@ void MainWindow::setupToolbar()
             if (m_typingLabel)      m_typingLabel->setVisible(m_config.ui.typingIndicator);
         });
 
+        menu->addSeparator();
+        menu->addAction("Close Menu", menu, &QMenu::close);
+
         QPoint pos = m_hamburger->mapToGlobal(QPoint(0, m_hamburger->height()));
         menu->exec(pos);
     });
