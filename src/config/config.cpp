@@ -139,11 +139,24 @@ Config Config::load(const QString &path)
                 else                   sc.bouncerType = BouncerType::None;
                 sc.bouncerNetwork = QString::fromStdString((*s)["bouncer_network"].value_or<std::string>(""));
 
-                const std::string chanStr = (*s)["channels"].value_or<std::string>("");
-                for (const QString &part : QString::fromStdString(chanStr).split(',', Qt::SkipEmptyParts)) {
-                    const QString name = part.trimmed();
-                    if (!name.isEmpty())
-                        sc.channels.append({name, {}});
+                if (auto chans = (*s)["channel"].as_array()) {
+                    for (auto &cnode : *chans) {
+                        auto *c = cnode.as_table();
+                        if (!c) continue;
+                        ChannelConfig cc;
+                        cc.name     = QString::fromStdString((*c)["name"].value_or<std::string>(""));
+                        cc.password = QString::fromStdString((*c)["key"].value_or<std::string>(""));
+                        if (!cc.name.isEmpty())
+                            sc.channels.append(cc);
+                    }
+                } else {
+                    // backward compat: old comma-separated string
+                    const std::string chanStr = (*s)["channels"].value_or<std::string>("");
+                    for (const QString &part : QString::fromStdString(chanStr).split(',', Qt::SkipEmptyParts)) {
+                        const QString name = part.trimmed();
+                        if (!name.isEmpty())
+                            sc.channels.append({name, {}});
+                    }
                 }
 
                 if (!sc.host.isEmpty())
@@ -222,11 +235,11 @@ void Config::save(const Config &cfg, const QString &path)
             out << "bouncer           = \"soju\"\n";
         if (!s.bouncerNetwork.isEmpty())
             out << "bouncer_network   = " << tomlQuote(s.bouncerNetwork) << "\n";
-        if (!s.channels.isEmpty()) {
-            QStringList names;
-            for (const auto &ch : s.channels)
-                names << ch.name;
-            out << "channels = " << tomlQuote(names.join(", ")) << "\n";
+        for (const auto &ch : s.channels) {
+            out << "\n[[server.channel]]\n";
+            out << "name = " << tomlQuote(ch.name) << "\n";
+            if (!ch.password.isEmpty())
+                out << "key  = " << tomlQuote(ch.password) << "\n";
         }
         out << "\n";
     }

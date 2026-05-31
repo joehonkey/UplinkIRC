@@ -102,26 +102,76 @@ if [[ -n "$(ls -A "$STUB_DIR" 2>/dev/null)" ]]; then
     export LD_LIBRARY_PATH="$STUB_DIR:${LD_LIBRARY_PATH:-}"
 fi
 
-export OUTPUT="UplinkIRC-$VERSION-$ARCH.AppImage"
+OUTPUT_FILE="UplinkIRC-$VERSION-$ARCH.AppImage"
 
-# If UPDATE_INFORMATION is set (e.g. by CI), embed zsync metadata for auto-update.
-# Format: gh-releases-zsync|owner|repo|latest|UplinkIRC-*-ARCH.AppImage.zsync
-if [[ -n "${UPDATE_INFORMATION:-}" ]]; then
-    export UPDATE_INFORMATION
-    echo "==> Embedding update info: $UPDATE_INFORMATION"
+# ---------------------------------------------------------------------------
+# Download appimagetool (used for the final packaging step — separate from
+# linuxdeploy so its bundled strip is never called on our AppDir).
+# ---------------------------------------------------------------------------
+APPIMAGETOOL="$TOOLS_DIR/appimagetool-$ARCH.AppImage"
+if [[ ! -x "$APPIMAGETOOL" ]]; then
+    echo "==> Downloading appimagetool..."
+    curl -fL "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-$ARCH.AppImage" \
+         -o "$APPIMAGETOOL"
+    chmod +x "$APPIMAGETOOL"
 fi
 
-# linuxdeploy's bundled strip can't handle modern .relr.dyn sections; shadow it with a no-op
-STRIP_WRAP=$(mktemp -d)
-printf '#!/bin/sh\nexit 0\n' > "$STRIP_WRAP/strip"
-chmod +x "$STRIP_WRAP/strip"
-export PATH="$STRIP_WRAP:$PATH"
-"$LD" \
+# ---------------------------------------------------------------------------
+# Phase 1: extract linuxdeploy and patch its bundled strip with a no-op.
+# The bundled strip binary cannot handle .relr.dyn ELF sections produced by
+# modern Arch/Fedora toolchains (gcc >= 12 / binutils >= 2.39 with
+# -z pack-relative-relocs). Replacing it with a no-op shell script lets
+# linuxdeploy finish deploying all libraries without stripping them.
+# We strip with appimagetool in Phase 2 instead.
+# ---------------------------------------------------------------------------
+LD_EXTRACT=$(mktemp -d)
+trap 'rm -rf "$LD_EXTRACT"' EXIT
+echo "==> Patching linuxdeploy strip (bundled strip can't handle .relr.dyn)..."
+(cd "$LD_EXTRACT" && "$LD" --appimage-extract >/dev/null 2>&1)
+printf '#!/bin/sh\nexit 0\n' > "$LD_EXTRACT/squashfs-root/usr/bin/strip"
+chmod +x "$LD_EXTRACT/squashfs-root/usr/bin/strip"
+LD_PATCHED="$LD_EXTRACT/squashfs-root/AppRun"
+
+# ---------------------------------------------------------------------------
+# Phase 2: deploy Qt libs and plugins into AppDir using patched linuxdeploy.
+# ---------------------------------------------------------------------------
+echo "==> Deploying Qt libraries..."
+"$LD_PATCHED" \
     --appdir "$APPDIR" \
     --plugin qt \
     --desktop-file "$SCRIPT_DIR/UplinkIRC.desktop" \
-    --icon-file "$ICON_PNG" \
-    --output appimage
+    --icon-file "$ICON_PNG"
+
+# Phase 2b: ensure AppDir root has the required files for appimagetool
+cp -n "$APPDIR/usr/share/applications/UplinkIRC.desktop" "$APPDIR/" 2>/dev/null || true
+cp -n "$APPDIR/usr/share/icons/hicolor/scalable/apps/uplinkirc.svg" "$APPDIR/" 2>/dev/null || true
+if [[ -f "$SCRIPT_DIR/uplinkirc.png" ]] && [[ ! -f "$APPDIR/uplinkirc.png" ]]; then
+    cp "$SCRIPT_DIR/uplinkirc.png" "$APPDIR/"
+fi
+if [[ ! -f "$APPDIR/AppRun" ]]; then
+    cat > "$APPDIR/AppRun" << 'APPRUN'
+#!/bin/bash
+HERE="$(dirname "$(readlink -f "$0")")"
+export LD_LIBRARY_PATH="$HERE/usr/lib:${LD_LIBRARY_PATH:-}"
+export QT_PLUGIN_PATH="$HERE/usr/plugins:${QT_PLUGIN_PATH:-}"
+export QT_QPA_PLATFORM_PLUGIN_PATH="$HERE/usr/plugins/platforms"
+export XDG_DATA_DIRS="$HERE/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+exec "$HERE/usr/bin/UplinkIRC" "$@"
+APPRUN
+    chmod +x "$APPDIR/AppRun"
+fi
+
+# ---------------------------------------------------------------------------
+# Phase 3: package AppDir into an AppImage with appimagetool.
+# If UPDATE_INFORMATION is set (e.g. by CI), embed zsync metadata.
+# ---------------------------------------------------------------------------
+echo "==> Packaging AppImage..."
+APPIMAGETOOL_ARGS=()
+if [[ -n "${UPDATE_INFORMATION:-}" ]]; then
+    echo "==> Embedding update info: $UPDATE_INFORMATION"
+    APPIMAGETOOL_ARGS+=( --updateinformation "$UPDATE_INFORMATION" )
+fi
+"$APPIMAGETOOL" "${APPIMAGETOOL_ARGS[@]}" "$APPDIR" "$OUTPUT_FILE"
 
 echo ""
-echo "==> Done: $OUTPUT"
+echo "==> Done: $OUTPUT_FILE"

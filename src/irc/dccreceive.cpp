@@ -32,9 +32,24 @@ void DccReceive::start()
     m_socket->connectToHost(QHostAddress(m_ip), m_port);
 }
 
+void DccReceive::cancel()
+{
+    if (m_socket) m_socket->abort();
+    if (m_file.isOpen()) {
+        const QString path = m_file.fileName();
+        m_file.close();
+        QFile::remove(path);
+    }
+}
+
 void DccReceive::onReadyRead()
 {
-    const QByteArray data = m_socket->readAll();
+    const qint64 remaining = m_total - m_received;
+    if (remaining <= 0) {
+        m_socket->disconnectFromHost();
+        return;
+    }
+    const QByteArray data = m_socket->read(qMin(m_socket->bytesAvailable(), remaining));
     if (m_file.write(data) != data.size()) {
         emit error("Write failed");
         return;

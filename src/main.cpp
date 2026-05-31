@@ -4,12 +4,13 @@
 #include "config/config.h"
 #include "model/sessionmodel.h"
 #include "ui/mainwindow.h"
+#include "version.h"
 
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     app.setApplicationName("UplinkIRC");
-    app.setApplicationVersion("0.7.10");
+    app.setApplicationVersion(UPLINKIRC_VERSION);
 
 #if defined(Q_OS_WIN)
     // Use native Windows rendering as the base style.

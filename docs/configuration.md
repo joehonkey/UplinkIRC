@@ -55,12 +55,17 @@ ssl      = true
 nick     = "yournick"
 user     = "uplink"
 realname = "UplinkIRC User"
-channels = "#uplink, #linux"           # comma-separated channels to join on connect
 # sasl_user         = "yournick"       # uncomment to enable SASL PLAIN
 # sasl_password     = "yourpassword"
 # nickserv_password = "yourpassword"   # alternative: NickServ IDENTIFY on connect
 # bouncer           = "soju"           # "znc" or "soju" — enables bouncer-specific caps
 # bouncer_network   = "libera"         # soju only: which network to attach to
+
+[[server.channel]]
+name = "#uplink"
+
+[[server.channel]]
+name = "#linux"
 ```
 
 ---
@@ -180,7 +185,9 @@ ssl      = true
 nick     = "yournick"
 user     = "uplink"
 realname = "UplinkIRC User"
-channels = "#uplink"
+
+[[server.channel]]
+name = "#uplink"
 ```
 
 ---
@@ -385,23 +392,41 @@ No configuration is required — history replay happens automatically whenever t
 
 ---
 
-## Channels (`channels`)
+## Channels
 
-Channels to auto-join on connect. Set `channels` to a comma-separated list of channel names directly in the `[[server]]` block. You can also use ☰ → **Manage Servers... → Edit** and fill in the **Auto-join** field — changes are saved automatically. **Reload Config** picks up manual edits without a restart.
+Channels to auto-join on connect. Two formats are supported.
 
-| Key | Type | Description |
-|---|---|---|
-| `channels` | string | Comma-separated channel names to join on connect (e.g. `"#uplink, #linux"`) |
+### Simple format (string)
 
-### Examples
+Set `channels` to a comma-separated list of channel names directly in the `[[server]]` block. This format is good for public channels that require no key.
 
 ```toml
-# Single channel
-channels = "#uplink"
-
-# Multiple channels
 channels = "#uplink, #linux, #dojoirc"
 ```
+
+### Table format (with keys)
+
+For password-protected channels, use `[[server.channel]]` sub-tables with a `key` field. This format is also how UplinkIRC saves channels internally after the first config write.
+
+```toml
+[[server]]
+name = "LinuxDojo"
+host = "irc.linuxdojo.org"
+port = 6697
+ssl  = true
+nick = "yournick"
+
+[[server.channel]]
+name = "#uplink"
+
+[[server.channel]]
+name = "#private"
+key  = "secretkey"
+```
+
+Both formats load correctly. On the next save (via **Manage Servers** or **Reload Config**), channels are written in the table format with keys preserved.
+
+> **Note:** UplinkIRC will not prompt you for a missing channel key. If a channel requires a key, add it to the config manually using the `[[server.channel]]` format above.
 
 ---
 
@@ -421,7 +446,9 @@ ssl      = true
 nick     = "yournick"
 user     = "uplink"
 realname = "UplinkIRC User"
-channels = "#uplink"
+
+[[server.channel]]
+name = "#uplink"
 
 [[server]]
 name          = "Libera"
@@ -431,9 +458,14 @@ ssl           = true
 nick          = "yournick"
 user          = "uplink"
 realname      = "UplinkIRC User"
-channels      = "#linux, #archlinux"
 sasl_user     = "yournick"
 sasl_password = "yourpassword"
+
+[[server.channel]]
+name = "#linux"
+
+[[server.channel]]
+name = "#archlinux"
 ```
 
 ---

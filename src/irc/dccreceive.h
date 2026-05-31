@@ -13,6 +13,7 @@ public:
                QObject *parent = nullptr);
 
     void start();
+    void cancel();
 
 signals:
     void progress(qint64 received, qint64 total);

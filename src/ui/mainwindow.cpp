@@ -684,8 +684,11 @@ void MainWindow::setupChatArea()
     if (m_theme.valid)
         m_chatView->document()->setDefaultStyleSheet(
             QString("a { color: %1; text-decoration: underline; }").arg(m_theme.accent));
-    connect(m_chatView, &QTextBrowser::anchorClicked,
-            this, [](const QUrl &url){ QDesktopServices::openUrl(url); });
+    connect(m_chatView, &QTextBrowser::anchorClicked, this, [](const QUrl &url){
+        const QString s = url.scheme().toLower();
+        if (s == "http" || s == "https")
+            QDesktopServices::openUrl(url);
+    });
 
     m_linkPreview = new LinkPreview(this);
 
@@ -1003,7 +1006,7 @@ void MainWindow::connectModel()
             dcc->deleteLater();
             QMessageBox::warning(this, "DCC Error", msg);
         });
-        connect(prog, &QProgressDialog::canceled, dcc, [dcc]{ dcc->deleteLater(); });
+        connect(prog, &QProgressDialog::canceled, dcc, [dcc]{ dcc->cancel(); dcc->deleteLater(); });
 
         dcc->start();
         prog->show();
@@ -1062,8 +1065,12 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
 
                 connect(menu.addAction("Copy URL"), &QAction::triggered,
                         this, [anchor]{ QApplication::clipboard()->setText(anchor); });
-                connect(menu.addAction("Open URL"), &QAction::triggered,
-                        this, [anchor]{ QDesktopServices::openUrl(QUrl(anchor)); });
+                connect(menu.addAction("Open URL"), &QAction::triggered, this, [anchor]{
+                    const QUrl u(anchor);
+                    const QString s = u.scheme().toLower();
+                    if (s == "http" || s == "https")
+                        QDesktopServices::openUrl(u);
+                });
 
                 auto *ch = m_model->channel(host, channel);
                 const bool isHidden  = ch && ch->hiddenPreviews.contains(anchor);
@@ -2169,10 +2176,13 @@ void MainWindow::showNickContextMenu(const QString &nick, const QPoint &globalPo
         IrcClient *client = m_model->clientFor(host);
         if (!client) return;
 
+        const quint32 localIp = client->localIpv4();
         auto *dcc = new DccSend(path, this);
-        if (!dcc->listen()) { dcc->deleteLater(); return; }
+        if (!dcc->listen(localIp ? QHostAddress(localIp) : QHostAddress::Any)) {
+            dcc->deleteLater(); return;
+        }
 
-        const quint32 ip   = client->localIpv4();
+        const quint32 ip   = localIp;
         const quint16 port = dcc->port();
         const QString fn   = dcc->filename();
         const qint64  size = dcc->filesize();
@@ -2200,7 +2210,7 @@ void MainWindow::showNickContextMenu(const QString &nick, const QPoint &globalPo
             dcc->deleteLater();
             QMessageBox::warning(this, "DCC Error", msg);
         });
-        connect(prog, &QProgressDialog::canceled, dcc, [dcc]{ dcc->deleteLater(); });
+        connect(prog, &QProgressDialog::canceled, dcc, [dcc]{ dcc->cancel(); dcc->deleteLater(); });
 
         prog->show();
     });

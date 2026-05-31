@@ -11,15 +11,24 @@ DccSend::DccSend(const QString &filepath, QObject *parent)
     , m_file(filepath)
 {}
 
-bool DccSend::listen()
+bool DccSend::listen(QHostAddress bindAddr)
 {
     if (!m_file.open(QIODevice::ReadOnly)) {
         emit error("Cannot open: " + m_file.fileName());
         return false;
     }
+
+    const qint64 size = filesize();
+    if (size <= 0 || size > static_cast<qint64>(UINT32_MAX)) {
+        emit error(size <= 0 ? "File is empty" : "File too large for DCC (max 4 GiB)");
+        m_file.close();
+        return false;
+    }
+
     m_server = new QTcpServer(this);
-    if (!m_server->listen(QHostAddress::Any, 0)) {
+    if (!m_server->listen(bindAddr, 0)) {
         emit error("Cannot bind listen port");
+        m_file.close();
         return false;
     }
     connect(m_server, &QTcpServer::newConnection, this, &DccSend::onNewConnection);
@@ -29,6 +38,13 @@ bool DccSend::listen()
             emit error("No connection received (timeout)");
     });
     return true;
+}
+
+void DccSend::cancel()
+{
+    if (m_server) m_server->close();
+    if (m_socket) m_socket->abort();
+    m_file.close();
 }
 
 quint16 DccSend::port() const
@@ -64,7 +80,7 @@ void DccSend::onReadyRead()
     while (m_socket->bytesAvailable() >= 4) {
         quint32 raw;
         m_socket->read(reinterpret_cast<char *>(&raw), 4);
-        if (qFromBigEndian(raw) >= static_cast<quint32>(filesize())) {
+        if (static_cast<qint64>(qFromBigEndian(raw)) >= filesize()) {
             emit finished();
             return;
         }

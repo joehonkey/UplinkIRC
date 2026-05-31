@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QFile>
+#include <QHostAddress>
 #include <QObject>
 
 class QTcpServer;
@@ -12,7 +13,8 @@ class DccSend : public QObject
 public:
     explicit DccSend(const QString &filepath, QObject *parent = nullptr);
 
-    bool    listen();
+    bool    listen(QHostAddress bindAddr = QHostAddress::Any);
+    void    cancel();
     quint16 port()     const;
     QString filename() const;
     qint64  filesize() const;

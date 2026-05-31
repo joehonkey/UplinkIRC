@@ -9,6 +9,32 @@
 #include <QSslSocket>
 #include <QTimer>
 
+static QString stripCrlf(QString s)
+{
+    s.remove('\r');
+    s.remove('\n');
+    return s;
+}
+
+static bool validIrcToken(const QString &s)
+{
+    if (s.isEmpty()) return false;
+    for (QChar c : s)
+        if (c.isSpace() || c == '\r' || c == '\n' || c == '\0')
+            return false;
+    return true;
+}
+
+static QString ircv3TagEscape(QString s)
+{
+    s.replace("\\", "\\\\");
+    s.replace(";", "\\:");
+    s.replace(" ", "\\s");
+    s.replace("\r", "\\r");
+    s.replace("\n", "\\n");
+    return s;
+}
+
 IrcClient::IrcClient(QObject *parent)
     : QObject(parent)
     , m_socket(new QSslSocket(this))
@@ -96,36 +122,42 @@ void IrcClient::quit(const QString &reason)
 
 void IrcClient::join(const QString &channel, const QString &key)
 {
-    sendRaw(key.isEmpty() ? "JOIN " + channel : "JOIN " + channel + " " + key);
+    if (!validIrcToken(channel)) return;
+    sendRaw(key.isEmpty() ? "JOIN " + channel : "JOIN " + channel + " " + stripCrlf(key));
 }
 
 void IrcClient::part(const QString &channel, const QString &reason)
 {
-    sendRaw(reason.isEmpty() ? "PART " + channel : "PART " + channel + " :" + reason);
+    if (!validIrcToken(channel)) return;
+    sendRaw(reason.isEmpty() ? "PART " + channel : "PART " + channel + " :" + stripCrlf(reason));
 }
 
 void IrcClient::privmsg(const QString &target, const QString &text, const QString &replyToMsgid)
 {
+    if (!validIrcToken(target)) return;
     if (replyToMsgid.isEmpty())
-        sendRaw("PRIVMSG " + target + " :" + text);
+        sendRaw("PRIVMSG " + target + " :" + stripCrlf(text));
     else
-        sendRaw("@+draft/reply=" + replyToMsgid + " PRIVMSG " + target + " :" + text);
+        sendRaw("@+draft/reply=" + ircv3TagEscape(replyToMsgid) + " PRIVMSG " + target + " :" + stripCrlf(text));
 }
 
 void IrcClient::notice(const QString &target, const QString &text)
 {
-    sendRaw("NOTICE " + target + " :" + text);
+    if (!validIrcToken(target)) return;
+    sendRaw("NOTICE " + target + " :" + stripCrlf(text));
 }
 
 void IrcClient::setNick(const QString &nick)
 {
-    m_nick = nick;
-    sendRaw("NICK " + nick);
+    const QString clean = stripCrlf(nick);
+    m_nick = clean;
+    sendRaw("NICK " + clean);
 }
 
 void IrcClient::sendTyping(const QString &channel, const QString &state)
 {
-    sendRaw("@+typing=" + state + " TAGMSG " + channel);
+    if (!validIrcToken(channel)) return;
+    sendRaw("@+typing=" + ircv3TagEscape(state) + " TAGMSG " + channel);
 }
 
 void IrcClient::requestHistory(const QString &target, int limit)
@@ -175,10 +207,10 @@ void IrcClient::onConnected()
     sendRaw("CAP LS 302");
 
     if (!m_password.isEmpty())
-        sendRaw("PASS :" + m_password);
+        sendRaw("PASS :" + stripCrlf(m_password));
 
-    sendRaw("NICK " + m_nick);
-    sendRaw("USER " + m_user + " 0 * :" + m_realname);
+    sendRaw("NICK " + stripCrlf(m_nick));
+    sendRaw("USER " + stripCrlf(m_user) + " 0 * :" + stripCrlf(m_realname));
 }
 
 void IrcClient::onDisconnected()
@@ -265,6 +297,8 @@ void IrcClient::doReconnect()
     emit reconnecting(m_host);
     emit serverMessage(m_host, "Reconnecting…");
     m_saslPending = false;
+    if (m_socket->state() != QAbstractSocket::UnconnectedState)
+        m_socket->abort();
     if (m_ssl)
         m_socket->connectToHostEncrypted(m_host, m_port);
     else
@@ -393,7 +427,7 @@ void IrcClient::processLine(const QString &line)
                 const qint64  now  = QDateTime::currentMSecsSinceEpoch();
                 if (now - m_ctcpTimestamps.value(rkey, 0) >= 5000) {
                     m_ctcpTimestamps.insert(rkey, now);
-                    QString payload = ctcp.section(' ', 1).left(32);
+                    const QString payload = stripCrlf(ctcp.section(' ', 1).left(32));
                     sendRaw("NOTICE " + msg.nick + " :\x01PING " + payload + "\x01");
                 }
             } else if (ctcpCmd == "DCC") {
@@ -404,7 +438,7 @@ void IrcClient::processLine(const QString &line)
                     const quint32 ip       = ctcp.section(' ', 3, 3).toUInt(&ok1);
                     const quint16 port     = ctcp.section(' ', 4, 4).toUShort(&ok2);
                     const qint64  filesize = ctcp.section(' ', 5, 5).toLongLong(&ok3);
-                    if (ok1 && ok2 && ok3 && !fn.isEmpty())
+                    if (ok1 && ok2 && ok3 && !fn.isEmpty() && port != 0 && filesize > 0)
                         emit dccSendReceived(m_host, msg.nick, fn, ip, port, filesize);
                     else
                         emit serverMessage(m_host, "DCC SEND from " + msg.nick + " (malformed)");

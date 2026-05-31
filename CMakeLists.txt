@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(UplinkIRC VERSION 0.12.1 LANGUAGES CXX)
+project(UplinkIRC VERSION 0.13.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -76,6 +76,11 @@ target_link_libraries(UplinkIRC PRIVATE
     Qt6::Svg
     tomlplusplus::tomlplusplus
 )
+
+# Prevent .relr.dyn sections that linuxdeploy's bundled strip cannot handle
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_link_options(UplinkIRC PRIVATE -Wl,-z,nopack-relative-relocs)
+endif()
 
 # Copy themes next to binary for development
 add_custom_command(TARGET UplinkIRC POST_BUILD

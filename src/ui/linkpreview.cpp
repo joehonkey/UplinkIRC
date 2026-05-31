@@ -131,6 +131,8 @@ void LinkPreview::fetch(const QUrl &url)
 
 void LinkPreview::fetchImage(const QUrl &pageUrl, const QString &title, const QUrl &imageUrl)
 {
+    if (isPrivateUrl(imageUrl)) return;
+
     QNetworkRequest req(imageUrl);
     req.setRawHeader("User-Agent",
         "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "

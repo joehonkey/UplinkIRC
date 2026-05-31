@@ -172,6 +172,7 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 - [x] Autojoin regression fix — editing a server in the GUI no longer wipes auto-join channels; Auto-join field added to Add/Edit Server dialog
 - [x] Autojoin Windows fix — config loading now uses Qt file I/O instead of toml::parse_file; paths with non-ASCII characters load correctly on Windows
 - [x] Simplified channel config — `channels = "#uplink, #linux"` replaces `[[server.channels]]` array-of-tables; Reload Config syncs changes live via SessionModel::syncServers()
+- [x] Channel key persistence — channels saved as `[[server.channel]]` tables with `name` + `key`; backward-compatible load of old comma-string format (v0.13.0)
 - [x] Close/Close Query in sidebar — right-clicking a channel shows Close (PARTs + removes buffer); right-clicking a PM query shows Close Query (removes buffer)
 - [x] Channel focus on join — joining a channel now always switches focus to it
 - [x] Nick panel redesign — replaced detachable QDockWidget with embedded panel in QSplitter; gear button (⚙) in header animates a full spin before toggling the user list; gear and user count remain visible when collapsed; panel background matches chat buffer color across all themes
@@ -186,8 +187,17 @@ Default network: **irc.linuxdojo.org:6697** — channel **#uplink**
 ## Security Backlog
 
 - [x] Config file permissions — 0600 enforced via QSaveFile (done v0.8.0)
-- [ ] Password field encryption — don't store plaintext passwords
-- [ ] Self-signed cert option — per-server accept/reject UI
+- [x] Outbound IRC injection prevention — stripCrlf/validIrcToken/ircv3TagEscape helpers; all send paths validated (v0.13.0)
+- [x] openUrl scheme guard — only http/https links passed to QDesktopServices::openUrl (v0.13.0)
+- [x] Link preview SSRF — og:image and direct image fetches blocked for private/loopback addresses (v0.13.0)
+- [x] DCC receive write cap — reads bounded to remaining advertised byte count (v0.13.0)
+- [x] DCC send 4 GiB guard — files over UINT32_MAX rejected; ACK comparison uses qint64 (v0.13.0)
+- [x] DCC local bind — listener binds to IRC socket's local interface, not all interfaces (v0.13.0)
+- [x] DCC cancel cleanup — cancel() methods added; partial files removed on user cancel (v0.13.0)
+- [x] DCC offer validation — zero port / non-positive filesize rejected before accept dialog (v0.13.0)
+- [x] Reconnect socket abort — socket abort()ed before reconnect if not already unconnected (v0.13.0)
+- [ ] Password field encryption — don't store plaintext passwords (OS keychain integration)
+- [ ] Self-signed cert option — per-server accept/reject + fingerprint-pin UI
 - [ ] SOCKS5 proxy support
 
 ---
