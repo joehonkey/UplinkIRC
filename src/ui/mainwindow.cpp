@@ -947,9 +947,10 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
         if (event->type() == QEvent::MouseMove) {
             auto *me = static_cast<QMouseEvent *>(event);
             const QString anchor = m_chatView->anchorAt(me->position().toPoint());
+            const bool isNick = anchor.startsWith("nick:");
             if (anchor != m_hoveredUrl) {
                 m_hoveredUrl = anchor;
-                if (anchor.isEmpty()) {
+                if (anchor.isEmpty() || isNick) {
                     QToolTip::hideText();
                     statusBar()->clearMessage();
                 } else {
@@ -960,6 +961,16 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
                     QToolTip::showText(m_hoverGlobalPos, url.host(),
                                        m_chatView->viewport());
                     m_linkPreview->fetch(url);
+                }
+            }
+        } else if (event->type() == QEvent::MouseButtonPress) {
+            auto *me = static_cast<QMouseEvent *>(event);
+            if (me->button() == Qt::RightButton) {
+                const QString anchor = m_chatView->anchorAt(me->position().toPoint());
+                if (anchor.startsWith("nick:")) {
+                    showNickContextMenu(anchor.mid(5),
+                        m_chatView->viewport()->mapToGlobal(me->position().toPoint()));
+                    return true;
                 }
             }
         } else if (event->type() == QEvent::Leave) {
@@ -1983,8 +1994,13 @@ void MainWindow::onNickListContextMenu(const QPoint &pos)
 {
     auto *item = m_nickList->itemAt(pos);
     if (!item) return;
+    const QString nick = item->data(Qt::UserRole).toString();
+    if (nick.isEmpty()) return;
+    showNickContextMenu(nick, m_nickList->mapToGlobal(pos));
+}
 
-    const QString nick    = item->data(Qt::UserRole).toString();
+void MainWindow::showNickContextMenu(const QString &nick, const QPoint &globalPos)
+{
     const QString host    = m_model->activeHost();
     const QString channel = m_model->activeChannel();
     if (nick.isEmpty() || host.isEmpty()) return;
@@ -2065,7 +2081,7 @@ void MainWindow::onNickListContextMenu(const QPoint &pos)
         m_model->sendRaw(host, "PRIVMSG " + nick + " :\x01VERSION\x01");
     });
 
-    menu.exec(m_nickList->mapToGlobal(pos));
+    menu.exec(globalPos);
 }
 
 void MainWindow::refreshChatView(const QString &host, const QString &channel)
@@ -2341,6 +2357,8 @@ QString MainWindow::formatMessage(const Message &msg) const
             }
         }
         const QString nickDisplay = nickOpen + msg.nick.toHtmlEscaped() + nickClose;
+        const QString nickAnchor  = QString("<a href='nick:%1' style='color:%2; text-decoration:none; font-weight:bold'>%3</a>")
+            .arg(msg.nick.toHtmlEscaped(), color, nickDisplay);
         QString textHtml = linkifyHtml(ircToHtml(msg.text));
         const QString sn = m_model->selfNick(m_model->activeHost());
         if (!sn.isEmpty()) {
@@ -2348,22 +2366,25 @@ QString MainWindow::formatMessage(const Message &msg) const
                                     QRegularExpression::CaseInsensitiveOption);
             textHtml.replace(snRe, "<span style='color:red;font-weight:bold'>\\1</span>");
         }
-        html = QString("<span style='color:gray'>%1</span> "
-                       "<b style='color:%2'>%3</b> %4")
-            .arg(ts, color, nickDisplay, textHtml);
+        html = QString("<span style='color:gray'>%1</span> %2 %3")
+            .arg(ts, nickAnchor, textHtml);
         break;
     }
-    case MessageType::Action:
-        html = QString("<span style='color:gray'>%1</span> "
-                       "<i>* %2 %3</i>")
-            .arg(ts, msg.nick.toHtmlEscaped(), linkifyHtml(ircToHtml(msg.text)));
+    case MessageType::Action: {
+        const QString actionNick = QString("<a href='nick:%1' style='color:inherit; text-decoration:none'>%1</a>")
+            .arg(msg.nick.toHtmlEscaped());
+        html = QString("<span style='color:gray'>%1</span> <i>* %2 %3</i>")
+            .arg(ts, actionNick, linkifyHtml(ircToHtml(msg.text)));
         break;
-
-    case MessageType::Notice:
+    }
+    case MessageType::Notice: {
+        const QString noticeNick = QString("<a href='nick:%1' style='color:inherit; text-decoration:none'>%1</a>")
+            .arg(msg.nick.toHtmlEscaped());
         html = QString("<span style='color:gray'>%1</span> "
                        "<span style='color:#cc8800'>-%2- %3</span>")
-            .arg(ts, msg.nick.toHtmlEscaped(), linkifyHtml(ircToHtml(msg.text)));
+            .arg(ts, noticeNick, linkifyHtml(ircToHtml(msg.text)));
         break;
+    }
 
     case MessageType::Join:
         html = wrap("seagreen",  ts + " → " + msg.text); break;

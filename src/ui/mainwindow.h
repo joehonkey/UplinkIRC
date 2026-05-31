@@ -87,6 +87,7 @@ private:
     void applyAppIcon(const QString &choice);
 
     QString    formatMessage(const Message &msg) const;
+    void       showNickContextMenu(const QString &nick, const QPoint &globalPos);
     static QColor nickColor(const QString &nick);
 
     // Tab completion
