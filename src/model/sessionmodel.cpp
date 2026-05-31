@@ -328,28 +328,31 @@ void SessionModel::onSocketError(const QString &host, const QString &error)
 
 void SessionModel::onMessage(const QString &host, const QString &target,
                              const QString &nick, const QString &text,
-                             const QDateTime &serverTime, bool isHistory)
+                             const QDateTime &serverTime, bool isHistory,
+                             const QString &msgid)
 {
     const bool isPM = !target.startsWith('#') && !target.startsWith('&')
                       && !target.startsWith('!');
     const QString buf = isPM ? nick : target;
     if (isPM && !isHistory) openPM(host, nick);
-    postMessage(host, buf, Message::make(MessageType::Privmsg, nick, text, serverTime, isHistory));
+    postMessage(host, buf, Message::make(MessageType::Privmsg, nick, text, serverTime, isHistory, msgid));
 }
 
 void SessionModel::onNotice(const QString &host, const QString &target,
                             const QString &nick, const QString &text,
-                            const QDateTime &serverTime, bool isHistory)
+                            const QDateTime &serverTime, bool isHistory,
+                            const QString &msgid)
 {
     const QString dest = target.startsWith('#') ? target : "(server)";
-    postMessage(host, dest, Message::make(MessageType::Notice, nick, text, serverTime, isHistory));
+    postMessage(host, dest, Message::make(MessageType::Notice, nick, text, serverTime, isHistory, msgid));
 }
 
 void SessionModel::onAction(const QString &host, const QString &target,
                             const QString &nick, const QString &text,
-                            const QDateTime &serverTime, bool isHistory)
+                            const QDateTime &serverTime, bool isHistory,
+                            const QString &msgid)
 {
-    postMessage(host, target, Message::make(MessageType::Action, nick, text, serverTime, isHistory));
+    postMessage(host, target, Message::make(MessageType::Action, nick, text, serverTime, isHistory, msgid));
 }
 
 void SessionModel::onUserJoined(const QString &host, const QString &channel, const QString &nick)

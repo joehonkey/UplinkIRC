@@ -87,13 +87,16 @@ private:
     void onSocketError    (const QString &host, const QString &error);
     void onMessage        (const QString &host, const QString &target,
                            const QString &nick, const QString &text,
-                           const QDateTime &serverTime, bool isHistory);
+                           const QDateTime &serverTime, bool isHistory,
+                           const QString &msgid);
     void onNotice         (const QString &host, const QString &target,
                            const QString &nick, const QString &text,
-                           const QDateTime &serverTime, bool isHistory);
+                           const QDateTime &serverTime, bool isHistory,
+                           const QString &msgid);
     void onAction         (const QString &host, const QString &target,
                            const QString &nick, const QString &text,
-                           const QDateTime &serverTime, bool isHistory);
+                           const QDateTime &serverTime, bool isHistory,
+                           const QString &msgid);
     void onUserJoined     (const QString &host, const QString &channel, const QString &nick);
     void onUserParted     (const QString &host, const QString &channel,
                            const QString &nick, const QString &reason);

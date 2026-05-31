@@ -23,10 +23,12 @@ struct Message {
     QString     text;
     MessageType type{MessageType::Privmsg};
     bool        isHistory{false};
+    QString     msgid;
 
     static Message make(MessageType t, const QString &nick, const QString &text,
-                        const QDateTime &ts = {}, bool history = false)
+                        const QDateTime &ts = {}, bool history = false,
+                        const QString &msgid = {})
     {
-        return { ts.isValid() ? ts : QDateTime::currentDateTime(), nick, text, t, history };
+        return { ts.isValid() ? ts : QDateTime::currentDateTime(), nick, text, t, history, msgid };
     }
 };

@@ -48,13 +48,16 @@ signals:
 
     void messageReceived(const QString &server, const QString &target,
                          const QString &nick,   const QString &text,
-                         const QDateTime &serverTime, bool isHistory);
+                         const QDateTime &serverTime, bool isHistory,
+                         const QString &msgid);
     void noticeReceived (const QString &server, const QString &target,
                          const QString &nick,   const QString &text,
-                         const QDateTime &serverTime, bool isHistory);
+                         const QDateTime &serverTime, bool isHistory,
+                         const QString &msgid);
     void actionReceived (const QString &server, const QString &target,
                          const QString &nick,   const QString &text,
-                         const QDateTime &serverTime, bool isHistory);
+                         const QDateTime &serverTime, bool isHistory,
+                         const QString &msgid);
 
     void userJoined   (const QString &server, const QString &channel, const QString &nick);
     void userParted   (const QString &server, const QString &channel, const QString &nick, const QString &reason);
@@ -147,6 +150,7 @@ private:
             QStringList params;
             QString     trailing;
             QDateTime   serverTime;
+            QString     msgid;
         };
         QList<Msg> msgs;
     };

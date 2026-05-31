@@ -352,6 +352,7 @@ void IrcClient::processLine(const QString &line)
         bm.params     = msg.params;
         bm.trailing   = msg.trailing;
         bm.serverTime = msg.serverTime;
+        bm.msgid      = msg.tags.value("msgid");
         batch.msgs.append(bm);
         return;
     }
@@ -367,12 +368,13 @@ void IrcClient::processLine(const QString &line)
         const bool isSelf = (msg.nick == m_nick) ||
                             msg.tags.contains("znc.in/self-message");
 
+        const QString msgid = msg.tags.value("msgid");
         if (text.startsWith('\x01') && text.endsWith('\x01')) {
             const QString ctcp    = text.mid(1, text.size() - 2);
             const QString ctcpCmd = ctcp.section(' ', 0, 0).toUpper();
             if (ctcpCmd == "ACTION") {
                 emit actionReceived(m_host, isSelf ? target : target,
-                                    msg.nick, ctcp.mid(7), serverTime, false);
+                                    msg.nick, ctcp.mid(7), serverTime, false, msgid);
             } else if (ctcpCmd == "VERSION") {
                 const QString rkey = msg.nick + ":VERSION";
                 const qint64  now  = QDateTime::currentMSecsSinceEpoch();
@@ -408,7 +410,7 @@ void IrcClient::processLine(const QString &line)
                 emit serverMessage(m_host, "CTCP " + ctcpCmd + " from " + msg.nick);
             }
         } else {
-            emit messageReceived(m_host, target, msg.nick, text, serverTime, false);
+            emit messageReceived(m_host, target, msg.nick, text, serverTime, false, msgid);
         }
         return;
     }
@@ -427,10 +429,11 @@ void IrcClient::processLine(const QString &line)
                 emit ctcpTimeReply(m_host, msg.nick, ctcp.section(' ', 1));
             } else {
                 emit noticeReceived(m_host, msg.params[0], msg.nick,
-                                    "CTCP reply: " + ctcp, serverTime, false);
+                                    "CTCP reply: " + ctcp, serverTime, false, {});
             }
         } else {
-            emit noticeReceived(m_host, msg.params[0], msg.nick, text, serverTime, false);
+            emit noticeReceived(m_host, msg.params[0], msg.nick, text, serverTime, false,
+                                msg.tags.value("msgid"));
         }
         return;
     }
@@ -530,14 +533,14 @@ void IrcClient::deliverBatch(const QString &ref)
                 const QString ctcp = text.mid(1, text.size() - 2);
                 if (ctcp.startsWith("ACTION "))
                     emit actionReceived(m_host, target, bm.nick,
-                                        ctcp.mid(7), bm.serverTime, isHistory);
+                                        ctcp.mid(7), bm.serverTime, isHistory, bm.msgid);
             } else {
                 emit messageReceived(m_host, target, bm.nick,
-                                     text, bm.serverTime, isHistory);
+                                     text, bm.serverTime, isHistory, bm.msgid);
             }
         } else if (bm.command == "NOTICE" && bm.params.size() >= 1) {
             emit noticeReceived(m_host, bm.params[0], bm.nick,
-                                bm.trailing, bm.serverTime, isHistory);
+                                bm.trailing, bm.serverTime, isHistory, bm.msgid);
         }
     }
 }
