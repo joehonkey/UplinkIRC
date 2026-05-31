@@ -104,9 +104,12 @@ void IrcClient::part(const QString &channel, const QString &reason)
     sendRaw(reason.isEmpty() ? "PART " + channel : "PART " + channel + " :" + reason);
 }
 
-void IrcClient::privmsg(const QString &target, const QString &text)
+void IrcClient::privmsg(const QString &target, const QString &text, const QString &replyToMsgid)
 {
-    sendRaw("PRIVMSG " + target + " :" + text);
+    if (replyToMsgid.isEmpty())
+        sendRaw("PRIVMSG " + target + " :" + text);
+    else
+        sendRaw("@+draft/reply=" + replyToMsgid + " PRIVMSG " + target + " :" + text);
 }
 
 void IrcClient::notice(const QString &target, const QString &text)
@@ -353,6 +356,7 @@ void IrcClient::processLine(const QString &line)
         bm.trailing   = msg.trailing;
         bm.serverTime = msg.serverTime;
         bm.msgid      = msg.tags.value("msgid");
+        bm.replyTo    = msg.tags.value("+draft/reply");
         batch.msgs.append(bm);
         return;
     }
@@ -368,7 +372,8 @@ void IrcClient::processLine(const QString &line)
         const bool isSelf = (msg.nick == m_nick) ||
                             msg.tags.contains("znc.in/self-message");
 
-        const QString msgid = msg.tags.value("msgid");
+        const QString msgid   = msg.tags.value("msgid");
+        const QString replyTo = msg.tags.value("+draft/reply");
         if (text.startsWith('\x01') && text.endsWith('\x01')) {
             const QString ctcp    = text.mid(1, text.size() - 2);
             const QString ctcpCmd = ctcp.section(' ', 0, 0).toUpper();
@@ -410,7 +415,7 @@ void IrcClient::processLine(const QString &line)
                 emit serverMessage(m_host, "CTCP " + ctcpCmd + " from " + msg.nick);
             }
         } else {
-            emit messageReceived(m_host, target, msg.nick, text, serverTime, false, msgid);
+            emit messageReceived(m_host, target, msg.nick, text, serverTime, false, msgid, replyTo);
         }
         return;
     }
@@ -429,11 +434,11 @@ void IrcClient::processLine(const QString &line)
                 emit ctcpTimeReply(m_host, msg.nick, ctcp.section(' ', 1));
             } else {
                 emit noticeReceived(m_host, msg.params[0], msg.nick,
-                                    "CTCP reply: " + ctcp, serverTime, false, {});
+                                    "CTCP reply: " + ctcp, serverTime, false, {}, {});
             }
         } else {
             emit noticeReceived(m_host, msg.params[0], msg.nick, text, serverTime, false,
-                                msg.tags.value("msgid"));
+                                msg.tags.value("msgid"), msg.tags.value("+draft/reply"));
         }
         return;
     }
@@ -536,11 +541,11 @@ void IrcClient::deliverBatch(const QString &ref)
                                         ctcp.mid(7), bm.serverTime, isHistory, bm.msgid);
             } else {
                 emit messageReceived(m_host, target, bm.nick,
-                                     text, bm.serverTime, isHistory, bm.msgid);
+                                     text, bm.serverTime, isHistory, bm.msgid, bm.replyTo);
             }
         } else if (bm.command == "NOTICE" && bm.params.size() >= 1) {
             emit noticeReceived(m_host, bm.params[0], bm.nick,
-                                bm.trailing, bm.serverTime, isHistory, bm.msgid);
+                                bm.trailing, bm.serverTime, isHistory, bm.msgid, bm.replyTo);
         }
     }
 }

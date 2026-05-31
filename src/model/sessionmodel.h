@@ -34,7 +34,8 @@ public:
     QString activeChannel() const { return m_activeChannel; }
 
     // Send on behalf of a session
-    void sendMessage(const QString &host, const QString &target, const QString &text);
+    void sendMessage(const QString &host, const QString &target, const QString &text,
+                     const QString &replyToMsgid = {});
     void sendRaw    (const QString &host, const QString &line);
     void localMessage(const QString &host, const QString &target, const QString &text);
     QString selfNick  (const QString &host);
@@ -88,11 +89,11 @@ private:
     void onMessage        (const QString &host, const QString &target,
                            const QString &nick, const QString &text,
                            const QDateTime &serverTime, bool isHistory,
-                           const QString &msgid);
+                           const QString &msgid, const QString &replyTo);
     void onNotice         (const QString &host, const QString &target,
                            const QString &nick, const QString &text,
                            const QDateTime &serverTime, bool isHistory,
-                           const QString &msgid);
+                           const QString &msgid, const QString &replyTo);
     void onAction         (const QString &host, const QString &target,
                            const QString &nick, const QString &text,
                            const QDateTime &serverTime, bool isHistory,

@@ -115,11 +115,12 @@ void SessionModel::openPM(const QString &host, const QString &nick)
         emit channelAdded(host, nick);
 }
 
-void SessionModel::sendMessage(const QString &host, const QString &target, const QString &text)
+void SessionModel::sendMessage(const QString &host, const QString &target, const QString &text,
+                               const QString &replyToMsgid)
 {
     auto *cl = clientFor(host);
     if (!cl) return;
-    cl->privmsg(target, text);
+    cl->privmsg(target, text, replyToMsgid);
     // Open a PM tab for outgoing private messages
     const bool isPM = !target.startsWith('#') && !target.startsWith('&')
                       && !target.startsWith('!') && target != "(server)";
@@ -332,7 +333,7 @@ void SessionModel::onSocketError(const QString &host, const QString &error)
 void SessionModel::onMessage(const QString &host, const QString &target,
                              const QString &nick, const QString &text,
                              const QDateTime &serverTime, bool isHistory,
-                             const QString &msgid)
+                             const QString &msgid, const QString &replyTo)
 {
     auto *sess = session(host);
     const bool isSelf = sess && (nick.toLower() == sess->nick.toLower());
@@ -341,16 +342,16 @@ void SessionModel::onMessage(const QString &host, const QString &target,
     const QString pmNick = isSelf ? target : nick;
     const QString buf = isPM ? pmNick : target;
     if (isPM && !isHistory) openPM(host, pmNick);
-    postMessage(host, buf, Message::make(MessageType::Privmsg, nick, text, serverTime, isHistory, msgid));
+    postMessage(host, buf, Message::make(MessageType::Privmsg, nick, text, serverTime, isHistory, msgid, replyTo));
 }
 
 void SessionModel::onNotice(const QString &host, const QString &target,
                             const QString &nick, const QString &text,
                             const QDateTime &serverTime, bool isHistory,
-                            const QString &msgid)
+                            const QString &msgid, const QString &replyTo)
 {
     const QString dest = target.startsWith('#') ? target : "(server)";
-    postMessage(host, dest, Message::make(MessageType::Notice, nick, text, serverTime, isHistory, msgid));
+    postMessage(host, dest, Message::make(MessageType::Notice, nick, text, serverTime, isHistory, msgid, replyTo));
 }
 
 void SessionModel::onAction(const QString &host, const QString &target,

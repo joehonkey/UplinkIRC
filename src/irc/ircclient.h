@@ -25,7 +25,7 @@ public:
 
     void join(const QString &channel, const QString &key = {});
     void part(const QString &channel, const QString &reason = {});
-    void privmsg(const QString &target, const QString &text);
+    void privmsg(const QString &target, const QString &text, const QString &replyToMsgid = {});
     void notice(const QString &target, const QString &text);
     void setNick(const QString &nick);
     void sendTyping(const QString &channel, const QString &state);
@@ -49,11 +49,11 @@ signals:
     void messageReceived(const QString &server, const QString &target,
                          const QString &nick,   const QString &text,
                          const QDateTime &serverTime, bool isHistory,
-                         const QString &msgid);
+                         const QString &msgid, const QString &replyTo);
     void noticeReceived (const QString &server, const QString &target,
                          const QString &nick,   const QString &text,
                          const QDateTime &serverTime, bool isHistory,
-                         const QString &msgid);
+                         const QString &msgid, const QString &replyTo);
     void actionReceived (const QString &server, const QString &target,
                          const QString &nick,   const QString &text,
                          const QDateTime &serverTime, bool isHistory,
@@ -151,6 +151,7 @@ private:
             QString     trailing;
             QDateTime   serverTime;
             QString     msgid;
+            QString     replyTo;
         };
         QList<Msg> msgs;
     };
