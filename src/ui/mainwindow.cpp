@@ -1065,14 +1065,25 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *event)
                 connect(menu.addAction("Open URL"), &QAction::triggered,
                         this, [anchor]{ QDesktopServices::openUrl(QUrl(anchor)); });
 
-                auto *hideAction = menu.addAction("Hide Preview");
                 auto *ch = m_model->channel(host, channel);
-                hideAction->setEnabled(ch && ch->previews.contains(anchor));
-                connect(hideAction, &QAction::triggered, this, [this, anchor, host, channel]{
-                    auto *ch = m_model->channel(host, channel);
-                    if (ch) ch->previews.remove(anchor);
-                    refreshChatView(host, channel);
-                });
+                const bool isHidden  = ch && ch->hiddenPreviews.contains(anchor);
+                const bool hasPreview = ch && ch->previews.contains(anchor);
+                if (isHidden) {
+                    auto *showAction = menu.addAction("Show Preview");
+                    connect(showAction, &QAction::triggered, this, [this, anchor, host, channel]{
+                        auto *ch = m_model->channel(host, channel);
+                        if (ch) ch->hiddenPreviews.remove(anchor);
+                        refreshChatView(host, channel);
+                    });
+                } else {
+                    auto *hideAction = menu.addAction("Hide Preview");
+                    hideAction->setEnabled(hasPreview);
+                    connect(hideAction, &QAction::triggered, this, [this, anchor, host, channel]{
+                        auto *ch = m_model->channel(host, channel);
+                        if (ch) ch->hiddenPreviews.insert(anchor);
+                        refreshChatView(host, channel);
+                    });
+                }
 
                 menu.exec(globalPos);
             }
@@ -2287,7 +2298,7 @@ void MainWindow::refreshChatView(const QString &host, const QString &channel)
             while (it.hasNext()) {
                 const QString urlStr = QUrl(it.next().captured(0)).toString();
                 const auto p = ch->previews.constFind(urlStr);
-                if (p != ch->previews.constEnd())
+                if (p != ch->previews.constEnd() && !ch->hiddenPreviews.contains(urlStr))
                     insertHtmlBlock(m_chatView, p.value());
             }
         }

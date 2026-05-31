@@ -55,6 +55,7 @@ struct Channel {
     QList<Message>   messages;
     QSet<QString>    botNicks;  // lowercased nicks with +B channel user mode
     QHash<QString, QString> previews;  // url → persisted card HTML
+    QSet<QString>           hiddenPreviews; // urls the user manually hid
     int              unread{0};
     int              mentions{0};
     bool             joined{false};
